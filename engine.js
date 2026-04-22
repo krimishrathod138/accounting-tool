@@ -3403,11 +3403,28 @@ window.AccountingEngine = {
     showUserBadge() {
         const user = this.getCurrentUser();
         if (!user) return;
+        // Inject a global print-hide rule once so the badge (and any other UI chrome
+        // that pages have forgotten to mark as no-print) doesn't show on physical print.
+        if (!document.getElementById('_userBadgePrintCSS')) {
+            const css = document.createElement('style');
+            css.id = '_userBadgePrintCSS';
+            css.textContent =
+              '@media print {' +
+              '  #_userBadge, #autoSaveIndicator, #dragOverlay, ._noPrint,' +
+              '  .toolbar-row, .toolbar, .bottom-tabs, .menu-bar, .file-dropdown,' +
+              '  .legend, .info-box, .recon-box, .modal, .modal-backdrop,' +
+              '  #statusBar, #cfDiag {' +
+              '    display: none !important;' +
+              '  }' +
+              '}';
+            document.head.appendChild(css);
+        }
         let badge = document.getElementById('_userBadge');
         if (badge) { badge.textContent = user.name + ' (' + (user.role || 'Admin') + ')'; return; }
         /* Create badge — try to attach to common header elements */
         badge = document.createElement('div');
         badge.id = '_userBadge';
+        badge.className = '_noPrint';
         badge.style.cssText = 'position:fixed;top:4px;right:12px;z-index:99999;background:#234a7b;color:#fff;padding:3px 12px;border-radius:12px;font-size:11px;font-weight:600;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.2);';
         badge.textContent = (user.name || user.username) + ' (' + (user.role || 'Admin') + ')';
         badge.title = 'Click to logout';
@@ -3574,7 +3591,7 @@ window.AccountingEngine = {
         const el      = (typeof target === 'string') ? document.querySelector(target) : target;
         if (!el) { alert('Nothing to export.'); return; }
         const filename = opts.filename || ('Document_' + new Date().toISOString().slice(0,10) + '.pdf');
-        const hideSel = opts.hideSelectors || '.toolbar, .toolbar-row, .bottom-tabs, #statusBar, .info-box, .legend, .recon-box, button';
+        const hideSel = opts.hideSelectors || '.toolbar, .toolbar-row, .bottom-tabs, #statusBar, .info-box, .legend, .recon-box, button, #_userBadge, ._noPrint, .menu-bar, .file-dropdown';
         const orientation = opts.orientation || 'portrait';
         const hidden = [];
 
