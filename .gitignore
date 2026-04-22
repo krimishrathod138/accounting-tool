@@ -24,5 +24,10 @@ yarn-debug.log*
 
 # Files that exceed GitHub's 100 MiB hard limit (rest of node_modules / dist is included).
 # Anyone cloning can regenerate these via `npm install` and `npm run build`.
-Electron Framework
+dist/mac/Balance Sheet Builder.app/Contents/Frameworks/Electron Framework.framework/Electron Framework
+dist/mac/Balance Sheet Builder.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Electron Framework
+dist/mac-arm64/Balance Sheet Builder.app/Contents/Frameworks/Electron Framework.framework/Electron Framework
+dist/mac-arm64/Balance Sheet Builder.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Electron Framework
+node_modules/electron/dist/Electron.app/Contents/Frameworks/Electron Framework.framework/Electron Framework
+node_modules/electron/dist/Electron.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Electron Framework
 dist/win-unpacked/Balance Sheet Builder.exe

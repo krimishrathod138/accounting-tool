@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Ledger Mapping — Balance Sheet Builder</title>
+<link rel="stylesheet" href="style.css">
+<style>
+body { font-family: Arial, sans-serif; background:#f4f4f4; margin:0; padding-bottom:90px; }
+
+.top-wrap { background:#fff; border-bottom:2px solid #15c39a; padding:16px 28px; box-shadow:0 2px 8px rgba(0,0,0,0.06); }
+.top-wrap h1 { margin:0; font-size:20px; color:#14345a; }
+.top-wrap .sub { font-size:12px; color:#555; margin-top:4px; }
+
+.toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:10px; background:#fff; padding:12px 28px; border-bottom:1px solid #e0e0e0; }
+.toolbar .btn { padding:7px 14px; border:1px solid #aaa; background:#fff; border-radius:5px; cursor:pointer; font-size:12px; font-weight:600; }
+.toolbar .btn:hover { background:#f0f0f0; }
+.toolbar .btn-primary { background:#15c39a; color:#fff; border-color:#15c39a; }
+.toolbar .btn-primary:hover { background:#11a683; }
+.toolbar .btn-warn { background:#e05252; color:#fff; border-color:#e05252; }
+.toolbar input[type="search"] { padding:6px 10px; border:1px solid #aaa; border-radius:5px; font-size:12px; width:240px; }
+.toolbar .count { font-size:12px; color:#555; margin-left:auto; }
+.toolbar .count b { color:#14345a; }
+
+.filters { padding:8px 28px; background:#f9f9fa; border-bottom:1px solid #e8e8e8; display:flex; flex-wrap:wrap; gap:8px; font-size:11px; }
+.filter-chip { padding:4px 12px; border:1px solid #c9c9c9; border-radius:14px; background:#fff; cursor:pointer; font-weight:600; color:#555; }
+.filter-chip.active { background:#14345a; color:#fff; border-color:#14345a; }
+.filter-chip:hover:not(.active) { background:#eef; }
+.filter-chip .badge { margin-left:5px; background:rgba(0,0,0,0.12); padding:1px 6px; border-radius:8px; font-size:10px; }
+
+.wrap { background:#fff; margin:16px 24px 0; border:1px solid #d0d0d0; border-radius:6px; overflow:hidden; }
+
+table { width:100%; border-collapse:collapse; font-size:12.5px; }
+th { position:sticky; top:0; background:#14345a; color:#fff; padding:10px 12px; text-align:left; font-weight:700; z-index:5; }
+th.amt { text-align:right; }
+td { padding:7px 12px; border-bottom:1px solid #eef; vertical-align:middle; }
+tr:hover td { background:#fafcff; }
+td.amt { text-align:right; font-family:monospace; font-variant-numeric:tabular-nums; white-space:nowrap; }
+td .ledger-name { font-weight:600; color:#14345a; }
+td select.group-select { width:100%; padding:4px 6px; font-size:12px; border:1px solid #bbb; border-radius:4px; background:#fffef3; cursor:pointer; }
+td select.group-select.changed { background:#ffe8a3; border-color:#e0a000; font-weight:700; }
+td select.group-select:focus { outline:2px solid #ffcc00; }
+td.cat-cell { font-size:11px; font-weight:600; color:#555; }
+td.cat-cell.bs-lia { color:#8a5a00; }
+td.cat-cell.bs-asset { color:#0a7c5c; }
+td.cat-cell.pl-inc { color:#15c39a; }
+td.cat-cell.pl-exp { color:#c0392b; }
+td.rule-indicator { text-align:center; font-size:11px; }
+
+.empty { padding:40px 28px; text-align:center; color:#666; font-size:14px; }
+
+.status-bar { position:fixed; bottom:50px; left:0; width:100%; background:#14345a; color:#fff; padding:8px 24px; font-size:12px; display:none; z-index:100; }
+.status-bar.show { display:flex; justify-content:space-between; align-items:center; }
+.status-bar .actions { display:flex; gap:10px; }
+.status-bar button { padding:5px 14px; font-size:12px; font-weight:700; border:none; border-radius:4px; cursor:pointer; }
+.status-bar .save-btn { background:#15c39a; color:#fff; }
+.status-bar .cancel-btn { background:#e05252; color:#fff; }
+</style>
+</head>
+<body>
+<script src="engine.js"></script>
+
+<div class="top-wrap">
+  <h1>📋 Ledger Mapping</h1>
+  <div class="sub">Review how each Tally ledger is classified into Schedule III heads. Override any ledger by picking a different head from its dropdown. Saved mappings apply to the Balance Sheet, P&amp;L, Cash Flow, and all Notes.</div>
+</div>
+
+<div class="toolbar">
+  <input type="search" id="searchBox" placeholder="🔍 Filter ledgers by name…" oninput="applyFilters()">
+  <button type="button" class="btn" onclick="resetAllToAuto()" title="Remove all user overrides — revert to keyword-based auto classification">↺ Reset All to Auto</button>
+  <button type="button" class="btn btn-primary" onclick="saveAll()">💾 Save Mapping</button>
+  <span class="count" id="countBadge">— ledgers</span>
+</div>
+
+<div class="filters" id="filterBar"></div>
+
+<div class="wrap" id="tableWrap">
+  <table id="ledgerTable">
+    <thead>
+      <tr>
+        <th style="width:30px;">#</th>
+        <th style="width:34%;">Ledger Name</th>
+        <th class="amt" style="width:14%;">Balance (CY)</th>
+        <th style="width:14%;">Category</th>
+        <th style="width:30%;">Schedule III Head</th>
+        <th style="width:50px;" title="★ = user override">Rule</th>
+      </tr>
+    </thead>
+    <tbody id="ledgerBody"></tbody>
+  </table>
+  <div class="empty" id="emptyMsg" style="display:none;">No ledgers found. Import a Trial Balance first via the <a href="tb.html">TB page</a>.</div>
+</div>
+
+<div class="status-bar" id="statusBar">
+  <span id="statusMsg"></span>
+  <div class="actions">
+    <button type="button" class="cancel-btn" onclick="discardChanges()">Discard</button>
+    <button type="button" class="save-btn" onclick="saveAll()">Save Changes</button>
+  </div>
+</div>
+
+<!-- BOTTOM TABS -->
+<div class="bottom-tabs">
+  <a href="dashboard.html" class="tab">HOME</a>
+  <a href="bd.html" class="tab">BD</a>
+  <a href="tb.html" class="tab">TB</a>
+  <a href="mapping.html" class="tab active">MAP</a>
+  <a href="ae.html" class="tab">AE</a>
+  <a href="balance.html" class="tab">BS</a>
+  <a href="pl.html" class="tab">PL</a>
+  <a href="cf.html" class="tab">CF</a>
+  <a href="n1.html" class="tab">N1</a>
+  <a href="n2.html" class="tab">N2</a>
+  <a href="n3.html" class="tab">N3</a>
+  <a href="n4.html" class="tab">N4</a>
+  <a href="n5.html" class="tab">N5</a>
+  <a href="n6.html" class="tab">N6</a>
+  <a href="n7.html" class="tab">N7</a>
+  <a href="tx.html" class="tab">TX</a>
+  <a href="fs-package.html" class="tab">FS</a>
+</div>
+
+<script>
+/* ═══════ GROUP → SCHEDULE III HEAD CATEGORIES ═══════ */
+const GROUPS = {
+  'Balance Sheet — Liabilities': [
+    'Capital Account', 'Reserves and surplus', 'Sources Of Fund',
+    'Long Term Borrowings', 'Secured Loans', 'Unsecured Loans', 'Loans (Liability)',
+    'Short term borrowings', 'Bank OD',
+    'Trade Payables', 'Sundry Creditors',
+    'Duties & Taxes', 'Provisions',
+    'Other Current Liabilities', 'Current Liabilities', 'Current Libilities',
+  ],
+  'Balance Sheet — Assets': [
+    'Fixed Assets', 'Non Current Assets', 'Tangible Asset', 'Intangible Asset',
+    'Investments',
+    'Stock-in-hand', 'Closing Stock', 'Inventories',
+    'Sundry Debtors', 'Trade Receivables',
+    'Cash-in-hand', 'Bank Accounts', 'Cash And Cash Equivalents',
+    'Deposits (Asset)', 'Loans & Advances (Asset)',
+    'Short term loans and advances', 'Other current assets',
+    'Current Assets',
+  ],
+  'Profit & Loss — Income': [
+    'Sales Accounts', 'Revenue', 'Direct Incomes', 'Indirect Incomes',
+  ],
+  'Profit & Loss — Expenses': [
+    'Purchase Accounts', 'Direct Expenses', 'Indirect Expenses',
+  ],
+};
+
+// Category → CSS class for colouring
+const CAT_CLASS = {
+  'Balance Sheet — Liabilities': 'bs-lia',
+  'Balance Sheet — Assets': 'bs-asset',
+  'Profit & Loss — Income': 'pl-inc',
+  'Profit & Loss — Expenses': 'pl-exp',
+};
+const CAT_LABEL = {
+  'Balance Sheet — Liabilities': 'BS Liability',
+  'Balance Sheet — Assets': 'BS Asset',
+  'Profit & Loss — Income': 'P&L Income',
+  'Profit & Loss — Expenses': 'P&L Expense',
+};
+
+function groupToCategory(groupName) {
+  const g = (groupName || '').trim();
+  for (const cat in GROUPS) {
+    if (GROUPS[cat].some(x => x.toLowerCase() === g.toLowerCase())) return cat;
+  }
+  return 'Balance Sheet — Assets';  // fallback
+}
+
+/* ═══════ STATE ═══════ */
+let rows = [];          // [{name, balance, group(assigned), auto, hasRule}]
+let pendingChanges = {}; // ledgerName → newGroup
+let activeFilter = null;
+
+/* ═══════ LOAD ═══════ */
+function load() {
+  const ledgers = AccountingEngine.getLedgers();
+  if (!ledgers.length) {
+    document.getElementById('tableWrap').style.display = 'none';
+    document.getElementById('emptyMsg').style.display = 'block';
+    document.getElementById('countBadge').textContent = '0 ledgers';
+    return;
+  }
+  const balances = AccountingEngine.getLedgerBalances('CY');
+  const rules = AccountingEngine.getGroupRules();
+
+  rows = ledgers.map(l => {
+    const auto = AccountingEngine.guessGroup(l.name); // may use override
+    // Determine the raw auto-classification (without rule override) for comparison
+    let rawAuto = auto;
+    if (rules[l.name] || rules[l.name.toLowerCase()]) {
+      // There IS a rule; recompute raw auto by temporarily bypassing rules
+      rawAuto = computeRawAuto(l.name);
+    }
+    const currentGroup = l.group || auto;
+    return {
+      name: l.name,
+      balance: balances[l.name] ? balances[l.name].current : 0,
+      group: currentGroup,
+      auto: rawAuto,
+      hasRule: !!rules[l.name] || !!rules[l.name.toLowerCase()],
+    };
+  });
+
+  renderFilters();
+  applyFilters();
+}
+
+/* Fallback raw-auto (duplicate of some engine keywords — just a hint
+   so we can show whether the current group differs from the keyword default). */
+function computeRawAuto(ledgerName) {
+  const n = ledgerName.toLowerCase();
+  if (n.includes('sales')) return 'Sales Accounts';
+  if (n.includes('purchase')) return 'Purchase Accounts';
+  if (n.includes('cash')) return 'Cash-in-hand';
+  if (n.includes('bank')) return 'Bank Accounts';
+  if (n.includes('debtor') || n.includes('receivable')) return 'Sundry Debtors';
+  if (n.includes('creditor') || n.includes('payable')) return 'Sundry Creditors';
+  if (n.includes('stock') || n.includes('inventory')) return 'Stock-in-hand';
+  if (n.includes('capital') || n.includes('share')) return 'Capital Account';
+  return '(auto)';
+}
+
+/* ═══════ FILTERS ═══════ */
+function renderFilters() {
+  const counts = {};
+  rows.forEach(r => {
+    const cat = groupToCategory(r.group);
+    counts[cat] = (counts[cat] || 0) + 1;
+  });
+  const rulesCount = rows.filter(r => r.hasRule).length;
+  let h = '';
+  h += `<span class="filter-chip ${activeFilter===null?'active':''}" onclick="setFilter(null)">All <span class="badge">${rows.length}</span></span>`;
+  for (const cat in GROUPS) {
+    if (counts[cat]) {
+      h += `<span class="filter-chip ${activeFilter===cat?'active':''}" onclick="setFilter('${cat.replace(/'/g,"&apos;")}')">${CAT_LABEL[cat]} <span class="badge">${counts[cat]}</span></span>`;
+    }
+  }
+  if (rulesCount) {
+    h += `<span class="filter-chip ${activeFilter==='_rules'?'active':''}" onclick="setFilter('_rules')" title="Ledgers with user-defined overrides">★ Overridden <span class="badge">${rulesCount}</span></span>`;
+  }
+  document.getElementById('filterBar').innerHTML = h;
+}
+function setFilter(cat) { activeFilter = cat; renderFilters(); applyFilters(); }
+
+function applyFilters() {
+  const q = (document.getElementById('searchBox').value || '').trim().toLowerCase();
+  const tbody = document.getElementById('ledgerBody');
+  let shown = 0;
+  const displayedRows = rows.filter(r => {
+    if (q && !r.name.toLowerCase().includes(q)) return false;
+    if (activeFilter === '_rules' && !r.hasRule) return false;
+    if (activeFilter && activeFilter !== '_rules' && groupToCategory(r.group) !== activeFilter) return false;
+    return true;
+  });
+  let h = '';
+  displayedRows.forEach((r, i) => {
+    shown++;
+    const cat = groupToCategory(r.group);
+    const catCls = CAT_CLASS[cat] || '';
+    const changed = (pendingChanges[r.name] !== undefined && pendingChanges[r.name] !== r.group);
+    const rule = r.hasRule || changed;
+    h += `<tr>
+      <td>${i+1}</td>
+      <td><div class="ledger-name">${escapeHtml(r.name)}</div></td>
+      <td class="amt">${fmtBal(r.balance)}</td>
+      <td class="cat-cell ${catCls}">${CAT_LABEL[cat] || cat}</td>
+      <td>${renderGroupSelect(r, changed)}</td>
+      <td class="rule-indicator" title="${rule ? 'User-defined override' : 'Auto-classified'}">${rule ? '⭐' : ''}</td>
+    </tr>`;
+  });
+  tbody.innerHTML = h;
+  document.getElementById('countBadge').innerHTML = `<b>${shown}</b> of ${rows.length} ledgers${q||activeFilter?' (filtered)':''}`;
+
+  // Wire dropdowns
+  tbody.querySelectorAll('select.group-select').forEach(sel => {
+    sel.addEventListener('change', onGroupChange);
+  });
+
+  updateStatusBar();
+}
+
+function renderGroupSelect(row, changed) {
+  const current = pendingChanges[row.name] !== undefined ? pendingChanges[row.name] : row.group;
+  let h = `<select class="group-select ${changed?'changed':''}" data-name="${escapeAttr(row.name)}">`;
+  h += `<option value="" disabled>— Choose —</option>`;
+  for (const cat in GROUPS) {
+    h += `<optgroup label="${CAT_LABEL[cat]}">`;
+    GROUPS[cat].forEach(g => {
+      h += `<option value="${escapeAttr(g)}" ${g===current?'selected':''}>${escapeHtml(g)}</option>`;
+    });
+    h += '</optgroup>';
+  }
+  h += '</select>';
+  return h;
+}
+
+/* ═══════ CHANGE TRACKING ═══════ */
+function onGroupChange(e) {
+  const sel = e.target;
+  const name = sel.dataset.name;
+  const newGroup = sel.value;
+  const row = rows.find(r => r.name === name);
+  if (!row) return;
+  if (newGroup === row.group) {
+    delete pendingChanges[name];
+  } else {
+    pendingChanges[name] = newGroup;
+  }
+  sel.classList.toggle('changed', pendingChanges[name] !== undefined);
+  // Recompute category cell colour
+  const tr = sel.closest('tr');
+  const catCell = tr.querySelector('.cat-cell');
+  const cat = groupToCategory(newGroup);
+  catCell.className = 'cat-cell ' + (CAT_CLASS[cat] || '');
+  catCell.textContent = CAT_LABEL[cat] || cat;
+  // Update rule indicator
+  const ruleCell = tr.querySelector('.rule-indicator');
+  ruleCell.textContent = pendingChanges[name] !== undefined ? '⭐' : (row.hasRule ? '⭐' : '');
+  updateStatusBar();
+}
+
+function updateStatusBar() {
+  const n = Object.keys(pendingChanges).length;
+  const bar = document.getElementById('statusBar');
+  if (n === 0) { bar.classList.remove('show'); return; }
+  document.getElementById('statusMsg').textContent = `${n} unsaved change${n>1?'s':''}`;
+  bar.classList.add('show');
+}
+
+/* ═══════ ACTIONS ═══════ */
+function saveAll() {
+  const n = Object.keys(pendingChanges).length;
+  if (n === 0) { alert('No changes to save.'); return; }
+  // Write rules and update ledgers' group field
+  Object.keys(pendingChanges).forEach(name => {
+    AccountingEngine.setGroupRule(name, pendingChanges[name]);
+  });
+  // Update LEDGERS so BS/PL/CF pages see the new grouping immediately
+  const ledgers = AccountingEngine.getLedgers();
+  ledgers.forEach(l => {
+    if (pendingChanges[l.name] !== undefined) l.group = pendingChanges[l.name];
+  });
+  localStorage.setItem('LEDGERS', JSON.stringify(ledgers));
+  AccountingEngine.persistToElectron && AccountingEngine.persistToElectron();
+  alert(`✓ Saved ${n} mapping change${n>1?'s':''}. The new classification is now active across BS, P&L, CF, and all Notes.`);
+  pendingChanges = {};
+  load();
+}
+
+function discardChanges() {
+  if (Object.keys(pendingChanges).length === 0) return;
+  if (!confirm('Discard all unsaved mapping changes?')) return;
+  pendingChanges = {};
+  applyFilters();
+}
+
+function resetAllToAuto() {
+  const n = Object.keys(AccountingEngine.getGroupRules()).length;
+  if (n === 0) { alert('No overrides to reset.'); return; }
+  if (!confirm(`Remove all ${n} user-defined classification override${n>1?'s':''}?\n\nAll ledgers will revert to keyword-based auto-classification.`)) return;
+  AccountingEngine.clearAllGroupRules();
+  // Re-apply guessGroup to update LEDGERS
+  const ledgers = AccountingEngine.getLedgers();
+  ledgers.forEach(l => { l.group = AccountingEngine.guessGroup(l.name); });
+  localStorage.setItem('LEDGERS', JSON.stringify(ledgers));
+  AccountingEngine.persistToElectron && AccountingEngine.persistToElectron();
+  alert(`✓ Reset ${n} override${n>1?'s':''}. All ledgers now use auto-classification.`);
+  pendingChanges = {};
+  load();
+}
+
+/* ═══════ HELPERS ═══════ */
+function fmtBal(v) {
+  if (!v || isNaN(v)) return '—';
+  const a = Math.abs(v).toLocaleString('en-IN', { maximumFractionDigits: 0 });
+  return v < 0 ? '('+a+')' : a;
+}
+function escapeHtml(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escapeAttr(s) { return escapeHtml(s).replace(/"/g,'&quot;'); }
+
+/* ═══════ BOOT ═══════ */
+document.addEventListener('DOMContentLoaded', load);
+window.addEventListener('beforeunload', e => {
+  if (Object.keys(pendingChanges).length > 0) { e.preventDefault(); e.returnValue = ''; }
+});
+</script>
+</body>
+</html>
