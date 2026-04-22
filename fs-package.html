@@ -1041,10 +1041,11 @@ function renderCF(){
   const vBSpec  = gg('b_spec',   inv.speculation);
   const vNetB   = vCapex + vIntRec + vDivRec + vEqInv + vFD + vBLtcg + vBFno + vBStcg + vBSpec;
 
-  const vLoans  = gg('c_loans', fin.ltBorrChange);
-  const vEq     = gg('c_eq',    fin.shareCapChange);
-  const vIntPd  = gg('c_int',   -fin.financeCostsPaid);
-  const vNetC   = vLoans + vEq + vIntPd;
+  const vLoans  = gg('c_loans',   fin.ltBorrChange);
+  const vEq     = gg('c_eq',      fin.shareCapChange);
+  const vIntPd  = gg('c_int',     -fin.financeCostsPaid);
+  const vDivPd  = gg('c_divPaid', -fin.dividendsPaid);
+  const vNetC   = vLoans + vEq + vIntPd + vDivPd;
 
   const vTotal  = vNetA + vNetB + vNetC;
   const vOpen   = gg('s_open',  sum.openingCash);
@@ -1110,6 +1111,7 @@ function renderCF(){
         <tr class="item"><td>Loans taken / (repaid) (net)</td><td class="amt">${f(vLoans)}</td>${pyCell}</tr>
         <tr class="item"><td>Change in Equity</td><td class="amt">${f(vEq)}</td>${pyCell}</tr>
         <tr class="item"><td>Interest expenses</td><td class="amt">${f(vIntPd)}</td>${pyCell}</tr>
+        <tr class="item"><td>Dividends paid</td><td class="amt">${f(vDivPd)}</td>${pyCell}</tr>
         <tr class="total"><td><b>Net cash generated from / (used) in financing activities (C)</b></td><td class="amt">${f(vNetC)}</td>${pyCell}</tr>
 
         <tr class="blank"><td colspan="${HAS_PY?3:2}"></td></tr>

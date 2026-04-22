@@ -220,7 +220,8 @@ function render(){
   const vLoans     = g('c_loans',     fin.ltBorrChange);
   const vEq        = g('c_eq',        fin.shareCapChange);
   const vIntPaid   = g('c_int',       -fin.financeCostsPaid);
-  const vNetC      = vLoans + vEq + vIntPaid;
+  const vDivPaid   = g('c_divPaid',   -fin.dividendsPaid);
+  const vNetC      = vLoans + vEq + vIntPaid + vDivPaid;
 
   const vTotal     = vNetA + vNetB + vNetC;
   const vOpen      = g('s_open',      sum.openingCash);
@@ -316,6 +317,8 @@ function render(){
       <td class="amt"><input type="number" id="c_eq" value="${u.c_eq||''}" placeholder="${R(fin.shareCapChange)}"></td></tr>
     <tr><td>Interest expenses</td>
       <td class="amt"><input type="number" id="c_int" value="${u.c_int||''}" placeholder="${R(-fin.financeCostsPaid)}"></td></tr>
+    <tr><td>Dividends paid</td>
+      <td class="amt"><input type="number" id="c_divPaid" value="${u.c_divPaid||''}" placeholder="${R(-fin.dividendsPaid)}"></td></tr>
     <tr class="grptot"><td><b>Net cash generated from / (used) in financing activities (C)</b></td>
       <td class="amt">${fmt(vNetC)}</td></tr>
 

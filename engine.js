@@ -2630,29 +2630,15 @@ window.AccountingEngine = {
         const capCredCY = capCreditorTotal(reportCY);
         const capCredPY = hasPY ? capCreditorTotal(reportPY) : 0;
         // Increase = more capex on credit (less cash outflow now); decrease = paid them off.
-        const capCredDelta = hasPY ? (capCredCY - capCredPY) : 0;
-        // Remove cap-creditor movement from wcPayables and reassign to investing capex line.
+        // NOTE: we apply this reclassification only if capex > 0 — see block below.
+        // `capCredDelta` is finalised later and may be reset to 0 when no capex exists.
+        let capCredDelta = hasPY ? (capCredCY - capCredPY) : 0;
+        // Tentatively remove from wcPayables (might restore below if capex is 0)
+        const wcPayablesBefore = wcPayables;
         wcPayables -= capCredDelta;
 
-        const totalWCChange = wcReceivables + wcStLoans + wcOtherCA + wcInventories +
-                              wcPayables + wcStBorrowings + wcStProvisions + wcOtherCL;
-        const cashFromOps = profitBeforeWC + totalWCChange;
-
-        // Taxes paid — actual cash outflow.
-        // Cash tax paid = movement in (Advance Tax + TDS receivable) when PY is present.
-        // The accrual "Current Tax" expense from P&L is a Provision, NOT cash, so it must
-        // not be added on top of the advance-tax delta (would double-count).
-        // If no PY, fall back to the P&L provision as a rough proxy.
-        let taxesPaid = 0;
-        if (hasPY) {
-            const advCY = (bsnCY.n14_stLoans?.advanceTax || 0);
-            const advPY = (bsnPY.n14_stLoans?.advanceTax || 0);
-            const advDelta = advCY - advPY;   // +ve = paid more taxes in advance this year
-            taxesPaid = Math.max(0, advDelta);
-        } else {
-            taxesPaid = plnCY.n24_tax?.currentTax || 0;
-        }
-        const netA = cashFromOps - taxesPaid;
+        // NOTE: totalWCChange & cashFromOps computed below AFTER capex is known,
+        // because the cap-creditor reclassification depends on whether capex > 0.
 
         // === B. INVESTING ACTIVITIES ===
         let capex = 0;
@@ -2670,10 +2656,39 @@ window.AccountingEngine = {
             capex = Math.max(0, (ppeCY - ppePY) + depreciation);
         }
 
-        // Capital advances / equity / FD flows — all PY-dependent; zero out if no PY.
+        // Capital advances — PY-dependent; zero out if no PY.
         const capAdvOutflow  = hasPY ? (invCY.capitalAdv.total - invPY.capitalAdv.total) : 0;
-        // Capex total = PPE additions + capital advance increase − capital creditor increase (goods bought on credit)
-        const capexTotal     = capex + capAdvOutflow - capCredDelta;
+
+        // Capex total = PPE additions + capital-advance increase − capital-creditor increase.
+        // EDGE CASE: if capex == 0 (no PPE movement), a machinery creditor delta alone
+        // doesn't make sense as "goods bought on credit" — it's likely a mis-classified
+        // ledger. Skip the reclassification so it stays in wcPayables where it was.
+        if (capex === 0 && capAdvOutflow === 0) {
+            wcPayables = wcPayablesBefore;
+            capCredDelta = 0;
+        }
+        const capexTotal = capex + capAdvOutflow - capCredDelta;
+
+        // Now finalise Operating totals (depend on wcPayables which may have been restored).
+        const totalWCChange = wcReceivables + wcStLoans + wcOtherCA + wcInventories +
+                              wcPayables + wcStBorrowings + wcStProvisions + wcOtherCL;
+        const cashFromOps = profitBeforeWC + totalWCChange;
+
+        // Taxes paid — actual cash outflow.
+        // Cash tax paid = movement in (Advance Tax + TDS receivable) when PY is present.
+        // The accrual "Current Tax" expense from P&L is a Provision, NOT cash, so it must
+        // not be added on top of the advance-tax delta (would double-count).
+        // If no PY, fall back to the P&L provision as a rough proxy.
+        let taxesPaid = 0;
+        if (hasPY) {
+            const advCY = (bsnCY.n14_stLoans?.advanceTax || 0);
+            const advPY = (bsnPY.n14_stLoans?.advanceTax || 0);
+            const advDelta = advCY - advPY;
+            taxesPaid = Math.max(0, advDelta);
+        } else {
+            taxesPaid = plnCY.n24_tax?.currentTax || 0;
+        }
+        const netA = cashFromOps - taxesPaid;
         const equityInvFlow  = hasPY ? (invPY.equityInv.total - invCY.equityInv.total) : 0;
         const fdFlow         = hasPY ? (invPY.fixedDeposit.total - invCY.fixedDeposit.total) : 0;
 
