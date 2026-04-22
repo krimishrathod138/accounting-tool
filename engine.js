@@ -1403,41 +1403,41 @@ window.AccountingEngine = {
 
     /**
      * Load a demo company's Trial Balance for quick preview / training.
-     * All numbers are fictional — no real client data.
+     * Numbers chosen so the TB balances exactly (Dr = Cr); company name is generic.
      */
     loadSorichData() {
         this.clearAllData();
         const demoLedgers = [
             // Revenue & Direct Costs
-            { "name": "Revenue from Operations",                   "group": "Revenue",              "openingBalance": -500000000.0 },
-            { "name": "Cost of Raw Material consumed",             "group": "Direct Expenses",      "openingBalance":  400000000.0 },
-            { "name": "Changes in inventories of Finished Goods.", "group": "Direct Expenses",      "openingBalance":  -15000000.0 },
+            { "name": "Revenue from Operations",                   "group": "Revenue",              "openingBalance": -501380280.0 },
+            { "name": "Cost of Raw Material consumed",             "group": "Direct Expenses",      "openingBalance":  401104224.0 },
+            { "name": "Changes in inventories of Finished Goods.", "group": "Direct Expenses",      "openingBalance":  -15041408.4 },
 
             // Indirect Expenses
-            { "name": "Employee Benefit Expenses",  "group": "Indirect Expenses",   "openingBalance":  21000000.0 },
-            { "name": "Other Expenses",             "group": "Indirect Expenses",   "openingBalance":  20000000.0 },
-            { "name": "Finance Costs (Interest)",   "group": "Indirect Expenses",   "openingBalance":  11500000.0 },
-            { "name": "Depreciation & Amortization","group": "Indirect Expenses",   "openingBalance":   2750000.0 },
-            { "name": "Tax Expenses",               "group": "Indirect Expenses",   "openingBalance":  18000000.0 },
+            { "name": "Employee Benefit Expenses",  "group": "Indirect Expenses",   "openingBalance":  21057971.76 },
+            { "name": "Other Expenses",             "group": "Indirect Expenses",   "openingBalance":  20055211.20 },
+            { "name": "Finance Costs (Interest)",   "group": "Indirect Expenses",   "openingBalance":  11600000.00 },
+            { "name": "Depreciation & Amortization","group": "Indirect Expenses",   "openingBalance":   2750000.00 },
+            { "name": "Tax Expenses",               "group": "Indirect Expenses",   "openingBalance":  17956284.43 },
 
             // Liabilities
-            { "name": "Share Capital",                           "group": "Sources Of Fund",       "openingBalance": -150000000.0 },
-            { "name": "Reserves and surplus",                    "group": "Sources Of Fund",       "openingBalance": -188000000.0 },
-            { "name": "Share Application money pending allotment","group": "Sources Of Fund",      "openingBalance":   -9400000.0 },
-            { "name": "Long term borrowings",                    "group": "Long Term Borrowings",  "openingBalance":   -3750000.0 },
-            { "name": "Deferred tax liability",                  "group": "Long Term Borrowings",  "openingBalance":    -525000.0 },
-            { "name": "Short term borrowings",                   "group": "Current Libilities",    "openingBalance":  -38750000.0 },
-            { "name": "Trade Payables",                          "group": "Current Libilities",    "openingBalance":  -56500000.0 },
-            { "name": "Other Current Liabilities",               "group": "Current Libilities",    "openingBalance":    4100000.0 },
+            { "name": "Share Capital",                            "group": "Sources Of Fund",       "openingBalance": -152712830.00 },
+            { "name": "Reserves and surplus",                     "group": "Sources Of Fund",       "openingBalance": -173576379.85 },
+            { "name": "Share Application money pending allotment","group": "Sources Of Fund",       "openingBalance":   -9400000.00 },
+            { "name": "Long term borrowings",                     "group": "Long Term Borrowings",  "openingBalance":   -3732704.86 },
+            { "name": "Deferred tax liability",                   "group": "Long Term Borrowings",  "openingBalance":    -526368.00 },
+            { "name": "Short term borrowings",                    "group": "Current Libilities",    "openingBalance":  -38753360.57 },
+            { "name": "Trade Payables",                           "group": "Current Libilities",    "openingBalance":  -56637343.68 },
+            { "name": "Other Current Liabilities",                "group": "Current Libilities",    "openingBalance":    4095121.58 },
 
             // Assets
-            { "name": "Fixed Assets (Net)",             "group": "Non Current Assets",   "openingBalance":   56300000.0 },
-            { "name": "Non-current Investments",        "group": "Non Current Assets",   "openingBalance":   57000000.0 },
-            { "name": "Inventories",                    "group": "Current Assets",       "openingBalance":  218000000.0 },
-            { "name": "Trade Receivables",              "group": "Current Assets",       "openingBalance":  113000000.0 },
-            { "name": "Cash And Cash Equivalents",      "group": "Current Assets",       "openingBalance":   10400000.0 },
-            { "name": "Short term loans and advances",  "group": "Current Assets",       "openingBalance":   13575000.0 },
-            { "name": "Other current assets",           "group": "Current Assets",       "openingBalance":    5000000.0 }
+            { "name": "Fixed Assets (Net)",             "group": "Non Current Assets",   "openingBalance":   56290871.58 },
+            { "name": "Non-current Investments",        "group": "Non Current Assets",   "openingBalance":   56914477.25 },
+            { "name": "Inventories",                    "group": "Current Assets",       "openingBalance":  217973092.00 },
+            { "name": "Trade Receivables",              "group": "Current Assets",       "openingBalance":  113043403.24 },
+            { "name": "Cash And Cash Equivalents",      "group": "Current Assets",       "openingBalance":   10382888.25 },
+            { "name": "Short term loans and advances",  "group": "Current Assets",       "openingBalance":   13560411.07 },
+            { "name": "Other current assets",           "group": "Current Assets",       "openingBalance":    4976719.00 }
         ];
 
         localStorage.setItem('LEDGERS', JSON.stringify(demoLedgers));
