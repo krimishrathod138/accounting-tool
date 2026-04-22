@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>N1 — Notes 1-2: General Information &amp; Accounting Policies</title>
+<link rel="stylesheet" href="style.css">
+<style>
+body{font-family:Arial,sans-serif;background:#f4f4f4;margin:0;padding:0 0 90px;}
+.notes-wrap{background:#fff;max-width:950px;margin:16px auto;padding:30px 40px;border:1px solid #c0c8d3;box-shadow:0 2px 10px rgba(0,0,0,.07);font-family:Calibri,'Segoe UI',Arial,sans-serif;}
+.note-header{margin-bottom:14px;border-bottom:2px solid #000;padding-bottom:6px;}
+.note-header .co-name{font-size:14px;font-weight:700;}
+.note-header .co-title{font-size:12px;font-weight:700;}
+.note-header .co-date{font-size:10.5px;display:flex;justify-content:space-between;margin-top:4px;}
+.note-header .co-date .right{font-style:italic;color:#444;}
+
+.note-block{margin-top:20px;}
+.note-heading{display:flex;align-items:baseline;gap:12px;font-size:13px;font-weight:700;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid #bbb;}
+.note-heading .num{min-width:30px;}
+
+.note-body{font-size:11.5px;line-height:1.55;color:#000;text-align:justify;}
+.note-body p{margin:0 0 10px;}
+.note-body h4{font-size:12px;font-weight:700;margin:14px 0 5px;}
+.note-body ul{margin:4px 0 10px 24px;padding:0;}
+.note-body li{margin:2px 0;}
+
+.toolbar-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
+.btn-primary{background:#234a7b;color:#fff;border:none;padding:7px 16px;border-radius:3px;cursor:pointer;font-size:12px;font-weight:600;}
+.btn-save{background:#006400;color:#fff;border:none;padding:7px 16px;border-radius:3px;cursor:pointer;font-size:12px;font-weight:600;}
+button:hover:not(.tab){filter:brightness(1.1);}
+
+#statusBar{max-width:950px;margin:14px auto;padding:8px 12px;font-size:13px;font-weight:600;border-radius:3px;}
+.status-success{background:#d4edda;color:#155724;border:1px solid #c3e6cb;}
+.status-normal{background:#e2e3e5;color:#41464b;border:1px solid #d6d8db;}
+
+.edit-area textarea{width:100%;padding:10px 12px;border:1px solid #999;border-radius:3px;font-family:Calibri,Arial,sans-serif;font-size:11.5px;line-height:1.5;box-sizing:border-box;resize:vertical;}
+.edit-area textarea:focus{outline:none;border-color:#ffcc00;background:#fffef3;box-shadow:0 0 0 2px rgba(255,204,0,.4);}
+.edit-label{font-size:11.5px;font-weight:700;margin-top:10px;margin-bottom:4px;display:block;}
+
+.view-mode .edit-area{display:none;}
+.edit-mode .display-mode{display:none;}
+
+@media print{
+  body{background:#fff;padding:0;}
+  .toolbar-row, .side-panel, .modal-backdrop, .bottom-tabs, #statusBar{display:none !important;}
+  .notes-wrap{box-shadow:none;border:none;padding:0;margin:0;}
+  @page{margin:1.5cm 2cm;size:A4 portrait;}
+}
+</style>
+</head>
+<body>
+<script src="engine.js"></script>
+
+<div id="statusBar" class="status-normal">Loading...</div>
+
+<div class="notes-wrap view-mode" id="notesWrap">
+  <div class="toolbar-row">
+    <div style="font-weight:700;color:#14345a;">N1 — Notes 1 &amp; 2: General Information and Accounting Policies</div>
+    <div style="display:flex;gap:8px;">
+      <button type="button" class="btn-primary" id="editBtn" onclick="toggleEdit()">✎ Edit</button>
+      <button type="button" class="btn-primary" id="tplGaapBtn" onclick="loadTemplate('gaap')">Load Indian GAAP Template</button>
+      <button type="button" class="btn-primary" id="tplIndAsBtn" onclick="loadTemplate('indas')">Load Ind AS Template</button>
+      <button type="button" class="btn-save" id="saveBtn" onclick="saveAll()">💾 Save</button>
+      <button type="button" class="btn-primary" onclick="window.print()">🖨 Print</button>
+    </div>
+  </div>
+
+  <!-- Page header (auto from company details) -->
+  <div class="note-header">
+    <div class="co-name" id="coName">Company Name</div>
+    <div class="co-title">Notes to the Financial Statements</div>
+    <div class="co-date">
+      <span id="cyLabel">Year ended March 31, 2024</span>
+      <span class="right" id="roundLabel">All amounts in INR, unless otherwise stated</span>
+    </div>
+  </div>
+
+  <!-- NOTE 1: General Information -->
+  <div class="note-block">
+    <div class="note-heading"><span class="num">1.</span><span>General Information</span></div>
+    <div class="note-body display-mode" id="n1GenView"></div>
+    <div class="edit-area">
+      <label class="edit-label">General Information (company name, nature, registered office, CIN, etc.)</label>
+      <textarea id="n1GenText" rows="6"></textarea>
+    </div>
+  </div>
+
+  <!-- NOTE 2: Significant Accounting Policies -->
+  <div class="note-block">
+    <div class="note-heading"><span class="num">2.</span><span>Significant Accounting Policies</span></div>
+    <div class="note-body display-mode" id="n1PolView"></div>
+    <div class="edit-area">
+      <label class="edit-label">Significant Accounting Policies (multi-heading, full text)</label>
+      <textarea id="n1PolText" rows="30"></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM TABS -->
+<div class="bottom-tabs">
+  <a href="dashboard.html" class="tab">HOME</a>
+  <a href="bd.html" class="tab">BD</a>
+  <a href="tb.html" class="tab">TB</a>
+  <a href="ae.html" class="tab">AE</a>
+  <a href="balance.html" class="tab">BS</a>
+  <a href="pl.html" class="tab">PL</a>
+  <a href="cf.html" class="tab">CF</a>
+  <a href="n1.html" class="tab active">N1</a>
+  <a href="n2.html" class="tab">N2</a>
+  <a href="n3.html" class="tab">N3</a>
+  <a href="n4.html" class="tab">N4</a>
+  <a href="n5.html" class="tab">N5</a>
+  <a href="n6.html" class="tab">N6</a>
+  <a href="n7.html" class="tab">N7</a>
+    <a href="tx.html" class="tab">TX</a>
+  <a href="audit-report.html" class="tab">AR</a>
+    <a href="fs-package.html" class="tab">FS</a>
+    <button type="button" class="tab plus">+</button>
+</div>
+
+<script>
+const status = document.getElementById('statusBar');
+
+const TPL_GAAP = {
+  gen: `{{COMPANY}} (the 'Company') is a Private Limited Company, domiciled in India with its registered office located at {{ADDRESS}}.`,
+  pol: `Basis of Preparation of Financial Statements
+The Financial Statements of the Company have been prepared and presented in accordance with the Generally Accepted Accounting Principles in India ('Indian GAAP'). It comprises the Accounting Standards notified u/s 133 read with section 469 of the Companies Act, 2013. The accounting policies have been framed, keeping in view the fundamental accounting assumptions of Going Concern, Consistency and Accrual, and also the basic considerations of Prudence, Substance over form, and Materiality. Based on the nature of products and the time between acquisition of assets and their realisation in cash and cash equivalents, the Company has ascertained its operating cycle as 12 months for the purpose of current or non-current classification of assets and liabilities. These financial statements have been prepared on historical cost basis except certain items like Financial Leases and Defined Benefit Plans are measured at fair value.
+
+Use of Estimates
+The preparation of financial statements requires the management to make certain estimates and assumptions that affect the amounts reported in the financial statements and notes thereto. The management believes that these estimates and assumptions are reasonable and prudent but the actual results may differ from them. They are reviewed on an on-going basis and any revision to accounting estimates is recognised prospectively in current and future periods. Accounting estimates and assumptions that have a significant effect on the amounts reported in the financial statements include:
+ i) Net Realisable value of items of Inventories
+ ii) Useful life and Residual value of Property, Plant and Equipment and Intangible Assets
+ iii) Defined Benefit obligations
+ iv) Deferred Tax asset or liability
+ v) Provisions for Trade Receivables
+ vi) Other Provisions and Contingencies
+
+Property, Plant and Equipments
+Property, plant and equipments are initially recognised at cost. Cost includes purchase price, taxes and duties and other costs directly attributable to bringing the asset to the working condition for its intended use. However, cost excludes duties and taxes wherever credit of such duties and taxes is availed. It is thereafter carried at its cost less accumulated depreciation and accumulated impairment losses, if any.
+Depreciation is provided under the 'Straight-line' method as per the useful life specified in Schedule II to the Companies Act, 2013. Residual values of assets are measured at not more than 5% of their original cost. For assets added or disposed during the year, depreciation is charged on pro-rata basis from the date of addition or till the date of disposal.
+
+Impairment of Assets
+At the end of each reporting period, the carrying amounts of Property, Plant & Equipment, and Intangible assets are tested for impairment. An Impairment loss is recognised for an amount by which the asset's carrying amount exceeds its recoverable amount. The recoverable amount is the higher of an asset's fair value less costs of disposal and Value-in-use.
+
+Inventories
+Inventories are valued at the lower of cost and net realisable value. Cost is computed on a 'First In First Out' basis.
+Cost of raw materials and stores and spares includes cost of purchase and other costs incurred in bringing the inventories to their present location and condition. The aforesaid items are valued at net realisable value if the finished products in which they are to be incorporated are expected to be sold at a loss. Cost of finished goods and work-in-progress include all costs of purchases, conversion costs and other costs incurred in bringing the inventories to their present location and condition. The net realisable value is the estimated selling price in the ordinary course of business less the estimated costs of completion and estimated costs necessary to make the sale.
+
+Trade Receivables and Loans and Advances
+Trade Receivables and Loans and Advances are presented after making adequate provision for any shortfall in their recovery. The provision and any subsequent recovery is recognised in the Profit and Loss statement. Bad debts are written off when they are identified.
+
+Cash and cash equivalents
+All highly liquid financial instruments, which are readily convertible into known amount of cash that are subject to an insignificant risk of change in value and having original maturities of three months or less from the date of purchase are considered to be cash equivalents.
+
+Provisions and Contingent Liabilities
+A Provision is recognised when the entity has a present obligation as a result of past event and it is probable that an outflow of resources will be required and a reliable estimate can be made of the amount of the obligation. Provisions are measured at the best estimate of the expenditure required to settle the present obligation at the Balance Sheet date.
+Contingent liabilities are disclosed when there is a possible obligation arising from past events, the existence of which will be confirmed only by the occurrence or non-occurrence of one or more uncertain future events not wholly within the control of the entity or a present obligation that arises from past events where it is either not probable that an outflow of resources will be required to settle the obligation or a reliable estimate of the amount cannot be made. A Contingent asset is neither recognised nor disclosed.
+
+Revenue Recognition
+Revenue from sale of goods, if any, is recognised when control and significant risks and rewards of ownership of the products being sold is transferred to the customer. This is generally fulfilled at the time of dispatch, delivery or upon formal customer acceptance depending on customer terms. Revenue is measured on the basis of contracted price, after deduction of any trade discounts, volume rebates and any taxes or duties collected on behalf of the government such as goods and services tax, etc.
+Income from services rendered is recognised as and when the services are performed. Interest income is recognised on an accrual basis using the time proportion method. Dividend income is recognised when the right to receive the income is established.
+
+Employee Benefits
+Short-term employee benefits (salaries, wages, incentives) are charged to the statement of profit and loss in the period in which the employee renders the related service.
+Defined Contribution Plans: Payments to provident and pension funds are charged as an expense as and when services are rendered.
+Defined Benefit Plans: Gratuity and similar obligations are determined based on independent actuarial valuation using the projected unit credit method, with actuarial gains and losses recognised in the statement of profit and loss.
+Other Long-term Employee Benefits include leave encashment, recognised on actuarial basis.
+
+Taxes on Income
+Current Tax is the estimated amount of tax payable on taxable income for the year, using enacted or substantively enacted tax rates. MAT is accounted as current tax when book-profit taxes exceed normal-provision taxes; MAT credit entitlement is recognised only when recoverability is reasonably certain.
+Deferred Tax is recognised for timing differences using the balance-sheet approach. Deferred tax assets are recognised only to the extent that future taxable profits will be available.
+
+Earnings per Share
+Basic EPS = Net profit attributable to equity shareholders ÷ Weighted-average number of equity shares outstanding.
+Diluted EPS additionally considers the weighted-average number of shares that could have been issued on conversion of all dilutive potential equity shares.`
+};
+
+const TPL_IND_AS = {
+  gen: `{{COMPANY}} (the 'Company') is a Private Limited Company, domiciled in India with its registered office located at {{ADDRESS}}.`,
+  pol: `Basis of Preparation (Ind AS)
+These financial statements have been prepared in accordance with Indian Accounting Standards (Ind AS) notified under the Companies (Indian Accounting Standards) Rules, 2015 and subsequent amendments, read with Section 133 of the Companies Act, 2013. They are prepared on historical cost basis except where Ind AS requires fair value measurement.
+
+Revenue Recognition (Ind AS 115)
+Revenue is recognised upon transfer of control of promised goods or services to customers, in an amount reflecting the consideration to which the Company expects to be entitled.
+
+Property, Plant and Equipment (Ind AS 16)
+PPE is measured at cost less accumulated depreciation and impairment. Depreciation is provided on the Straight-Line method over the useful life specified in Schedule II to the Companies Act, 2013.
+
+Impairment (Ind AS 36)
+Assets are reviewed at each reporting date for indicators of impairment. If any exist, the recoverable amount is estimated and impairment loss recognised if carrying amount exceeds it.
+
+Financial Instruments (Ind AS 109)
+Financial assets and liabilities are initially recognised at fair value. Subsequent measurement depends on classification (amortised cost, FVTOCI, or FVTPL).
+
+Inventories (Ind AS 2)
+Measured at lower of cost and net realisable value. Cost is determined using weighted-average method.
+
+Leases (Ind AS 116)
+Right-of-use assets and lease liabilities are recognised at commencement date of the lease. Short-term and low-value leases are expensed on a straight-line basis.
+
+Employee Benefits (Ind AS 19)
+Short-term benefits are recognised on an undiscounted basis. Post-employment defined-benefit obligations (gratuity, etc.) are measured using the projected unit credit method.
+
+Income Taxes (Ind AS 12)
+Current tax is the expected tax payable on taxable income for the year. Deferred tax is recognised using the balance-sheet approach for temporary differences between carrying amounts and tax bases.
+
+Provisions and Contingencies (Ind AS 37)
+Provisions are recognised when the Company has a present obligation (legal or constructive), outflow is probable, and the amount can be reliably estimated. Contingent liabilities are disclosed but not recognised.
+
+Earnings Per Share (Ind AS 33)
+Basic and diluted EPS are computed as per Ind AS 33.`
+};
+
+function loadCompany(){
+  const bd = AccountingEngine.getCompanyDetails();
+  const fy = bd.financialYear || '1-Apr-23 to 31-Mar-24';
+  const endDate = (fy.split(' to ')[1] || 'March 31, 2024').trim();
+  const meta = JSON.parse(localStorage.getItem('FS_META') || '{}');
+  const coName = meta.companyName || bd.name || 'Company Name';
+  document.getElementById('coName').textContent = coName;
+  document.getElementById('cyLabel').textContent = 'Year ended ' + endDate;
+
+  const rounding = localStorage.getItem('ROUNDING') || 'unrounded';
+  document.getElementById('roundLabel').textContent =
+    rounding === 'rounded' ? 'All amounts in INR Thousands, unless otherwise stated' :
+    rounding === 'lakhs' ? 'All amounts in INR Lakhs, unless otherwise stated' :
+    'All amounts in INR Unrounded, unless otherwise stated';
+  return { coName, endDate, meta, bd };
+}
+
+function renderView(){
+  const gen = localStorage.getItem('N1_GEN') || '';
+  const pol = localStorage.getItem('N1') || localStorage.getItem('N1_POL') || '';
+  const toHtml = s => (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .split('\n\n').map(para => '<p>' + para.replace(/\n/g,'<br>') + '</p>').join('');
+  document.getElementById('n1GenView').innerHTML = gen ? toHtml(gen) : '<p style="color:#999;font-style:italic;">No General Information entered yet. Click Edit to add, or load a template.</p>';
+  document.getElementById('n1PolView').innerHTML = pol ? toHtml(pol) : '<p style="color:#999;font-style:italic;">No Accounting Policies entered yet. Click "Load Indian GAAP Template" or add your own.</p>';
+  document.getElementById('n1GenText').value = gen;
+  document.getElementById('n1PolText').value = pol;
+}
+
+function toggleEdit(){
+  const wrap = document.getElementById('notesWrap');
+  const isEditing = wrap.classList.contains('edit-mode');
+  if (isEditing) {
+    saveAll();
+    wrap.classList.remove('edit-mode');
+    wrap.classList.add('view-mode');
+    document.getElementById('editBtn').textContent = '✎ Edit';
+  } else {
+    wrap.classList.remove('view-mode');
+    wrap.classList.add('edit-mode');
+    document.getElementById('editBtn').textContent = '👁 View';
+  }
+}
+
+function loadTemplate(kind){
+  const t = kind === 'indas' ? TPL_IND_AS : TPL_GAAP;
+  const co = loadCompany();
+  const meta = co.meta;
+  const gen = t.gen.replace('{{COMPANY}}', co.coName).replace('{{ADDRESS}}', meta.address || '__________');
+  if ((document.getElementById('n1GenText').value || '').trim() && !confirm('Replace existing General Information with template?')) {
+    // skip gen
+  } else {
+    document.getElementById('n1GenText').value = gen;
+  }
+  if ((document.getElementById('n1PolText').value || '').trim() && !confirm('Replace existing Accounting Policies with template?')) return;
+  document.getElementById('n1PolText').value = t.pol;
+  saveAll();
+  status.textContent = (kind === 'indas' ? 'Ind AS' : 'Indian GAAP') + ' template loaded and saved.';
+  status.className = 'status-success';
+}
+
+function saveAll(){
+  const gen = document.getElementById('n1GenText').value.trim();
+  const pol = document.getElementById('n1PolText').value.trim();
+  localStorage.setItem('N1_GEN', gen);
+  localStorage.setItem('N1', pol);       // keep same key used by financials.html
+  localStorage.setItem('N1_POL', pol);   // mirror
+  if (typeof AccountingEngine !== 'undefined') AccountingEngine.persistToElectron();
+  renderView();
+  status.textContent = '✓ Notes 1-2 saved successfully.';
+  status.className = 'status-success';
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  loadCompany();
+  renderView();
+  status.textContent = 'N1 loaded. Click Edit to modify.';
+  status.className = 'status-success';
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    const wrap = document.getElementById('notesWrap');
+    if (wrap.classList.contains('edit-mode')) toggleEdit();
+    else window.history.back();
+  }
+  if ((e.key.toLowerCase() === 's') && (e.ctrlKey || e.altKey)) { e.preventDefault(); saveAll(); }
+});
+</script>
+</body>
+</html>

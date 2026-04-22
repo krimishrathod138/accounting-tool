@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TX — Tax Computation + Balance Sheet + P&amp;L</title>
+<link rel="stylesheet" href="style.css">
+<style>
+body{font-family:Arial,sans-serif;background:#f4f4f4;margin:0;padding:0 0 90px;}
+.tx-wrap{background:#fff;max-width:1100px;margin:16px auto;padding:28px 36px;border:1px solid #c0c8d3;box-shadow:0 2px 10px rgba(0,0,0,.07);font-family:Calibri,'Segoe UI',Arial,sans-serif;}
+.tx-header{margin-bottom:14px;border-bottom:2px solid #000;padding-bottom:6px;}
+.tx-header .co-name{font-size:14px;font-weight:700;}
+.tx-header .co-title{font-size:12px;font-weight:700;}
+.tx-header .co-date{font-size:10.5px;display:flex;justify-content:space-between;margin-top:4px;}
+.tx-header .co-date .right{font-style:italic;color:#444;}
+
+.tx-block{margin-top:22px;}
+
+.tx-table{width:100%;border-collapse:collapse;font-size:11px;border:1px solid #000;margin-bottom:8px;font-variant-numeric:tabular-nums;table-layout:fixed;}
+.tx-table td{border:1px solid #000;padding:3px 6px;vertical-align:middle;line-height:1.35;}
+.tx-table .amt, .tx-table .tot{text-align:right;width:115px;white-space:nowrap;}
+.tx-table .tot{font-weight:600;}
+.tx-table .hdr-title{background:#e9ecef;font-weight:700;padding:7px 8px;font-size:12px;letter-spacing:.3px;}
+.tx-table .hdr-col{background:#e9ecef;font-weight:700;text-align:center;padding:7px 4px;font-size:10.5px;}
+.tx-table .c1{width:26px;font-weight:700;padding-left:4px;text-align:left;}
+.tx-table .c2{width:26px;font-weight:700;padding-left:4px;text-align:left;}
+.tx-table .c3{width:26px;padding-left:4px;text-align:left;}
+.tx-table .c4{width:26px;padding-left:4px;text-align:left;}
+.tx-table .desc{padding-left:4px;}
+.tx-table .desc-b{font-weight:700;padding-left:4px;}
+.tx-table .desc-u{font-weight:700;text-decoration:underline;padding-left:4px;}
+.tx-table tr.grp td{font-weight:700;}
+.tx-table tr.spacer td{height:6px;background:#fafafa;padding:0;}
+.tx-table tr.grand td{background:#e9ecef;font-weight:700;font-size:12px;padding:7px 6px;}
+.tx-table input[type="number"]{width:100%;text-align:right;border:none;background:#fffef3;padding:2px 4px;font:inherit;box-sizing:border-box;font-variant-numeric:tabular-nums;}
+.tx-table input[type="number"]:focus{outline:2px solid #ffcc00;background:#fff;}
+.tx-table td.auto{background:#eef5ff;}
+.tx-table td.ro{background:#f5f5f5;}
+
+.toolbar-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
+.btn-primary{background:#234a7b;color:#fff;border:none;padding:6px 14px;border-radius:3px;cursor:pointer;font-size:12px;font-weight:600;}
+.btn-save{background:#006400;color:#fff;border:none;padding:6px 14px;border-radius:3px;cursor:pointer;font-size:12px;font-weight:600;}
+button:hover:not(.tab){filter:brightness(1.1);}
+
+#statusBar{max-width:1100px;margin:14px auto;padding:8px 12px;font-size:13px;font-weight:600;border-radius:3px;}
+.status-success{background:#d4edda;color:#155724;border:1px solid #c3e6cb;}
+.status-normal{background:#e2e3e5;color:#41464b;border:1px solid #d6d8db;}
+
+.section-title{font-size:13px;font-weight:700;color:#14345a;margin:20px 0 10px;padding-bottom:4px;border-bottom:1px solid #999;}
+
+@media print{
+  body{background:#fff;padding:0;}
+  .toolbar-row, .bottom-tabs, #statusBar{display:none !important;}
+  .tx-wrap{box-shadow:none;border:none;padding:0;margin:0;}
+  .page-break{page-break-before:always;}
+  @page{margin:1.2cm 1.4cm;size:A4 portrait;}
+}
+</style>
+</head>
+<body>
+<script src="engine.js"></script>
+
+<div id="statusBar" class="status-normal">Loading...</div>
+
+<div class="tx-wrap">
+  <div class="toolbar-row">
+    <div style="font-weight:700;color:#14345a;">TX — Income Tax Computation &middot; Balance Sheet &middot; Profit &amp; Loss (ITR Format)</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button type="button" class="btn-primary" onclick="render()">⟳ Refresh from TB</button>
+      <button type="button" class="btn-save" onclick="saveAll()">💾 Save</button>
+      <button type="button" class="btn-primary" onclick="window.print()">🖨 Print</button>
+    </div>
+  </div>
+
+  <div class="tx-header">
+    <div class="co-name" id="coName">Company Name</div>
+    <div class="co-title">Income Tax Return — Computation, Balance Sheet and Profit &amp; Loss</div>
+    <div class="co-date">
+      <span id="cyLabel">Year ended March 31, 2024</span>
+      <span class="right" id="roundLabel">All amounts in INR, unless otherwise stated</span>
+    </div>
+  </div>
+
+  <div id="sectionContainer"></div>
+</div>
+
+<div class="bottom-tabs">
+  <a href="dashboard.html" class="tab">HOME</a>
+  <a href="bd.html" class="tab">BD</a>
+  <a href="tb.html" class="tab">TB</a>
+  <a href="ae.html" class="tab">AE</a>
+  <a href="balance.html" class="tab">BS</a>
+  <a href="pl.html" class="tab">PL</a>
+  <a href="cf.html" class="tab">CF</a>
+  <a href="n1.html" class="tab">N1</a>
+  <a href="n2.html" class="tab">N2</a>
+  <a href="n3.html" class="tab">N3</a>
+  <a href="n4.html" class="tab">N4</a>
+  <a href="n5.html" class="tab">N5</a>
+  <a href="n6.html" class="tab">N6</a>
+  <a href="n7.html" class="tab">N7</a>
+    <a href="tx.html" class="tab active">TX</a>
+  <a href="audit-report.html" class="tab">AR</a>
+    <a href="fs-package.html" class="tab">FS</a>
+    <button type="button" class="tab plus">+</button>
+</div>
+
+<script>
+const status = document.getElementById('statusBar');
+let CY_YR = '2024', PY_YR = '2023';
+
+function fmt(v){if(v===undefined||v===null||isNaN(v)||v===0)return'-';const a=Math.abs(v);const s=a.toLocaleString('en-IN',{minimumFractionDigits:0,maximumFractionDigits:0});return v<0?'('+s+')':s;}
+function n(v){return Number(v)||0;}
+
+function loadCompany(){
+  const bd = AccountingEngine.getCompanyDetails();
+  const fy = bd.financialYear || '1-Apr-23 to 31-Mar-24';
+  const endDate = (fy.split(' to ')[1] || 'March 31, 2024').trim();
+  const m = endDate.match(/\d{4}/);
+  CY_YR = m ? m[0] : '2024';
+  PY_YR = String(Number(CY_YR) - 1);
+  const meta = JSON.parse(localStorage.getItem('FS_META') || '{}');
+  document.getElementById('coName').textContent = meta.companyName || bd.name || 'Company Name';
+  document.getElementById('cyLabel').textContent = 'Year ended ' + endDate;
+  const rounding = localStorage.getItem('ROUNDING') || 'unrounded';
+  document.getElementById('roundLabel').textContent =
+    rounding === 'rounded' ? 'All amounts in INR Thousands, unless otherwise stated' :
+    rounding === 'lakhs' ? 'All amounts in INR Lakhs, unless otherwise stated' :
+    'All amounts in INR Unrounded, unless otherwise stated';
+}
+
+function row(c1,c2,c3,c4,desc,amtHtml,totHtml,cls){
+  const cn=cls?` class="${cls}"`:'';
+  let dCls='desc';
+  if(cls==='grp')dCls='desc-b';
+  else if(cls==='und')dCls='desc-u';
+  return `<tr${cn}><td class="c1">${c1||''}</td><td class="c2">${c2||''}</td><td class="c3">${c3||''}</td><td class="c4">${c4||''}</td><td class="${dCls}">${desc||''}</td>${amtHtml}${totHtml}</tr>`;
+}
+function inputAmt(id,val){return `<td class="amt"><input type="number" step="0.01" id="${id}" value="${val!==undefined&&val!==null&&val!==''?val:''}" placeholder="0"></td>`;}
+function autoAmt(v){return `<td class="amt auto">${fmt(v)}</td>`;}
+function emptyAmt(){return `<td class="amt ro"></td>`;}
+function roTot(v){return `<td class="tot ro">${fmt(v)}</td>`;}
+function autoTot(v){return `<td class="tot auto">${fmt(v)}</td>`;}
+function emptyTot(){return `<td class="tot ro"></td>`;}
+function spacer(){return `<tr class="spacer"><td colspan="7"></td></tr>`;}
+
+function render(){
+  loadCompany();
+  let d = {};
+  try { d = AccountingEngine.getScheduleIIIReport('CY') || {}; } catch(e) { console.error(e); }
+
+  const pbt = d.pl?.profitBeforeTax || 0;
+
+  // Saved user tax inputs
+  const u = JSON.parse(localStorage.getItem('TX_DATA') || '{}');
+  const g = (k, def) => u[k] !== undefined ? u[k] : def;
+
+  // Tax regime + auto-compute toggle
+  const autoMode = u.auto_mode !== 'false';  // default ON
+  const regime = u.regime || 'domestic_25';   // default 25% corporate
+
+  // Auto-compute tax based on regime
+  function computeTax(taxableIncome, reg){
+    taxableIncome = Math.max(0, Number(taxableIncome) || 0);
+    let basic = 0, rate = 0.25;
+    if (reg === 'domestic_22')      rate = 0.22;  // Section 115BAA (22% + 10% SC + 4% cess)
+    else if (reg === 'domestic_15') rate = 0.15;  // Section 115BAB (new manufacturing)
+    else if (reg === 'domestic_30') rate = 0.30;  // Standard corporate 30%
+    else if (reg === 'domestic_25') rate = 0.25;  // Turnover ≤ 400 Cr (25%)
+    else if (reg === 'llp_30')      rate = 0.30;  // LLP/Partnership
+    basic = taxableIncome * rate;
+
+    // Surcharge (income-based for companies)
+    let surRate = 0;
+    if (reg === 'domestic_22') surRate = 0.10;
+    else if (reg === 'domestic_15') surRate = 0.10;
+    else if (taxableIncome > 100000000) surRate = 0.12;       // > ₹10 Cr
+    else if (taxableIncome > 10000000) surRate = 0.07;        // > ₹1 Cr
+    const surcharge = basic * surRate;
+
+    // Health & Education Cess = 4% on (Basic + Surcharge)
+    const cess = (basic + surcharge) * 0.04;
+
+    return { basic, surcharge, cess, total: basic + surcharge + cess, rate, surRate };
+  }
+
+  function computeMAT(bookProfit){
+    bookProfit = Math.max(0, Number(bookProfit) || 0);
+    const matRate = 0.15;              // 115JB: 15%
+    const basic = bookProfit * matRate;
+    let surRate = 0;
+    if (bookProfit > 100000000) surRate = 0.12;
+    else if (bookProfit > 10000000) surRate = 0.07;
+    const surcharge = basic * surRate;
+    const cess = (basic + surcharge) * 0.04;
+    return { basic, surcharge, cess, total: basic + surcharge + cess };
+  }
+
+  let html = '';
+
+  /* ══════ SECTION 1: COMPUTATION OF INCOME TAX ══════ */
+  const totalTI = pbt + n(g('tx_cg')) + n(g('tx_os')) - n(g('tx_via'));
+  const autoNT = computeTax(totalTI, regime);
+  const autoMAT = computeMAT(pbt);
+
+  // Use auto-computed or manual values based on toggle
+  const tx_basic = autoMode ? Math.round(autoNT.basic) : n(g('tx_basic'));
+  const tx_sur = autoMode ? Math.round(autoNT.surcharge) : n(g('tx_sur'));
+  const tx_cess = autoMode ? Math.round(autoNT.cess) : n(g('tx_cess'));
+  const mat_basic = autoMode ? Math.round(autoMAT.basic) : n(g('mat_basic'));
+  const mat_sur = autoMode ? Math.round(autoMAT.surcharge) : n(g('mat_sur'));
+  const mat_cess = autoMode ? Math.round(autoMAT.cess) : n(g('mat_cess'));
+
+  // Auto 234 interest
+  const autoInt = autoMode ? AccountingEngine.computeInterest234({
+    taxOwed: tx_basic + tx_sur + tx_cess,
+    tdsPaid: n(g('tx_tds')),
+    advancePaid: n(g('tx_adv')),
+    dueDate: g('tx_dueDate', '2024-10-31'),
+    filedDate: g('tx_filedDate', ''),
+    fyStart: g('tx_fyStart', '2024-04-01')
+  }) : { int234A: n(g('tx_int234A')), int234B: n(g('tx_int234B')), int234C: n(g('tx_int234C')), totalInterest: n(g('tx_int')) };
+  const tx_int = autoMode ? autoInt.totalInterest : n(g('tx_int'));
+  const mat_int = n(g('mat_int'));
+
+  const totalNT = tx_basic + tx_sur + tx_cess + tx_int;
+  const totalMAT = mat_basic + mat_sur + mat_cess + mat_int;
+
+  html += `<div class="tx-block">
+    <div class="section-title">Computation of Income Tax</div>
+
+    <div style="background:#f0f7ff;border:1px solid #cbd9ef;padding:10px 12px;margin-bottom:8px;border-radius:4px;font-size:11px;">
+      <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;">
+        <input type="checkbox" id="auto_mode" ${autoMode ? 'checked' : ''} onchange="toggleAutoMode()"> <b>Auto-compute tax from slabs</b>
+      </label>
+      <span style="margin-left:16px;">Regime:
+        <select id="regime_sel" onchange="changeRegime(this.value)" style="padding:3px 6px;font-size:11px;${autoMode ? '' : 'opacity:.5;pointer-events:none;'}">
+          <option value="domestic_25" ${regime==='domestic_25'?'selected':''}>Domestic Co. — 25% (turnover ≤ ₹400 Cr)</option>
+          <option value="domestic_30" ${regime==='domestic_30'?'selected':''}>Domestic Co. — 30% (turnover > ₹400 Cr)</option>
+          <option value="domestic_22" ${regime==='domestic_22'?'selected':''}>115BAA — 22% + 10% SC + 4% cess</option>
+          <option value="domestic_15" ${regime==='domestic_15'?'selected':''}>115BAB — 15% (new manufacturing)</option>
+          <option value="llp_30" ${regime==='llp_30'?'selected':''}>LLP / Partnership — 30%</option>
+        </select>
+      </span>
+      ${autoMode ? `<span style="margin-left:16px;color:#2e7d32;">Basic rate: <b>${(autoNT.rate*100).toFixed(0)}%</b> | Surcharge: <b>${(autoNT.surRate*100).toFixed(0)}%</b> | Cess: <b>4%</b></span>` : '<span style="margin-left:16px;color:#c00;">Manual mode — enter values below</span>'}
+    </div>
+
+    <div style="background:#fafafa;border:1px solid #ddd;padding:10px 12px;margin-bottom:8px;border-radius:4px;font-size:11px;">
+      <div style="font-weight:700;margin-bottom:6px;color:#14345a;">Interest u/s 234A / B / C — inputs for auto computation</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));gap:8px;">
+        <label>TDS / TCS paid (₹)<input type="number" id="tx_tds" value="${u.tx_tds||''}" placeholder="0" style="width:100%;padding:3px;border:1px solid #aaa;"></label>
+        <label>Advance Tax paid (₹)<input type="number" id="tx_adv" value="${u.tx_adv||''}" placeholder="0" style="width:100%;padding:3px;border:1px solid #aaa;"></label>
+        <label>FY start date<input type="date" id="tx_fyStart" value="${u.tx_fyStart||'2024-04-01'}" style="width:100%;padding:3px;border:1px solid #aaa;"></label>
+        <label>Return due date<input type="date" id="tx_dueDate" value="${u.tx_dueDate||'2024-10-31'}" style="width:100%;padding:3px;border:1px solid #aaa;"></label>
+        <label>Actual filed date<input type="date" id="tx_filedDate" value="${u.tx_filedDate||''}" style="width:100%;padding:3px;border:1px solid #aaa;"></label>
+      </div>
+      ${autoMode ? `<div style="margin-top:8px;color:#2e7d32;font-weight:600;">
+        234A: ${autoInt.int234A.toLocaleString('en-IN')} &nbsp;·&nbsp;
+        234B: ${autoInt.int234B.toLocaleString('en-IN')} &nbsp;·&nbsp;
+        234C: ${autoInt.int234C.toLocaleString('en-IN')} &nbsp;·&nbsp;
+        <b>Total: ${autoInt.totalInterest.toLocaleString('en-IN')}</b>
+      </div>` : ''}
+    </div>
+
+    <table class="tx-table"><thead>
+      <tr><td class="hdr-title" colspan="5">COMPUTATION OF INCOME TAX</td>
+          <td class="hdr-col">Year ended<br>March 31, ${CY_YR}</td>
+          <td class="hdr-col">Totals</td></tr>
+    </thead><tbody>`;
+  html += spacer();
+  html += row('','','','','<u><b>NORMAL TAX</b></u>','<td class="amt ro"></td>','<td class="tot ro"></td>','und');
+  html += row('','','','','<b>Business or Profession</b>','<td class="amt ro"></td>','<td class="tot ro"></td>','grp');
+  html += row('','','','','Profit or Loss before tax',autoAmt(pbt),emptyTot(),'');
+  html += row('','','','','',emptyAmt(),roTot(pbt),'');
+  html += row('','','','','<b>Capital Gains</b>',inputAmt('tx_cg',g('tx_cg','')),roTot(n(g('tx_cg'))),'grp');
+  html += row('','','','','<b>Other Sources</b>',inputAmt('tx_os',g('tx_os','')),roTot(n(g('tx_os'))),'grp');
+  html += row('','','','','<b>Chapter VIA Deductions</b>',inputAmt('tx_via',g('tx_via','')),roTot(-n(g('tx_via'))),'grp');
+  html += row('','','','','<b>Total Taxable Income</b>',emptyAmt(),roTot(totalTI),'grp');
+  if (autoMode) {
+    html += row('','','','','Basic Tax (auto)',autoAmt(tx_basic),emptyTot(),'');
+    html += row('','','','','Surcharge (auto)',autoAmt(tx_sur),emptyTot(),'');
+    html += row('','','','','Health &amp; Education Cess (auto)',autoAmt(tx_cess),emptyTot(),'');
+    html += row('','','','','Interest u/s 234A, 234B, 234C (auto)',autoAmt(tx_int),emptyTot(),'');
+  } else {
+    html += row('','','','','Basic Tax',inputAmt('tx_basic',g('tx_basic','')),emptyTot(),'');
+    html += row('','','','','Surcharge',inputAmt('tx_sur',g('tx_sur','')),emptyTot(),'');
+    html += row('','','','','Health &amp; Education Cess',inputAmt('tx_cess',g('tx_cess','')),emptyTot(),'');
+    html += row('','','','','Interest u/s 234A, 234B, 234C',inputAmt('tx_int',g('tx_int','')),emptyTot(),'');
+  }
+  html += row('','','','','<b>Total TAX</b>',emptyAmt(),roTot(totalNT),'grp');
+  html += spacer();
+  html += row('','','','','<u><b>MINIMUM ALTERNATE TAX (Sec 115JB @ 15%)</b></u>','<td class="amt ro"></td>','<td class="tot ro"></td>','und');
+  html += row('','','','','Profit or Loss before tax',autoAmt(pbt),emptyTot(),'');
+  html += row('','','','','<b>Total Book Profits</b>',emptyAmt(),roTot(pbt),'grp');
+  if (autoMode) {
+    html += row('','','','','Basic Tax (auto @ 15%)',autoAmt(mat_basic),emptyTot(),'');
+    html += row('','','','','Surcharge (auto)',autoAmt(mat_sur),emptyTot(),'');
+    html += row('','','','','Health &amp; Education Cess (auto)',autoAmt(mat_cess),emptyTot(),'');
+  } else {
+    html += row('','','','','Basic Tax',inputAmt('mat_basic',g('mat_basic','')),emptyTot(),'');
+    html += row('','','','','Surcharge',inputAmt('mat_sur',g('mat_sur','')),emptyTot(),'');
+    html += row('','','','','Health &amp; Education Cess',inputAmt('mat_cess',g('mat_cess','')),emptyTot(),'');
+  }
+  html += row('','','','','Interest u/s 234A, 234B, 234C',inputAmt('mat_int',g('mat_int','')),emptyTot(),'');
+  html += row('','','','','<b>Total MAT</b>',emptyAmt(),roTot(totalMAT),'grp');
+  html += row('','','','','<b>Final TAX (higher of Normal / MAT)</b>',emptyAmt(),roTot(Math.max(totalNT, totalMAT)),'grand');
+  html += `</tbody></table></div>`;
+
+  /* ══════ SECTION 2: BALANCE SHEET (ITR Format) ══════ */
+  const shareCapital = d.bsNotes?.n3_shareCapital?.total || 0;
+  const reserves = (d.bsNotes?.n4_reserves?.total || 0) + (d.pl?.profitForYear || 0);
+  const ltBorrowings = d.bsNotes?.n5_ltBorrowings?.total || 0;
+  const stBorrowings = d.bsNotes?.n6_stBorrowings?.total || 0;
+  const tradePayables = d.bsNotes?.n7_tradePayables?.total || 0;
+  const otherCL = d.bsNotes?.n8_otherCL?.total || 0;
+  const ppe = d.bsNotes?.n9_ppe?.total || 0;
+  const dta = d.bsNotes?.n10_dta?.total || 0;
+  const inventories = d.bsNotes?.n11_inventories?.total || 0;
+  const tradeRec = d.bsNotes?.n12_tradeReceivables?.total || 0;
+  const cashBank = d.bsNotes?.n13_cashBank?.total || 0;
+  const stLoans = d.bsNotes?.n14_stLoans?.total || 0;
+  const otherCA = d.bsNotes?.n15_otherCA?.total || 0;
+  const totalSHF = shareCapital + reserves;
+  const totalNCL = ltBorrowings;
+  const totalCL = stBorrowings + tradePayables + otherCL;
+  const totalNCA = ppe + dta;
+  const totalCA = inventories + tradeRec + cashBank + stLoans + otherCA;
+  const totalEL = totalSHF + totalNCL + totalCL;
+  const totalAssets = totalNCA + totalCA;
+
+  html += `<div class="tx-block page-break">
+    <div class="section-title">Balance Sheet</div>
+    <table class="tx-table"><thead>
+      <tr><td class="hdr-title" colspan="5">BALANCE SHEET</td>
+          <td class="hdr-col">Year ended<br>March 31, ${CY_YR}</td>
+          <td class="hdr-col">Totals</td></tr>
+    </thead><tbody>`;
+  html += row('I','','','','<b>EQUITY AND LIABILITIES</b>',emptyAmt(),emptyTot(),'grp');
+  html += row('','1','','','<b>Shareholder\'s fund</b>',emptyAmt(),emptyTot(),'grp');
+  html += row('','','A','','<u>Share capital</u>',emptyAmt(),emptyTot(),'und');
+  html += row('','','','i','Authorised',inputAmt('bs_authSC',g('bs_authSC','')),emptyTot(),'');
+  html += row('','','','ii','Issued, Subscribed and Paid up',autoAmt(shareCapital),emptyTot(),'');
+  html += row('','','','iii','Subscribed but not fully paid',inputAmt('bs_nfp',g('bs_nfp','')),emptyTot(),'');
+  html += row('','','','iv','Total',emptyAmt(),roTot(shareCapital),'');
+  html += row('','','B','','<u>Reserve and Surplus</u>',emptyAmt(),emptyTot(),'und');
+  html += row('','','','viii','Surplus i.e. Balance in Profit and loss account',autoAmt(reserves),emptyTot(),'');
+  html += row('','','','ix','Total (Debit balance to be shown as negative figure)',emptyAmt(),roTot(reserves),'');
+  html += row('','','D','','<u><b>Total Shareholder\'s fund</b></u>',emptyAmt(),roTot(totalSHF),'und');
+  html += row('','3','','','<b>Non-current liabilities</b>',emptyAmt(),emptyTot(),'grp');
+  html += row('','','A','','<u>Long-term borrowings</u>',emptyAmt(),emptyTot(),'und');
+  html += row('','','','','&nbsp;&nbsp;&nbsp;&nbsp;2&nbsp;&nbsp;From others',autoAmt(ltBorrowings),emptyTot(),'');
+  html += row('','','','ix','<b>Total Long term borrowings</b>',emptyAmt(),roTot(ltBorrowings),'grp');
+  html += row('','','E','','<u><b>Total Non-current liabilities</b></u>',emptyAmt(),roTot(totalNCL),'und');
+  html += row('','4','','','<b>Current liabilities</b>',emptyAmt(),emptyTot(),'grp');
+  html += row('','','A','','<u>Short-term borrowings</u>',autoAmt(stBorrowings),roTot(stBorrowings),'und');
+  html += row('','','B','','<u>Trade payables</u>',autoAmt(tradePayables),roTot(tradePayables),'und');
+  html += row('','','C','','<u>Other current liabilities</u>',autoAmt(otherCL),roTot(otherCL),'und');
+  html += row('','','E','','<u><b>Total Current liabilities</b></u>',emptyAmt(),roTot(totalCL),'und');
+  html += row('','','','','<b>Total Equity and liabilities</b>',emptyAmt(),roTot(totalEL),'grand');
+  html += spacer();
+  html += row('II','','','','<b>ASSETS</b>',emptyAmt(),emptyTot(),'grp');
+  html += row('','1','','','<b>Non-current assets</b>',emptyAmt(),emptyTot(),'grp');
+  html += row('','','A','','<u>Fixed assets</u>',autoAmt(ppe),roTot(ppe),'und');
+  html += row('','','C','','<u>Deferred tax assets (Net)</u>',autoAmt(dta),roTot(dta),'und');
+  html += row('','','F','','<u><b>Total Non-current assets</b></u>',emptyAmt(),roTot(totalNCA),'und');
+  html += row('','2','','','<b>Current assets</b>',emptyAmt(),emptyTot(),'grp');
+  html += row('','','B','','<u>Inventories</u>',autoAmt(inventories),roTot(inventories),'und');
+  html += row('','','C','','<u>Trade receivables</u>',autoAmt(tradeRec),roTot(tradeRec),'und');
+  html += row('','','D','','<u>Cash and cash equivalents</u>',autoAmt(cashBank),roTot(cashBank),'und');
+  html += row('','','E','','<u>Short-term loans and advances</u>',autoAmt(stLoans),roTot(stLoans),'und');
+  html += row('','','F','','<u>Other current assets</u>',autoAmt(otherCA),roTot(otherCA),'und');
+  html += row('','','G','','<u><b>Total Current assets</b></u>',emptyAmt(),roTot(totalCA),'und');
+  html += row('','','','','<b>Total Assets</b>',emptyAmt(),roTot(totalAssets),'grand');
+  html += `</tbody></table></div>`;
+
+  /* ══════ SECTION 3: P&L (ITR Format) ══════ */
+  const revenue = d.plNotes?.n16_revenue?.total || 0;
+  const otherIncome = d.plNotes?.n17_otherIncome?.total || 0;
+  const materials = d.plNotes?.n18_materials?.total || 0;
+  const invChange = d.plNotes?.n19_inventoryChange?.total || 0;
+  const employee = d.plNotes?.n20_employee?.total || 0;
+  const finance = d.plNotes?.n21_finance?.total || 0;
+  const depn = d.plNotes?.n22_depreciation?.total || 0;
+  const otherExp = d.plNotes?.n23_otherExpenses?.total || 0;
+  const totalIncome = revenue + otherIncome;
+  const totalExpenses = materials + invChange + employee + finance + depn + otherExp;
+
+  html += `<div class="tx-block page-break">
+    <div class="section-title">Profit &amp; Loss Account</div>
+    <table class="tx-table"><thead>
+      <tr><td class="hdr-title" colspan="5">PROFIT &amp; LOSS ACCOUNT</td>
+          <td class="hdr-col">Year ended<br>March 31, ${CY_YR}</td>
+          <td class="hdr-col">Totals</td></tr>
+    </thead><tbody>`;
+  html += row('','','','','<b>INCOME</b>',emptyAmt(),emptyTot(),'grp');
+  html += row('','','','','&nbsp;&nbsp;Revenue from Operations (Note 16)',autoAmt(revenue),emptyTot(),'');
+  html += row('','','','','&nbsp;&nbsp;Other Income (Note 17)',autoAmt(otherIncome),emptyTot(),'');
+  html += row('','','','','<b>Total Income</b>',emptyAmt(),roTot(totalIncome),'grp');
+  html += spacer();
+  html += row('','','','','<b>EXPENSES</b>',emptyAmt(),emptyTot(),'grp');
+  html += row('','','','','&nbsp;&nbsp;Cost of Materials Consumed (Note 18)',autoAmt(materials),emptyTot(),'');
+  html += row('','','','','&nbsp;&nbsp;Changes in Inventories (Note 20)',autoAmt(invChange),emptyTot(),'');
+  html += row('','','','','&nbsp;&nbsp;Employee Benefits (Note 21)',autoAmt(employee),emptyTot(),'');
+  html += row('','','','','&nbsp;&nbsp;Finance Costs (Note 22)',autoAmt(finance),emptyTot(),'');
+  html += row('','','','','&nbsp;&nbsp;Depreciation &amp; Amortisation (Note 23)',autoAmt(depn),emptyTot(),'');
+  html += row('','','','','&nbsp;&nbsp;Other Expenses (Note 24)',autoAmt(otherExp),emptyTot(),'');
+  html += row('','','','','<b>Total Expenses</b>',emptyAmt(),roTot(totalExpenses),'grp');
+  html += spacer();
+  html += row('','','','','<b>Profit before Tax</b>',emptyAmt(),roTot(pbt),'grand');
+  html += `</tbody></table></div>`;
+
+  document.getElementById('sectionContainer').innerHTML = html;
+  document.querySelectorAll('#sectionContainer input').forEach(inp => {
+    inp.addEventListener('change', () => saveAll(true));
+  });
+}
+
+function saveAll(silent){
+  const u = JSON.parse(localStorage.getItem('TX_DATA') || '{}');
+  document.querySelectorAll('#sectionContainer input').forEach(el => {
+    if (el.id && el.type !== 'checkbox') u[el.id] = el.value;
+  });
+  localStorage.setItem('TX_DATA', JSON.stringify(u));
+  AccountingEngine.persistToElectron && AccountingEngine.persistToElectron();
+  if (!silent) { status.textContent = '✓ TX saved.'; status.className = 'status-success'; }
+  render();
+}
+
+function toggleAutoMode(){
+  const el = document.getElementById('auto_mode');
+  const u = JSON.parse(localStorage.getItem('TX_DATA') || '{}');
+  u.auto_mode = el.checked ? 'true' : 'false';
+  localStorage.setItem('TX_DATA', JSON.stringify(u));
+  render();
+}
+
+function changeRegime(val){
+  const u = JSON.parse(localStorage.getItem('TX_DATA') || '{}');
+  u.regime = val;
+  localStorage.setItem('TX_DATA', JSON.stringify(u));
+  render();
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  render();
+  status.textContent = 'TX loaded. Fill tax amounts and review auto-calculated BS/P&L.';
+  status.className = 'status-success';
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') window.history.back();
+  if ((e.key.toLowerCase() === 's') && (e.ctrlKey || e.altKey)) { e.preventDefault(); saveAll(); }
+});
+</script>
+</body>
+</html>

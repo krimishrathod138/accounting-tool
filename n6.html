@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>N6 — Notes 25 to 27: EPS, Ratios, Disclosures</title>
+<link rel="stylesheet" href="style.css">
+<style>
+body{font-family:Arial,sans-serif;background:#f4f4f4;margin:0;padding:0 0 90px;}
+.notes-wrap{background:#fff;max-width:1150px;margin:16px auto;padding:28px 36px;border:1px solid #c0c8d3;box-shadow:0 2px 10px rgba(0,0,0,.07);font-family:Calibri,'Segoe UI',Arial,sans-serif;}
+.note-header{margin-bottom:14px;border-bottom:2px solid #000;padding-bottom:6px;}
+.note-header .co-name{font-size:14px;font-weight:700;}
+.note-header .co-title{font-size:12px;font-weight:700;}
+.note-header .co-date{font-size:10.5px;display:flex;justify-content:space-between;margin-top:4px;}
+.note-header .co-date .right{font-style:italic;color:#444;}
+
+.note-block{margin-top:22px;}
+.note-heading{display:flex;align-items:baseline;gap:10px;font-size:13px;font-weight:700;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid #bbb;}
+.note-heading .num{min-width:28px;}
+
+.n-table{width:100%;border-collapse:collapse;font-size:11px;border:1px solid #000;margin-bottom:8px;font-variant-numeric:tabular-nums;}
+.n-table td, .n-table th{border:1px solid #000;padding:4px 8px;vertical-align:middle;}
+.n-table th{background:#e9ecef;font-weight:700;text-align:center;}
+.n-table th.left{text-align:left;}
+.n-table .amt{text-align:right;width:130px;white-space:nowrap;}
+.n-table .py{color:#555;}
+.n-table .var{text-align:right;width:100px;}
+.n-table tr.sub td{font-weight:700;background:#fafafa;}
+.n-table tr.tot td{font-weight:700;border-top:1px solid #000;border-bottom:2px double #000;}
+.n-table input[type="number"], .n-table input[type="text"]{width:100%;text-align:right;border:none;background:#fffef3;padding:2px 4px;font:inherit;box-sizing:border-box;font-variant-numeric:tabular-nums;}
+.n-table input[type="text"]{text-align:left;}
+.n-table input:focus{outline:2px solid #ffcc00;background:#fff;}
+.n-table td.auto{background:#eef5ff;}
+.n-table td.ro{background:#f5f5f5;}
+
+.note-text{font-size:11px;line-height:1.6;text-align:justify;margin:6px 0 10px;}
+.note-text textarea{width:100%;min-height:80px;padding:8px;border:1px solid #999;border-radius:3px;font-family:Calibri,Arial,sans-serif;font-size:11px;line-height:1.5;resize:vertical;}
+.note-text textarea:focus{outline:none;border-color:#ffcc00;background:#fffef3;}
+
+.signature-block{margin-top:40px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:30px;font-size:11px;}
+.signature-block .sig-col{border-top:1px solid #000;padding-top:6px;}
+.signature-block .sig-col input{width:100%;border:none;background:#fffef3;padding:3px;font:inherit;}
+.signature-block .sig-col input:focus{outline:2px solid #ffcc00;background:#fff;}
+
+.toolbar-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
+.btn-primary{background:#234a7b;color:#fff;border:none;padding:6px 14px;border-radius:3px;cursor:pointer;font-size:12px;font-weight:600;}
+.btn-save{background:#006400;color:#fff;border:none;padding:6px 14px;border-radius:3px;cursor:pointer;font-size:12px;font-weight:600;}
+button:hover:not(.tab){filter:brightness(1.1);}
+
+#statusBar{max-width:1150px;margin:14px auto;padding:8px 12px;font-size:13px;font-weight:600;border-radius:3px;}
+.status-success{background:#d4edda;color:#155724;border:1px solid #c3e6cb;}
+.status-normal{background:#e2e3e5;color:#41464b;border:1px solid #d6d8db;}
+
+@media print{
+  body{background:#fff;padding:0;}
+  .toolbar-row, .bottom-tabs, #statusBar{display:none !important;}
+  .notes-wrap{box-shadow:none;border:none;padding:0;margin:0;}
+  @page{margin:1.2cm 1.4cm;size:A4 portrait;}
+}
+</style>
+</head>
+<body>
+<script src="engine.js"></script>
+
+<div id="statusBar" class="status-normal">Loading...</div>
+
+<div class="notes-wrap">
+  <div class="toolbar-row">
+    <div style="font-weight:700;color:#14345a;">N6 — Notes 25 to 27: EPS · Analytical Ratios · Other Disclosures</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button type="button" class="btn-primary" onclick="render()">⟳ Refresh from TB</button>
+      <button type="button" class="btn-save" onclick="saveAll()">💾 Save</button>
+      <button type="button" class="btn-primary" onclick="window.print()">🖨 Print</button>
+    </div>
+  </div>
+
+  <div class="note-header">
+    <div class="co-name" id="coName">Company Name</div>
+    <div class="co-title">Notes to the Financial Statements</div>
+    <div class="co-date">
+      <span id="cyLabel">Year ended March 31, 2024</span>
+      <span class="right" id="roundLabel">All amounts in INR, unless otherwise stated</span>
+    </div>
+  </div>
+
+  <div id="noteContainer"></div>
+</div>
+
+<div class="bottom-tabs">
+  <a href="dashboard.html" class="tab">HOME</a>
+  <a href="bd.html" class="tab">BD</a>
+  <a href="tb.html" class="tab">TB</a>
+  <a href="ae.html" class="tab">AE</a>
+  <a href="balance.html" class="tab">BS</a>
+  <a href="pl.html" class="tab">PL</a>
+  <a href="cf.html" class="tab">CF</a>
+  <a href="n1.html" class="tab">N1</a>
+  <a href="n2.html" class="tab">N2</a>
+  <a href="n3.html" class="tab">N3</a>
+  <a href="n4.html" class="tab">N4</a>
+  <a href="n5.html" class="tab">N5</a>
+  <a href="n6.html" class="tab active">N6</a>
+  <a href="n7.html" class="tab">N7</a>
+    <a href="tx.html" class="tab">TX</a>
+  <a href="audit-report.html" class="tab">AR</a>
+    <a href="fs-package.html" class="tab">FS</a>
+    <button type="button" class="tab plus">+</button>
+</div>
+
+<script>
+const status = document.getElementById('statusBar');
+let CY_YR = '2024', PY_YR = '2023';
+
+function fmt(v){if(v===undefined||v===null||isNaN(v)||v===0)return'-';const a=Math.abs(v);const s=a.toLocaleString('en-IN',{minimumFractionDigits:0,maximumFractionDigits:0});return v<0?'('+s+')':s;}
+function n(v){return Number(v)||0;}
+function fmt2(v){if(v===undefined||v===null||isNaN(v))return'-';return Number(v).toFixed(2);}
+function fmtPct(v){if(v===undefined||v===null||isNaN(v))return'-';return (Number(v)*100).toFixed(2)+'%';}
+
+function loadCompany(){
+  const bd = AccountingEngine.getCompanyDetails();
+  const fy = bd.financialYear || '1-Apr-23 to 31-Mar-24';
+  const endDate = (fy.split(' to ')[1] || 'March 31, 2024').trim();
+  const m = endDate.match(/\d{4}/);
+  CY_YR = m ? m[0] : '2024';
+  PY_YR = String(Number(CY_YR) - 1);
+  const meta = JSON.parse(localStorage.getItem('FS_META') || '{}');
+  document.getElementById('coName').textContent = meta.companyName || bd.name || 'Company Name';
+  document.getElementById('cyLabel').textContent = 'Year ended ' + endDate;
+  const rounding = localStorage.getItem('ROUNDING') || 'unrounded';
+  document.getElementById('roundLabel').textContent =
+    rounding === 'rounded' ? 'All amounts in INR Thousands, unless otherwise stated' :
+    rounding === 'lakhs' ? 'All amounts in INR Lakhs, unless otherwise stated' :
+    'All amounts in INR Unrounded, unless otherwise stated';
+  return { meta };
+}
+
+function render(){
+  const { meta } = loadCompany();
+  let cy = {}, py = {};
+  try { cy = AccountingEngine.getScheduleIIIReport('CY') || {}; } catch(e) {}
+  try { if (AccountingEngine.hasPYData && AccountingEngine.hasPYData()) py = AccountingEngine.getScheduleIIIReport('PY') || {}; } catch(e) {}
+
+  const patCY = cy.pl?.profitForYear || 0;
+  const patPY = py.pl?.profitForYear || 0;
+
+  const u = JSON.parse(localStorage.getItem('N6_DATA') || '{}');
+  const g = (k, d) => u[k] !== undefined ? u[k] : d;
+  const fv = Number(meta.faceValue) || 10;
+
+  // Auto-pull shares from N2 (issued shares) if available, else FS_META
+  let autoShares = Number(meta.weightedAvgShares || 0);
+  try {
+    const n2 = JSON.parse(localStorage.getItem('N2_DATA') || '{}');
+    if (n2.n3_issuedShares) autoShares = Number(n2.n3_issuedShares) || autoShares;
+  } catch(e) {}
+  const shares = autoShares;
+
+  let h = '';
+
+  /* ════════ NOTE 25: EPS ════════ */
+  h += `<div class="note-block">
+    <div class="note-heading"><span class="num">25.</span><span>Earnings Per Share</span></div>
+    <table class="n-table">
+      <thead><tr><th class="left">Particulars</th><th>Year ended<br>March 31, ${CY_YR}</th><th class="py">Year ended<br>March 31, ${PY_YR}</th></tr></thead>
+      <tbody>
+        <tr><td>Earnings attributable to equity shareholders (a)</td>
+          <td class="amt auto">${fmt(patCY)}</td>
+          <td class="amt py auto">${fmt(patPY)}</td></tr>
+        <tr><td>Weighted average number of equity shares for calculating basic earning per share (b)</td>
+          <td class="amt"><input type="number" id="n25_shares" value="${g('n25_shares', shares)||''}" placeholder="${shares}"></td>
+          <td class="amt py"><input type="number" id="n25_sharesPY" value="${g('n25_sharesPY', shares)||''}" placeholder="${shares}"></td></tr>
+        <tr class="tot"><td>Basic Earning per share (a/b) in Rs. (Face value of Rs. ${fv} each)</td>
+          <td class="amt">${fmt2(n(g('n25_shares', shares)) > 0 ? patCY / n(g('n25_shares', shares)) : 0)}</td>
+          <td class="amt py">${fmt2(n(g('n25_sharesPY', shares)) > 0 ? patPY / n(g('n25_sharesPY', shares)) : 0)}</td></tr>
+        <tr><td>Earnings attributable to potential equity shares (c)</td>
+          <td class="amt"><input type="number" id="n25_potential" value="${g('n25_potential','')}"></td>
+          <td class="amt py"><input type="number" id="n25_potentialPY" value="${g('n25_potentialPY','')}"></td></tr>
+        <tr><td>Earnings attributable to equity and potential equity shareholders (d = a + c)</td>
+          <td class="amt auto">${fmt(patCY + n(g('n25_potential')))}</td>
+          <td class="amt py auto">${fmt(patPY + n(g('n25_potentialPY')))}</td></tr>
+        <tr><td>Weighted average number of potential equity shares (e)</td>
+          <td class="amt"><input type="number" id="n25_potShares" value="${g('n25_potShares','')}"></td>
+          <td class="amt py"><input type="number" id="n25_potSharesPY" value="${g('n25_potSharesPY','')}"></td></tr>
+        <tr><td>Weighted average equity shares for calculating diluted earning per share (f = b + e)</td>
+          <td class="amt auto">${fmt(n(g('n25_shares', shares)) + n(g('n25_potShares')))}</td>
+          <td class="amt py auto">${fmt(n(g('n25_sharesPY', shares)) + n(g('n25_potSharesPY')))}</td></tr>
+        <tr class="tot"><td>Diluted Earning per share (d/f) in Rs. (Face value of Rs. ${fv} each)</td>
+          <td class="amt">${fmt2(n(g('n25_shares', shares)) + n(g('n25_potShares')) > 0 ? (patCY + n(g('n25_potential'))) / (n(g('n25_shares', shares)) + n(g('n25_potShares'))) : 0)}</td>
+          <td class="amt py">${fmt2(n(g('n25_sharesPY', shares)) + n(g('n25_potSharesPY')) > 0 ? (patPY + n(g('n25_potentialPY'))) / (n(g('n25_sharesPY', shares)) + n(g('n25_potSharesPY'))) : 0)}</td></tr>
+      </tbody>
+    </table>
+  </div>`;
+
+  /* ════════ RAW MATERIAL / STOCK DISCLOSURE (between N25 and N26) ════════ */
+  const rmItems = JSON.parse(u.rm_items || '[]');
+  const stItems = JSON.parse(u.st_items || '[]');
+  const fgItems = JSON.parse(u.fg_items || '[]');
+  while (rmItems.length < 3) rmItems.push({ name:'', cy:0, py:0 });
+  while (stItems.length < 3) stItems.push({ name:'', opCY:0, opPY:0, purCY:0, purPY:0, salCY:0, salPY:0, clCY:0, clPY:0 });
+  while (fgItems.length < 3) fgItems.push({ name:'', opCY:0, opPY:0, salCY:0, salPY:0, clCY:0, clPY:0 });
+
+  h += `<div class="note-block">
+    <div class="note-heading"><span class="num">&nbsp;</span><span>Purchase, Sale and Consumption of Major Items of Raw Material, Goods and Services</span></div>
+
+    <div style="font-size:11.5px;font-weight:700;text-decoration:underline;margin:12px 0 6px;">Raw Materials consumed during the period</div>
+    <table class="n-table">
+      <thead><tr><th class="left">Item of Raw Material</th><th>Year ended<br>March 31, ${CY_YR}</th><th class="py">Year ended<br>March 31, ${PY_YR}</th></tr></thead>
+      <tbody>`;
+  rmItems.forEach((it, i) => {
+    h += `<tr>
+      <td><input type="text" data-rm-idx="${i}" data-rm-f="name" value="${it.name||''}" style="text-align:left;"></td>
+      <td class="amt"><input type="number" data-rm-idx="${i}" data-rm-f="cy" value="${it.cy||''}"></td>
+      <td class="amt py"><input type="number" data-rm-idx="${i}" data-rm-f="py" value="${it.py||''}"></td>
+    </tr>`;
+  });
+  const rmTotalCY = rmItems.reduce((s,i) => s + Number(i.cy||0), 0);
+  const rmTotalPY = rmItems.reduce((s,i) => s + Number(i.py||0), 0);
+  h += `<tr class="tot"><td style="text-align:right;">Total</td>
+    <td class="amt">${fmt(rmTotalCY)}</td>
+    <td class="amt py">${fmt(rmTotalPY)}</td></tr>
+    </tbody></table>
+    <div><button type="button" class="btn-primary" onclick="addRMRow()" style="padding:3px 10px;font-size:11px;">+ Add Raw Material</button></div>
+
+    <div style="font-size:11.5px;font-weight:700;text-decoration:underline;margin:16px 0 6px;">Traded goods</div>
+    <table class="n-table">
+      <thead>
+        <tr><th class="left" rowspan="2">Item of Stock-in-trade</th>
+            <th colspan="2">Opening Inventory</th><th colspan="2">Purchases</th><th colspan="2">Sales</th><th colspan="2">Closing Inventory</th></tr>
+        <tr><th>CY ${CY_YR}</th><th class="py">PY ${PY_YR}</th>
+            <th>CY</th><th class="py">PY</th><th>CY</th><th class="py">PY</th><th>CY</th><th class="py">PY</th></tr>
+      </thead>
+      <tbody>`;
+  stItems.forEach((it, i) => {
+    h += `<tr>
+      <td><input type="text" data-st-idx="${i}" data-st-f="name" value="${it.name||''}" style="text-align:left;"></td>
+      <td class="amt"><input type="number" data-st-idx="${i}" data-st-f="opCY" value="${it.opCY||''}"></td>
+      <td class="amt py"><input type="number" data-st-idx="${i}" data-st-f="opPY" value="${it.opPY||''}"></td>
+      <td class="amt"><input type="number" data-st-idx="${i}" data-st-f="purCY" value="${it.purCY||''}"></td>
+      <td class="amt py"><input type="number" data-st-idx="${i}" data-st-f="purPY" value="${it.purPY||''}"></td>
+      <td class="amt"><input type="number" data-st-idx="${i}" data-st-f="salCY" value="${it.salCY||''}"></td>
+      <td class="amt py"><input type="number" data-st-idx="${i}" data-st-f="salPY" value="${it.salPY||''}"></td>
+      <td class="amt"><input type="number" data-st-idx="${i}" data-st-f="clCY" value="${it.clCY||''}"></td>
+      <td class="amt py"><input type="number" data-st-idx="${i}" data-st-f="clPY" value="${it.clPY||''}"></td>
+    </tr>`;
+  });
+  h += `</tbody></table>
+    <div><button type="button" class="btn-primary" onclick="addSTRow()" style="padding:3px 10px;font-size:11px;">+ Add Stock-in-trade</button></div>
+
+    <div style="font-size:11.5px;font-weight:700;text-decoration:underline;margin:16px 0 6px;">Manufactured goods</div>
+    <table class="n-table">
+      <thead>
+        <tr><th class="left" rowspan="2">Item of Finished goods</th>
+            <th colspan="2">Opening Inventory</th><th colspan="2">Sales</th><th colspan="2">Closing Inventory</th></tr>
+        <tr><th>CY ${CY_YR}</th><th class="py">PY ${PY_YR}</th>
+            <th>CY</th><th class="py">PY</th><th>CY</th><th class="py">PY</th></tr>
+      </thead>
+      <tbody>`;
+  fgItems.forEach((it, i) => {
+    h += `<tr>
+      <td><input type="text" data-fg-idx="${i}" data-fg-f="name" value="${it.name||''}" style="text-align:left;"></td>
+      <td class="amt"><input type="number" data-fg-idx="${i}" data-fg-f="opCY" value="${it.opCY||''}"></td>
+      <td class="amt py"><input type="number" data-fg-idx="${i}" data-fg-f="opPY" value="${it.opPY||''}"></td>
+      <td class="amt"><input type="number" data-fg-idx="${i}" data-fg-f="salCY" value="${it.salCY||''}"></td>
+      <td class="amt py"><input type="number" data-fg-idx="${i}" data-fg-f="salPY" value="${it.salPY||''}"></td>
+      <td class="amt"><input type="number" data-fg-idx="${i}" data-fg-f="clCY" value="${it.clCY||''}"></td>
+      <td class="amt py"><input type="number" data-fg-idx="${i}" data-fg-f="clPY" value="${it.clPY||''}"></td>
+    </tr>`;
+  });
+  h += `</tbody></table>
+    <div><button type="button" class="btn-primary" onclick="addFGRow()" style="padding:3px 10px;font-size:11px;">+ Add Finished Good</button></div>
+  </div>`;
+
+  /* ════════ NOTE 26: Analytical Ratios ════════ */
+  const currentAssetsCY = (cy.bs?.cAssets || 0);
+  const currentAssetsPY = (py.bs?.cAssets || 0);
+  const currentLiabCY = (cy.bs?.cLiabilities || 0);
+  const currentLiabPY = (py.bs?.cLiabilities || 0);
+  const ltBorrCY = (cy.bsNotes?.n5_ltBorrowings?.total || 0);
+  const ltBorrPY = (py.bsNotes?.n5_ltBorrowings?.total || 0);
+  const stBorrCY = (cy.bsNotes?.n6_stBorrowings?.total || 0);
+  const stBorrPY = (py.bsNotes?.n6_stBorrowings?.total || 0);
+  const equityCY = (cy.bs?.shareholdersFunds || 0);
+  const equityPY = (py.bs?.shareholdersFunds || 0);
+  const revenueCY = (cy.plNotes?.n16_revenue?.total || 0);
+  const revenuePY = (py.plNotes?.n16_revenue?.total || 0);
+  const invCY = (cy.bsNotes?.n11_inventories?.total || 0);
+  const invPY = (py.bsNotes?.n11_inventories?.total || 0);
+  const trCY = (cy.bsNotes?.n12_tradeReceivables?.total || 0);
+  const trPY = (py.bsNotes?.n12_tradeReceivables?.total || 0);
+  const tpCY = (cy.bsNotes?.n7_tradePayables?.total || 0);
+  const tpPY = (py.bsNotes?.n7_tradePayables?.total || 0);
+  const finCY = (cy.plNotes?.n21_finance?.total || 0);
+  const finPY = (py.plNotes?.n21_finance?.total || 0);
+  const depCY = (cy.plNotes?.n22_depreciation?.total || 0);
+  const depPY = (py.plNotes?.n22_depreciation?.total || 0);
+  const pbtCY = (cy.pl?.profitBeforeTax || 0);
+  const pbtPY = (py.pl?.profitBeforeTax || 0);
+
+  function div(a,b){if(!b)return 0;return a/b;}
+  function vr(cy,py){if(!py)return 0;return (cy-py)/Math.abs(py);}
+
+  const ratios = [
+    {name:'Current ratio (in times)', num:'Current assets', den:'Current liabilities', cy: div(currentAssetsCY, currentLiabCY), py: div(currentAssetsPY, currentLiabPY), type:'times'},
+    {name:'Debt - Equity ratio (in times)', num:'Long Term Borrowings + Short Term Borrowings', den:"Equity shareholders' funds", cy: div(ltBorrCY + stBorrCY, equityCY), py: div(ltBorrPY + stBorrPY, equityPY), type:'times'},
+    {name:'Debt Service coverage (in times)', num:'Earnings available for debt service', den:'Total debt service', cy: div(pbtCY + finCY + depCY, finCY), py: div(pbtPY + finPY + depPY, finPY), type:'times'},
+    {name:'Return on equity (in %)', num:'Profit after taxes - Preference Dividend', den:"Average equity shareholders' funds", cy: div(patCY, (equityCY + equityPY)/2 || equityCY), py: div(patPY, equityPY), type:'pct'},
+    {name:'Inventory Turnover (in times)', num:'Revenue from operations', den:'Average inventories', cy: div(revenueCY, (invCY + invPY)/2 || invCY), py: div(revenuePY, invPY), type:'times'},
+    {name:'Trade receivables turnover (in times)', num:'Revenue from operations', den:'Average trade receivables', cy: div(revenueCY, (trCY + trPY)/2 || trCY), py: div(revenuePY, trPY), type:'times'},
+    {name:'Trade payables turnover (in times)', num:'COGS + Other Expenses - Non Cash Expenditure', den:'Average trade payables', cy: div((cy.plNotes?.n18_materials?.total||0) + (cy.plNotes?.n23_otherExpenses?.total||0) - depCY, (tpCY + tpPY)/2 || tpCY), py: div((py.plNotes?.n18_materials?.total||0) + (py.plNotes?.n23_otherExpenses?.total||0) - depPY, tpPY), type:'times'},
+    {name:'Net capital turnover (in times)', num:'Revenue from operations', den:'Average of Current assets - Current liabilities', cy: div(revenueCY, ((currentAssetsCY - currentLiabCY) + (currentAssetsPY - currentLiabPY))/2 || (currentAssetsCY - currentLiabCY)), py: div(revenuePY, currentAssetsPY - currentLiabPY), type:'times'},
+    {name:'Net profit ratio (in %)', num:'Profit after taxes', den:'Revenue from operations', cy: div(patCY, revenueCY), py: div(patPY, revenuePY), type:'pct'},
+    {name:'Return on capital employed (in %)', num:'Profit before tax + Finance costs', den:'Average capital employed', cy: div(pbtCY + finCY, equityCY + ltBorrCY + stBorrCY), py: div(pbtPY + finPY, equityPY + ltBorrPY + stBorrPY), type:'pct'},
+    {name:'Return on investment (in %)', num:'Income from Investments', den:'Time weighted average Investments', cy: 0, py: 0, type:'pct'},
+  ];
+
+  h += `<div class="note-block">
+    <div class="note-heading"><span class="num">26.</span><span>Analytical Ratios</span></div>
+    <table class="n-table">
+      <thead><tr>
+        <th class="left">Ratio</th>
+        <th class="left">Numerator</th>
+        <th class="left">Denominator</th>
+        <th>Year ended<br>March 31, ${CY_YR}</th>
+        <th class="py">Year ended<br>March 31, ${PY_YR}</th>
+        <th>% Variance</th>
+      </tr></thead>
+      <tbody>`;
+  ratios.forEach(r => {
+    const fmtVal = r.type === 'pct' ? fmtPct : fmt2;
+    const variance = vr(r.cy, r.py);
+    h += `<tr>
+      <td>${r.name}</td>
+      <td>${r.num}</td>
+      <td>${r.den}</td>
+      <td class="amt">${fmtVal(r.cy)}</td>
+      <td class="amt py">${fmtVal(r.py)}</td>
+      <td class="var">${fmtPct(variance)}</td>
+    </tr>`;
+  });
+  h += `</tbody></table>
+    <div class="note-text" style="margin-top:8px;font-size:10.5px;">
+      <b>Earning available for debt service</b> = Profit for the year (before taxes) + Finance costs + Depreciation and Amortisation Expense<br>
+      <b>Total debt service</b> = Finance costs + Principal Repayments<br>
+      <b>Capital employed</b> = Shareholders' funds + Long Term Borrowings + Short Term Borrowings + Deferred Tax Liabilities (Net) - Intangible assets - Intangible Assets under development
+    </div>
+    <div style="margin-top:10px;">
+      <b style="font-size:11px;">Reasons for a material change or a change of 25% or more compared to the previous period:</b>
+      <textarea id="n26_reasons" style="width:100%;min-height:50px;margin-top:4px;padding:6px;border:1px solid #999;border-radius:3px;font-family:Calibri,Arial,sans-serif;font-size:11px;background:#fffef3;">${g('n26_reasons','')}</textarea>
+    </div>
+  </div>`;
+
+  /* ════════ NOTE 27: Other Disclosures ════════ */
+  h += `<div class="note-block">
+    <div class="note-heading"><span class="num">27.</span><span>Other Disclosures</span></div>
+    <div class="note-text">
+      <b>Disclosure requirements as notified by MCA pursuant to amended Schedule III:</b>
+      <ul style="margin:6px 0 0 24px;padding:0;">
+        <li>The Company has not traded or invested in Crypto currency or Virtual Currency during the financial year.</li>
+        <li>The Company does not have any Benami Property under Prohibition of Benami Property Transactions Act, 1988.</li>
+        <li>The Company has not been declared a wilful defaulter by any lender who has powers to declare a company as a wilful defaulter.</li>
+        <li>The Company has no Scheme of Arrangement approved by the competent authority specified under Section 230 to 237 of the Companies Act, 2013.</li>
+      </ul>
+      <p style="margin-top:10px;">Previous Period figures have been re-grouped / re-classified, wherever necessary, to make them comparable with Current Period's classification.</p>
+    </div>
+  </div>`;
+
+  /* Signature Block */
+  h += `<div class="note-block">
+    <div class="note-text">As per our report of even date attached</div>
+    <div class="signature-block">
+      <div class="sig-col">
+        <div style="font-weight:700;">For <input type="text" id="sig_caFirm" value="${g('sig_caFirm','')}" placeholder="CA Firm Name"></div>
+        <div>Chartered Accountants</div>
+        <div>Firm Regn No : <input type="text" id="sig_caReg" value="${g('sig_caReg','')}" style="width:50%;"></div>
+        <div style="margin-top:40px;font-weight:700;"><input type="text" id="sig_partner" value="${g('sig_partner','')}" placeholder="Partner Name"></div>
+        <div>Partner</div>
+        <div>Membership No : <input type="text" id="sig_memNo" value="${g('sig_memNo','')}" style="width:50%;"></div>
+        <div style="margin-top:20px;">Place : <input type="text" id="sig_placeCA" value="${g('sig_placeCA','Mumbai')}" style="width:60%;"></div>
+        <div>Date : <input type="text" id="sig_dateCA" value="${g('sig_dateCA','')}" style="width:60%;"></div>
+      </div>
+      <div class="sig-col">
+        <div style="font-weight:700;">For and on behalf of Board of Directors</div>
+        <div style="margin-top:50px;font-weight:700;"><input type="text" id="sig_d1" value="${g('sig_d1','')}" placeholder="Director Name"></div>
+        <div>Director</div>
+        <div>DIN : <input type="text" id="sig_d1din" value="${g('sig_d1din','')}" style="width:60%;"></div>
+        <div style="margin-top:20px;">Place : <input type="text" id="sig_placeD1" value="${g('sig_placeD1','Mumbai')}" style="width:60%;"></div>
+        <div>Date : <input type="text" id="sig_dateD1" value="${g('sig_dateD1','')}" style="width:60%;"></div>
+      </div>
+      <div class="sig-col">
+        <div style="font-weight:700;">&nbsp;</div>
+        <div style="margin-top:50px;font-weight:700;"><input type="text" id="sig_d2" value="${g('sig_d2','')}" placeholder="Director Name"></div>
+        <div>Director</div>
+        <div>DIN : <input type="text" id="sig_d2din" value="${g('sig_d2din','')}" style="width:60%;"></div>
+        <div style="margin-top:20px;">Place : <input type="text" id="sig_placeD2" value="${g('sig_placeD2','Mumbai')}" style="width:60%;"></div>
+        <div>Date : <input type="text" id="sig_dateD2" value="${g('sig_dateD2','')}" style="width:60%;"></div>
+      </div>
+    </div>
+  </div>`;
+
+  document.getElementById('noteContainer').innerHTML = h;
+  document.querySelectorAll('#noteContainer input, #noteContainer textarea').forEach(inp => {
+    inp.addEventListener('change', () => saveAll(true));
+  });
+}
+
+function addRMRow(){
+  const u = JSON.parse(localStorage.getItem('N6_DATA') || '{}');
+  const list = JSON.parse(u.rm_items || '[]');
+  list.push({ name:'', cy:0, py:0 });
+  u.rm_items = JSON.stringify(list);
+  localStorage.setItem('N6_DATA', JSON.stringify(u));
+  render();
+}
+function addSTRow(){
+  const u = JSON.parse(localStorage.getItem('N6_DATA') || '{}');
+  const list = JSON.parse(u.st_items || '[]');
+  list.push({ name:'', opCY:0, opPY:0, purCY:0, purPY:0, salCY:0, salPY:0, clCY:0, clPY:0 });
+  u.st_items = JSON.stringify(list);
+  localStorage.setItem('N6_DATA', JSON.stringify(u));
+  render();
+}
+function addFGRow(){
+  const u = JSON.parse(localStorage.getItem('N6_DATA') || '{}');
+  const list = JSON.parse(u.fg_items || '[]');
+  list.push({ name:'', opCY:0, opPY:0, salCY:0, salPY:0, clCY:0, clPY:0 });
+  u.fg_items = JSON.stringify(list);
+  localStorage.setItem('N6_DATA', JSON.stringify(u));
+  render();
+}
+
+function saveAll(silent){
+  // Collect raw-material / stock / finished-goods tables from data-attributes
+  const u0 = JSON.parse(localStorage.getItem('N6_DATA') || '{}');
+  ['rm','st','fg'].forEach(prefix => {
+    const key = prefix + '_items';
+    const list = JSON.parse(u0[key] || '[]');
+    document.querySelectorAll(`[data-${prefix}-idx]`).forEach(inp => {
+      const idx = Number(inp.dataset[prefix + 'Idx']);
+      const f = inp.dataset[prefix + 'F'];
+      while (list.length <= idx) list.push({});
+      list[idx][f] = (f === 'name') ? inp.value : (inp.value === '' ? 0 : Number(inp.value));
+    });
+    u0[key] = JSON.stringify(list);
+  });
+  localStorage.setItem('N6_DATA', JSON.stringify(u0));
+  return _saveRemaining(silent);
+}
+function _saveRemaining(silent){
+  const u = JSON.parse(localStorage.getItem('N6_DATA') || '{}');
+  document.querySelectorAll('#noteContainer input, #noteContainer textarea').forEach(el => {
+    if (el.id) u[el.id] = el.value;
+  });
+  localStorage.setItem('N6_DATA', JSON.stringify(u));
+  AccountingEngine.persistToElectron && AccountingEngine.persistToElectron();
+  if (!silent) { status.textContent = '✓ N6 saved.'; status.className = 'status-success'; }
+  render();
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  render();
+  status.textContent = 'N6 loaded. Fill in signatures and review ratios.';
+  status.className = 'status-success';
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') window.history.back();
+  if ((e.key.toLowerCase() === 's') && (e.ctrlKey || e.altKey)) { e.preventDefault(); saveAll(); }
+});
+</script>
+</body>
+</html>

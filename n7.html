@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>N7 — Related Party · Contingent Liabilities · MSME</title>
+<link rel="stylesheet" href="style.css">
+<style>
+body{font-family:Arial,sans-serif;background:#f4f4f4;margin:0;padding:0 0 90px;}
+.notes-wrap{background:#fff;max-width:1100px;margin:16px auto;padding:28px 36px;border:1px solid #c0c8d3;box-shadow:0 2px 10px rgba(0,0,0,.07);font-family:Calibri,'Segoe UI',Arial,sans-serif;}
+.note-header{margin-bottom:14px;border-bottom:2px solid #000;padding-bottom:6px;}
+.note-header .co-name{font-size:14px;font-weight:700;}
+.note-header .co-title{font-size:12px;font-weight:700;}
+.note-header .co-date{font-size:10.5px;display:flex;justify-content:space-between;margin-top:4px;}
+.note-header .co-date .right{font-style:italic;color:#444;}
+
+.note-block{margin-top:22px;}
+.note-heading{display:flex;align-items:baseline;gap:10px;font-size:13px;font-weight:700;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid #bbb;}
+.note-heading .num{min-width:28px;}
+
+.sub-heading{font-size:11.5px;font-weight:700;margin:12px 0 6px;text-decoration:underline;}
+
+.n-table{width:100%;border-collapse:collapse;font-size:11px;border:1px solid #000;margin-bottom:8px;font-variant-numeric:tabular-nums;}
+.n-table td, .n-table th{border:1px solid #000;padding:4px 8px;vertical-align:middle;}
+.n-table th{background:#e9ecef;font-weight:700;text-align:center;}
+.n-table th.left{text-align:left;}
+.n-table .amt{text-align:right;width:120px;white-space:nowrap;}
+.n-table .py{color:#555;}
+.n-table tr.sub td{font-weight:700;background:#fafafa;}
+.n-table tr.tot td{font-weight:700;border-top:1px solid #000;border-bottom:2px double #000;}
+.n-table input[type="number"], .n-table input[type="text"]{width:100%;border:none;background:#fffef3;padding:2px 4px;font:inherit;box-sizing:border-box;font-variant-numeric:tabular-nums;}
+.n-table input[type="number"]{text-align:right;}
+.n-table input[type="text"]{text-align:left;}
+.n-table input:focus{outline:2px solid #ffcc00;background:#fff;}
+.n-table textarea{width:100%;min-height:40px;border:none;background:#fffef3;padding:4px;font-family:inherit;font-size:11px;resize:vertical;}
+.n-table .warn{color:#b91c1c;font-weight:700;background:#fef2f2;}
+
+.note-text{font-size:11px;line-height:1.55;margin:6px 0 10px;}
+.note-text textarea{width:100%;min-height:60px;padding:8px;border:1px solid #999;border-radius:3px;font-family:Calibri,Arial,sans-serif;font-size:11px;background:#fffef3;resize:vertical;}
+
+.toolbar-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
+.btn-primary{background:#234a7b;color:#fff;border:none;padding:6px 14px;border-radius:3px;cursor:pointer;font-size:12px;font-weight:600;}
+.btn-save{background:#006400;color:#fff;border:none;padding:6px 14px;border-radius:3px;cursor:pointer;font-size:12px;font-weight:600;}
+.btn-secondary{background:#6c757d;color:#fff;border:none;padding:5px 12px;border-radius:3px;cursor:pointer;font-size:11px;}
+.btn-remove{background:#c0392b;color:#fff;border:none;padding:2px 7px;border-radius:3px;cursor:pointer;font-size:10px;}
+button:hover:not(.tab){filter:brightness(1.1);}
+
+#statusBar{max-width:1100px;margin:14px auto;padding:8px 12px;font-size:13px;font-weight:600;border-radius:3px;}
+.status-success{background:#d4edda;color:#155724;border:1px solid #c3e6cb;}
+.status-normal{background:#e2e3e5;color:#41464b;border:1px solid #d6d8db;}
+.status-warn{background:#fff3cd;color:#856404;border:1px solid #ffeeba;}
+
+@media print{
+  body{background:#fff;padding:0;}
+  .toolbar-row, .bottom-tabs, #statusBar, .btn-secondary, .btn-remove{display:none !important;}
+  .notes-wrap{box-shadow:none;border:none;padding:0;margin:0;}
+  @page{margin:1.2cm 1.4cm;size:A4 portrait;}
+}
+</style>
+</head>
+<body>
+<script src="engine.js"></script>
+
+<div id="statusBar" class="status-normal">Loading...</div>
+
+<div class="notes-wrap">
+  <div class="toolbar-row">
+    <div style="font-weight:700;color:#14345a;">N7 — Related Party Transactions · Contingent Liabilities · MSME</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button type="button" class="btn-primary" onclick="render()">⟳ Refresh</button>
+      <button type="button" class="btn-save" onclick="saveAll()">💾 Save</button>
+      <button type="button" class="btn-primary" onclick="window.print()">🖨 Print</button>
+    </div>
+  </div>
+
+  <div class="note-header">
+    <div class="co-name" id="coName">Company Name</div>
+    <div class="co-title">Notes to the Financial Statements</div>
+    <div class="co-date">
+      <span id="cyLabel">Year ended March 31, 2024</span>
+      <span class="right" id="roundLabel">All amounts in INR, unless otherwise stated</span>
+    </div>
+  </div>
+
+  <div id="noteContainer"></div>
+</div>
+
+<div class="bottom-tabs">
+  <a href="dashboard.html" class="tab">HOME</a>
+  <a href="bd.html" class="tab">BD</a>
+  <a href="tb.html" class="tab">TB</a>
+  <a href="ae.html" class="tab">AE</a>
+  <a href="balance.html" class="tab">BS</a>
+  <a href="pl.html" class="tab">PL</a>
+  <a href="cf.html" class="tab">CF</a>
+  <a href="n1.html" class="tab">N1</a>
+  <a href="n2.html" class="tab">N2</a>
+  <a href="n3.html" class="tab">N3</a>
+  <a href="n4.html" class="tab">N4</a>
+  <a href="n5.html" class="tab">N5</a>
+  <a href="n6.html" class="tab">N6</a>
+  <a href="n7.html" class="tab active">N7</a>
+  <a href="tx.html" class="tab">TX</a>
+  <button type="button" class="tab plus">+</button>
+</div>
+
+<script>
+const status = document.getElementById('statusBar');
+let CY_YR = '2024', PY_YR = '2023';
+
+function fmt(v){if(v===undefined||v===null||isNaN(v)||v===0)return'-';const a=Math.abs(v);const s=a.toLocaleString('en-IN',{minimumFractionDigits:0,maximumFractionDigits:0});return v<0?'('+s+')':s;}
+function n(v){return Number(v)||0;}
+function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function loadCompany(){
+  const bd = AccountingEngine.getCompanyDetails();
+  const fy = bd.financialYear || '1-Apr-23 to 31-Mar-24';
+  const endDate = (fy.split(' to ')[1] || 'March 31, 2024').trim();
+  const m = endDate.match(/\d{4}/);
+  CY_YR = m ? m[0] : '2024';
+  PY_YR = String(Number(CY_YR) - 1);
+  const meta = JSON.parse(localStorage.getItem('FS_META') || '{}');
+  document.getElementById('coName').textContent = meta.companyName || bd.name || 'Company Name';
+  document.getElementById('cyLabel').textContent = 'Year ended ' + endDate;
+  const rounding = localStorage.getItem('ROUNDING') || 'unrounded';
+  document.getElementById('roundLabel').textContent =
+    rounding === 'rounded' ? 'All amounts in INR Thousands, unless otherwise stated' :
+    rounding === 'lakhs' ? 'All amounts in INR Lakhs, unless otherwise stated' :
+    'All amounts in INR Unrounded, unless otherwise stated';
+}
+
+function getData(){ return JSON.parse(localStorage.getItem('N7_DATA') || '{}'); }
+function saveData(d){ localStorage.setItem('N7_DATA', JSON.stringify(d)); AccountingEngine.persistToElectron && AccountingEngine.persistToElectron(); }
+
+function render(){
+  loadCompany();
+  const u = getData();
+
+  let h = '';
+
+  /* ═══════════ RELATED PARTY DISCLOSURES (AS 18 / Ind AS 24) ═══════════ */
+  const rp_list = JSON.parse(u.rp_list || '[]');
+  const rp_txn = JSON.parse(u.rp_txn || '[]');
+  if (rp_list.length === 0) rp_list.push({name:'', relation:''});
+  if (rp_txn.length === 0) rp_txn.push({name:'', relation:'', nature:'', cy:0, py:0, cyOut:0, pyOut:0});
+
+  h += `<div class="note-block">
+    <div class="note-heading"><span class="num">28.</span><span>Related Party Disclosures (AS 18 / Ind AS 24)</span></div>
+
+    <div class="sub-heading">A. List of all Related Parties and Nature of Relationship</div>
+    <table class="n-table">
+      <thead><tr><th class="left">Name of Related Party</th><th class="left">Nature of Relationship</th><th style="width:40px;">—</th></tr></thead>
+      <tbody id="rpListBody">`;
+  rp_list.forEach((p, i) => {
+    h += `<tr>
+      <td><input type="text" data-rp="list" data-idx="${i}" data-f="name" value="${esc(p.name)}"></td>
+      <td><input type="text" data-rp="list" data-idx="${i}" data-f="relation" value="${esc(p.relation)}" placeholder="e.g. Director, Holding Co., Subsidiary, KMP"></td>
+      <td><button type="button" class="btn-remove" onclick="removeRPList(${i})">×</button></td>
+    </tr>`;
+  });
+  h += `</tbody></table>
+    <button type="button" class="btn-secondary" onclick="addRPList()">+ Add related party</button>
+
+    <div class="sub-heading">B. Transactions with Related Parties</div>
+    <table class="n-table">
+      <thead><tr>
+        <th class="left">Name of Related Party</th>
+        <th class="left">Relationship</th>
+        <th class="left">Nature of Transaction</th>
+        <th>Year ended<br>March 31, ${CY_YR}</th>
+        <th class="py">Year ended<br>March 31, ${PY_YR}</th>
+        <th>Outstanding CY</th>
+        <th class="py">Outstanding PY</th>
+        <th style="width:40px;">—</th>
+      </tr></thead>
+      <tbody id="rpTxnBody">`;
+  rp_txn.forEach((t, i) => {
+    h += `<tr>
+      <td><input type="text" data-rp="txn" data-idx="${i}" data-f="name" value="${esc(t.name)}"></td>
+      <td><input type="text" data-rp="txn" data-idx="${i}" data-f="relation" value="${esc(t.relation)}"></td>
+      <td><input type="text" data-rp="txn" data-idx="${i}" data-f="nature" value="${esc(t.nature)}" placeholder="e.g. Salary, Loan taken, Purchase"></td>
+      <td class="amt"><input type="number" data-rp="txn" data-idx="${i}" data-f="cy" value="${t.cy||''}"></td>
+      <td class="amt py"><input type="number" data-rp="txn" data-idx="${i}" data-f="py" value="${t.py||''}"></td>
+      <td class="amt"><input type="number" data-rp="txn" data-idx="${i}" data-f="cyOut" value="${t.cyOut||''}"></td>
+      <td class="amt py"><input type="number" data-rp="txn" data-idx="${i}" data-f="pyOut" value="${t.pyOut||''}"></td>
+      <td><button type="button" class="btn-remove" onclick="removeRPTxn(${i})">×</button></td>
+    </tr>`;
+  });
+  const rpT_cy = rp_txn.reduce((s,t) => s + n(t.cy), 0);
+  const rpT_py = rp_txn.reduce((s,t) => s + n(t.py), 0);
+  const rpT_cyOut = rp_txn.reduce((s,t) => s + n(t.cyOut), 0);
+  const rpT_pyOut = rp_txn.reduce((s,t) => s + n(t.pyOut), 0);
+  h += `<tr class="tot"><td colspan="3" style="text-align:right;">Total</td>
+    <td class="amt">${fmt(rpT_cy)}</td>
+    <td class="amt py">${fmt(rpT_py)}</td>
+    <td class="amt">${fmt(rpT_cyOut)}</td>
+    <td class="amt py">${fmt(rpT_pyOut)}</td>
+    <td></td></tr>
+    </tbody></table>
+    <button type="button" class="btn-secondary" onclick="addRPTxn()">+ Add transaction</button>
+
+    <div class="note-text" style="margin-top:12px;">
+      <strong>Note:</strong> Transactions with related parties are in the ordinary course of business and on arm's length basis, unless otherwise stated.
+    </div>
+  </div>`;
+
+  /* ═══════════ CONTINGENT LIABILITIES & COMMITMENTS ═══════════ */
+  const cl_items = JSON.parse(u.cl_items || '[]');
+  const commit_items = JSON.parse(u.commit_items || '[]');
+  if (cl_items.length === 0) cl_items.push({desc:'', cy:0, py:0});
+  if (commit_items.length === 0) commit_items.push({desc:'', cy:0, py:0});
+
+  h += `<div class="note-block">
+    <div class="note-heading"><span class="num">29.</span><span>Contingent Liabilities and Commitments</span></div>
+
+    <div class="sub-heading">A. Contingent Liabilities not provided for</div>
+    <table class="n-table">
+      <thead><tr><th class="left">Particulars</th><th>As at<br>March 31, ${CY_YR}</th><th class="py">As at<br>March 31, ${PY_YR}</th><th style="width:40px;">—</th></tr></thead>
+      <tbody id="clBody">`;
+  const clStandards = [
+    'Claims against the Company not acknowledged as debts',
+    'Guarantees given by the Company',
+    'Bank Guarantees / Letters of Credit',
+    'Demand / Show-cause notices from GST / Income Tax / other authorities',
+    'Disputed Income Tax demands',
+    'Disputed GST demands',
+    'Pending litigation / civil suits',
+    'Others (specify)'
+  ];
+  cl_items.forEach((it, i) => {
+    const placeholder = clStandards[i] || 'Specify...';
+    h += `<tr>
+      <td><input type="text" data-cl="item" data-idx="${i}" data-f="desc" value="${esc(it.desc)}" placeholder="${esc(placeholder)}"></td>
+      <td class="amt"><input type="number" data-cl="item" data-idx="${i}" data-f="cy" value="${it.cy||''}"></td>
+      <td class="amt py"><input type="number" data-cl="item" data-idx="${i}" data-f="py" value="${it.py||''}"></td>
+      <td><button type="button" class="btn-remove" onclick="removeCL(${i})">×</button></td>
+    </tr>`;
+  });
+  const clT_cy = cl_items.reduce((s,t) => s + n(t.cy), 0);
+  const clT_py = cl_items.reduce((s,t) => s + n(t.py), 0);
+  h += `<tr class="tot"><td style="text-align:right;">Total</td>
+    <td class="amt">${fmt(clT_cy)}</td>
+    <td class="amt py">${fmt(clT_py)}</td>
+    <td></td></tr>
+    </tbody></table>
+    <button type="button" class="btn-secondary" onclick="addCL()">+ Add contingent liability</button>
+
+    <div class="sub-heading">B. Capital and Other Commitments</div>
+    <table class="n-table">
+      <thead><tr><th class="left">Particulars</th><th>As at<br>March 31, ${CY_YR}</th><th class="py">As at<br>March 31, ${PY_YR}</th><th style="width:40px;">—</th></tr></thead>
+      <tbody id="commitBody">`;
+  const commitStandards = [
+    'Estimated amount of contracts remaining to be executed on capital account and not provided for',
+    'Other commitments'
+  ];
+  commit_items.forEach((it, i) => {
+    const placeholder = commitStandards[i] || 'Specify...';
+    h += `<tr>
+      <td><input type="text" data-commit="item" data-idx="${i}" data-f="desc" value="${esc(it.desc)}" placeholder="${esc(placeholder)}"></td>
+      <td class="amt"><input type="number" data-commit="item" data-idx="${i}" data-f="cy" value="${it.cy||''}"></td>
+      <td class="amt py"><input type="number" data-commit="item" data-idx="${i}" data-f="py" value="${it.py||''}"></td>
+      <td><button type="button" class="btn-remove" onclick="removeCommit(${i})">×</button></td>
+    </tr>`;
+  });
+  const cmT_cy = commit_items.reduce((s,t) => s + n(t.cy), 0);
+  const cmT_py = commit_items.reduce((s,t) => s + n(t.py), 0);
+  h += `<tr class="tot"><td style="text-align:right;">Total</td>
+    <td class="amt">${fmt(cmT_cy)}</td>
+    <td class="amt py">${fmt(cmT_py)}</td>
+    <td></td></tr>
+    </tbody></table>
+    <button type="button" class="btn-secondary" onclick="addCommit()">+ Add commitment</button>
+  </div>`;
+
+  /* ═══════════ MSME DISCLOSURE ═══════════ */
+  // Pull MSME outstanding from N2 data
+  let n2msme = 0;
+  try {
+    const n2 = JSON.parse(localStorage.getItem('N2_DATA') || '{}');
+    n2msme = Number(n2.n6_msme || 0);
+  } catch(e) {}
+
+  h += `<div class="note-block">
+    <div class="note-heading"><span class="num">30.</span><span>Disclosure under Micro, Small and Medium Enterprises Development (MSMED) Act, 2006</span></div>
+    <table class="n-table">
+      <thead><tr><th class="left">Particulars</th><th>As at<br>March 31, ${CY_YR}</th><th class="py">As at<br>March 31, ${PY_YR}</th></tr></thead>
+      <tbody>
+        <tr><td>(a) Principal amount remaining unpaid to supplier at the end of the year</td>
+          <td class="amt"><input type="number" id="msme_principal" value="${u.msme_principal !== undefined ? u.msme_principal : n2msme || ''}" placeholder="${n2msme}"></td>
+          <td class="amt py"><input type="number" id="msme_principalPY" value="${u.msme_principalPY||''}"></td></tr>
+        <tr><td>(b) Interest accrued and remaining unpaid at the end of the year</td>
+          <td class="amt"><input type="number" id="msme_interest" value="${u.msme_interest||''}"></td>
+          <td class="amt py"><input type="number" id="msme_interestPY" value="${u.msme_interestPY||''}"></td></tr>
+        <tr><td>(c) Amount of payments made to supplier beyond the appointed day during the year</td>
+          <td class="amt"><input type="number" id="msme_delay" value="${u.msme_delay||''}"></td>
+          <td class="amt py"><input type="number" id="msme_delayPY" value="${u.msme_delayPY||''}"></td></tr>
+        <tr><td>(d) Interest paid in terms of Section 16 of MSMED Act</td>
+          <td class="amt"><input type="number" id="msme_intPaid" value="${u.msme_intPaid||''}"></td>
+          <td class="amt py"><input type="number" id="msme_intPaidPY" value="${u.msme_intPaidPY||''}"></td></tr>
+        <tr><td>(e) Interest due &amp; payable (for the delay)</td>
+          <td class="amt"><input type="number" id="msme_intDue" value="${u.msme_intDue||''}"></td>
+          <td class="amt py"><input type="number" id="msme_intDuePY" value="${u.msme_intDuePY||''}"></td></tr>
+        <tr><td>(f) Interest accrued &amp; remaining unpaid at the end of the year</td>
+          <td class="amt"><input type="number" id="msme_intAccr" value="${u.msme_intAccr||''}"></td>
+          <td class="amt py"><input type="number" id="msme_intAccrPY" value="${u.msme_intAccrPY||''}"></td></tr>
+        <tr><td>(g) Further interest remaining due &amp; payable</td>
+          <td class="amt"><input type="number" id="msme_intFurther" value="${u.msme_intFurther||''}"></td>
+          <td class="amt py"><input type="number" id="msme_intFurtherPY" value="${u.msme_intFurtherPY||''}"></td></tr>
+      </tbody>
+    </table>
+    <div class="note-text" style="margin-top:8px;color:#666;font-size:10.5px;">
+      <strong>Note:</strong> The information has been determined to the extent such parties have been identified on the basis of information and records available with the Company. This has been relied upon by the auditors.
+    </div>
+  </div>`;
+
+  /* ═══════════ SEGMENT REPORTING (simplified) ═══════════ */
+  h += `<div class="note-block">
+    <div class="note-heading"><span class="num">31.</span><span>Segment Reporting (AS 17 / Ind AS 108)</span></div>
+    <div class="note-text">
+      <textarea id="seg_text" rows="4">${esc(u.seg_text || 'The Company operates in a single business segment and in a single geographical segment. Accordingly, no separate segment disclosures are required under AS 17 / Ind AS 108.')}</textarea>
+    </div>
+  </div>`;
+
+  document.getElementById('noteContainer').innerHTML = h;
+  bindInputs();
+}
+
+function bindInputs(){
+  document.querySelectorAll('#noteContainer input, #noteContainer textarea').forEach(inp => {
+    inp.addEventListener('change', onInputChange);
+  });
+}
+
+function onInputChange(e){
+  const el = e.target;
+  const u = getData();
+  // Handle list/txn tables
+  if (el.dataset.rp) {
+    const kind = el.dataset.rp; // 'list' or 'txn'
+    const idx = Number(el.dataset.idx);
+    const f = el.dataset.f;
+    const key = kind === 'list' ? 'rp_list' : 'rp_txn';
+    const list = JSON.parse(u[key] || '[]');
+    while (list.length <= idx) list.push({});
+    list[idx][f] = el.type === 'number' ? (el.value === '' ? 0 : Number(el.value)) : el.value;
+    u[key] = JSON.stringify(list);
+  } else if (el.dataset.cl) {
+    const idx = Number(el.dataset.idx);
+    const f = el.dataset.f;
+    const list = JSON.parse(u.cl_items || '[]');
+    while (list.length <= idx) list.push({});
+    list[idx][f] = el.type === 'number' ? (el.value === '' ? 0 : Number(el.value)) : el.value;
+    u.cl_items = JSON.stringify(list);
+  } else if (el.dataset.commit) {
+    const idx = Number(el.dataset.idx);
+    const f = el.dataset.f;
+    const list = JSON.parse(u.commit_items || '[]');
+    while (list.length <= idx) list.push({});
+    list[idx][f] = el.type === 'number' ? (el.value === '' ? 0 : Number(el.value)) : el.value;
+    u.commit_items = JSON.stringify(list);
+  } else if (el.id) {
+    u[el.id] = el.value;
+  }
+  saveData(u);
+  render();
+}
+
+function addRPList(){
+  const u = getData();
+  const list = JSON.parse(u.rp_list || '[]');
+  list.push({name:'', relation:''});
+  u.rp_list = JSON.stringify(list);
+  saveData(u); render();
+}
+function removeRPList(i){
+  const u = getData();
+  const list = JSON.parse(u.rp_list || '[]');
+  list.splice(i, 1);
+  u.rp_list = JSON.stringify(list);
+  saveData(u); render();
+}
+function addRPTxn(){
+  const u = getData();
+  const list = JSON.parse(u.rp_txn || '[]');
+  list.push({name:'', relation:'', nature:'', cy:0, py:0, cyOut:0, pyOut:0});
+  u.rp_txn = JSON.stringify(list);
+  saveData(u); render();
+}
+function removeRPTxn(i){
+  const u = getData();
+  const list = JSON.parse(u.rp_txn || '[]');
+  list.splice(i, 1);
+  u.rp_txn = JSON.stringify(list);
+  saveData(u); render();
+}
+function addCL(){
+  const u = getData();
+  const list = JSON.parse(u.cl_items || '[]');
+  list.push({desc:'', cy:0, py:0});
+  u.cl_items = JSON.stringify(list);
+  saveData(u); render();
+}
+function removeCL(i){
+  const u = getData();
+  const list = JSON.parse(u.cl_items || '[]');
+  list.splice(i, 1);
+  u.cl_items = JSON.stringify(list);
+  saveData(u); render();
+}
+function addCommit(){
+  const u = getData();
+  const list = JSON.parse(u.commit_items || '[]');
+  list.push({desc:'', cy:0, py:0});
+  u.commit_items = JSON.stringify(list);
+  saveData(u); render();
+}
+function removeCommit(i){
+  const u = getData();
+  const list = JSON.parse(u.commit_items || '[]');
+  list.splice(i, 1);
+  u.commit_items = JSON.stringify(list);
+  saveData(u); render();
+}
+
+function saveAll(){
+  // Also pick up any simple inputs that may not have triggered change yet
+  const u = getData();
+  document.querySelectorAll('#noteContainer input[id], #noteContainer textarea[id]').forEach(el => {
+    u[el.id] = el.value;
+  });
+  saveData(u);
+  status.textContent = '✓ N7 saved.';
+  status.className = 'status-success';
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  render();
+  status.textContent = 'N7 loaded. Fill in related parties, contingent liabilities, MSME disclosures.';
+  status.className = 'status-success';
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') window.history.back();
+  if ((e.key.toLowerCase() === 's') && (e.ctrlKey || e.altKey)) { e.preventDefault(); saveAll(); }
+});
+</script>
+</body>
+</html>

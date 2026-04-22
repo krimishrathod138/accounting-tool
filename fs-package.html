@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Financial Statements Package — Complete</title>
+<link rel="stylesheet" href="style.css">
+<style>
+*{box-sizing:border-box;}
+html,body{font-family:Calibri,'Segoe UI',Arial,sans-serif;font-size:11px;color:#000;background:#eef1f6;margin:0;padding:0 0 90px;line-height:1.4;font-variant-numeric:tabular-nums;}
+.toolbar{position:sticky;top:0;z-index:100;background:linear-gradient(180deg,#14345a 0%,#0f2a49 100%);color:#fff;padding:10px 24px;display:flex;align-items:center;gap:10px;box-shadow:0 2px 6px rgba(0,0,0,.15);flex-wrap:wrap;}
+.toolbar button{background:#fff;color:#14345a;border:none;padding:7px 16px;border-radius:3px;font-weight:600;cursor:pointer;font-size:12px;}
+.toolbar button:hover{background:#d6e0f0;}
+.toolbar .title{flex:1;font-weight:600;font-size:14px;}
+
+.fs-page{background:#fff;max-width:920px;margin:20px auto;padding:30px 40px;border:1px solid #c0c8d3;box-shadow:0 2px 10px rgba(0,0,0,.08);}
+
+.doc-header{margin-bottom:14px;border-bottom:2px solid #000;padding-bottom:6px;}
+.doc-header .co-name{font-size:15px;font-weight:700;}
+.doc-header .co-title{font-size:13px;font-weight:700;}
+.doc-header .co-date{font-size:10.5px;display:flex;justify-content:space-between;margin-top:4px;}
+.doc-header .co-date .right{font-style:italic;color:#444;}
+
+.note-block{margin-top:22px;}
+.note-heading{display:flex;align-items:baseline;gap:10px;font-size:13px;font-weight:700;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid #bbb;}
+.note-heading .num{min-width:28px;}
+
+.sub-heading{font-size:11.5px;font-weight:700;margin:10px 0 6px;text-decoration:underline;text-underline-offset:2px;}
+
+/* Main BS / PL table */
+.fs-tbl{width:100%;border-collapse:collapse;font-size:11px;border:1px solid #000;margin-bottom:8px;}
+.fs-tbl td{border:1px solid #000;padding:4px 7px;vertical-align:middle;}
+.fs-tbl th{background:#e9ecef;font-weight:700;padding:6px 7px;border:1px solid #000;}
+.fs-tbl th.left{text-align:left;}
+.fs-tbl .amt{text-align:right;width:125px;white-space:nowrap;}
+.fs-tbl .py{color:#555;}
+.fs-tbl tr.sec td{font-weight:700;padding-top:8px;font-size:11.5px;}
+.fs-tbl tr.subsec td{font-weight:700;padding-left:20px;}
+.fs-tbl tr.item td{padding-left:32px;}
+.fs-tbl tr.item2 td{padding-left:44px;}
+.fs-tbl tr.subtot td{font-weight:700;border-top:1px solid #000;border-bottom:1px solid #000;}
+.fs-tbl tr.total td{font-weight:700;border-top:1px solid #000;border-bottom:2px double #000;background:#f5f5f5;}
+.fs-tbl tr.blank td{height:6px;}
+.fs-tbl tr.tot td{font-weight:700;border-top:1px solid #000;border-bottom:2px double #000;}
+.fs-tbl tr.sub td{font-weight:700;background:#fafafa;}
+
+/* Signatures */
+.sig-block{margin-top:32px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:30px;font-size:10.5px;}
+.sig-col{border-top:1px solid #000;padding-top:6px;line-height:1.6;}
+.sig-preamble{font-size:10.5px;margin-bottom:14px;}
+
+.toc-list{font-size:12px;line-height:1.8;}
+.toc-list .toc-item{display:flex;justify-content:space-between;border-bottom:1px dotted #ccc;padding:2px 0;}
+
+.note-text{font-size:11px;line-height:1.6;text-align:justify;margin:6px 0 10px;}
+.note-text p{margin:0 0 10px;}
+.note-text ul{margin:6px 0 10px 24px;}
+
+.missing{color:#c00;font-style:italic;font-size:11px;background:#fff3f3;padding:8px 12px;border:1px solid #fcc;border-radius:3px;margin:6px 0;}
+
+@media print{
+  html,body{background:#fff !important;font-size:10.5px;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .toolbar,.bottom-tabs,.tab{display:none !important;}
+  .fs-page{box-shadow:none !important;border:none !important;margin:0 !important;padding:0 !important;page-break-after:always;}
+  .fs-page:last-child{page-break-after:auto;}
+  .page-break{page-break-before:always;}
+  .note-block{page-break-inside:avoid;}
+  .fs-tbl{page-break-inside:auto;}
+  .fs-tbl tr{page-break-inside:avoid;}
+  .fs-tbl thead{display:table-header-group;}
+  .fs-tbl tr.sub td, .fs-tbl tr.total td{background:#f5f5f5 !important;}
+  .fs-tbl th{background:#e9ecef !important;}
+  @page{margin:1.4cm 1.6cm;size:A4 portrait;}
+}
+</style>
+</head>
+<body>
+<script src="engine.js"></script>
+
+<div class="toolbar">
+  <span class="title">📑 Financial Statements Package — Complete</span>
+  <button type="button" onclick="window.location.href='balance.html'">← Back to BS</button>
+  <button type="button" onclick="render()">⟳ Refresh</button>
+  <button type="button" onclick="window.print()" style="background:#006400;color:#fff;">🖨 Print Complete Package (PDF)</button>
+</div>
+
+<div id="pkgWrap"></div>
+
+<script>
+let CY_YR='2024', PY_YR='2023', BY_YR='2022';
+let CY_END='March 31, 2024', PY_END='March 31, 2023';
+let COMPANY={name:'Company Name', cin:'', address:''};
+let HAS_PY=false;
+let CY={}, PY={};
+
+function fmt(v){if(v===undefined||v===null||isNaN(v)||v===0)return'-';const a=Math.abs(v);const s=a.toLocaleString('en-IN',{minimumFractionDigits:0,maximumFractionDigits:0});return v<0?'('+s+')':s;}
+function n(v){return Number(v)||0;}
+function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function safePath(obj, path){if(!obj)return undefined;return path.split('.').reduce((o,k)=>o&&o[k],obj);}
+
+function loadEverything(){
+  const bd = AccountingEngine.getCompanyDetails();
+  const fy = bd.financialYear || '1-Apr-23 to 31-Mar-24';
+  const endDate = (fy.split(' to ')[1] || 'March 31, 2024').trim();
+  const m = endDate.match(/\d{4}/);
+  CY_YR = m ? m[0] : '2024';
+  PY_YR = String(Number(CY_YR) - 1);
+  BY_YR = String(Number(CY_YR) - 2);
+  CY_END = endDate;
+  PY_END = endDate.replace(CY_YR, PY_YR);
+  const meta = JSON.parse(localStorage.getItem('FS_META') || '{}');
+  COMPANY.name = meta.companyName || bd.name || 'Company Name';
+  COMPANY.cin = meta.cin || '';
+  COMPANY.address = meta.address || '';
+  try { CY = AccountingEngine.getScheduleIIIReport('CY') || {}; } catch(e) { CY = {}; }
+  HAS_PY = AccountingEngine.hasPYData && AccountingEngine.hasPYData();
+  try { PY = HAS_PY ? AccountingEngine.getScheduleIIIReport('PY') : {}; } catch(e) { PY = {}; }
+}
+
+/* ═══════════ HEADER (used on every page) ═══════════ */
+function pageHeader(title, dateLine){
+  const rounding = localStorage.getItem('ROUNDING') || 'unrounded';
+  const roundLabel = rounding === 'rounded' ? 'All amounts in INR Thousands, unless otherwise stated' :
+                     rounding === 'lakhs' ? 'All amounts in INR Lakhs, unless otherwise stated' :
+                     'All amounts in INR, unless otherwise stated';
+  return `<div class="doc-header">
+    <div class="co-name">${esc(COMPANY.name)}</div>
+    <div class="co-title">${esc(title)}</div>
+    <div class="co-date">
+      <span>${esc(dateLine)}</span>
+      <span class="right">${esc(roundLabel)}</span>
+    </div>
+  </div>`;
+}
+function signatureBlock(){
+  const n6 = JSON.parse(localStorage.getItem('N6_DATA') || '{}');
+  const caFirm = n6.sig_caFirm || '_______________';
+  const caReg = n6.sig_caReg || '___________';
+  const partner = n6.sig_partner || '_______________';
+  const memNo = n6.sig_memNo || '___________';
+  const d1 = n6.sig_d1 || '_______________';
+  const d1din = n6.sig_d1din || '___________';
+  const d2 = n6.sig_d2 || '_______________';
+  const d2din = n6.sig_d2din || '___________';
+  const placeCA = n6.sig_placeCA || 'Mumbai';
+  const dateCA = n6.sig_dateCA || '___________';
+  const placeD1 = n6.sig_placeD1 || 'Mumbai';
+  const dateD1 = n6.sig_dateD1 || '___________';
+  const placeD2 = n6.sig_placeD2 || 'Mumbai';
+  const dateD2 = n6.sig_dateD2 || '___________';
+  return `<div class="sig-block">
+    <div class="sig-col">
+      <div style="font-weight:700;">For ${esc(caFirm)}</div>
+      <div>Chartered Accountants</div>
+      <div>Firm Regn No : ${esc(caReg)}</div>
+      <div style="margin-top:40px;font-weight:700;">${esc(partner)}</div>
+      <div>Partner</div>
+      <div>Membership No : ${esc(memNo)}</div>
+      <div style="margin-top:12px;">Place : ${esc(placeCA)}</div>
+      <div>Date : ${esc(dateCA)}</div>
+    </div>
+    <div class="sig-col">
+      <div style="font-weight:700;">For and on behalf of<br>Board of Directors</div>
+      <div style="margin-top:50px;font-weight:700;">${esc(d1)}</div>
+      <div>Director</div>
+      <div>DIN : ${esc(d1din)}</div>
+      <div style="margin-top:12px;">Place : ${esc(placeD1)}</div>
+      <div>Date : ${esc(dateD1)}</div>
+    </div>
+    <div class="sig-col">
+      <div style="font-weight:700;">&nbsp;</div>
+      <div style="margin-top:50px;font-weight:700;">${esc(d2)}</div>
+      <div>Director</div>
+      <div>DIN : ${esc(d2din)}</div>
+      <div style="margin-top:12px;">Place : ${esc(placeD2)}</div>
+      <div>Date : ${esc(dateD2)}</div>
+    </div>
+  </div>`;
+}
+function pageFooter(){
+  let f = '';
+  if (COMPANY.cin) f += `<div style="text-align:center;font-size:9px;color:#333;margin-top:20px;border-top:1px solid #999;padding-top:5px;">CIN / PAN: ${esc(COMPANY.cin)}</div>`;
+  if (COMPANY.address) f += `<div style="text-align:center;font-size:9px;color:#333;">${esc(COMPANY.address)}</div>`;
+  return f;
+}
+
+/* ═══════════ TABLE OF CONTENTS / COVER PAGE ═══════════ */
+function renderCover(){
+  const rounding = localStorage.getItem('ROUNDING') || 'unrounded';
+  const roundLabel = rounding === 'rounded' ? 'INR Thousands' : rounding === 'lakhs' ? 'INR Lakhs' : 'INR';
+  return `<div class="fs-page">
+    ${pageHeader('Financial Statements', 'For the year ended ' + CY_END)}
+    <div style="text-align:center;padding:60px 0;">
+      <div style="font-size:22px;font-weight:700;margin-bottom:10px;">FINANCIAL STATEMENTS</div>
+      <div style="font-size:14px;margin-bottom:30px;">For the year ended ${esc(CY_END)}</div>
+      <div style="font-size:12px;color:#555;">All amounts in ${roundLabel}, unless otherwise stated</div>
+      ${HAS_PY ? '<div style="font-size:11px;color:#2e7d32;margin-top:14px;">✓ Comparative figures for year ended ' + esc(PY_END) + ' included</div>' : ''}
+    </div>
+    <div style="margin-top:50px;">
+      <div style="font-weight:700;font-size:13px;margin-bottom:10px;padding-bottom:4px;border-bottom:1px solid #000;">CONTENTS</div>
+      <div class="toc-list">
+        <div class="toc-item"><span>Balance Sheet</span><span>Page 1</span></div>
+        <div class="toc-item"><span>Statement of Profit and Loss</span><span>Page 2</span></div>
+        <div class="toc-item"><span>Cash Flow Statement (AS 3 — Indirect Method)</span><span>Page 3</span></div>
+        <div class="toc-item"><span>Notes 1-2: General Information &amp; Accounting Policies</span><span>Page 4</span></div>
+        <div class="toc-item"><span>Notes 3-8: Share Capital, Reserves, Borrowings, Payables, Provisions</span><span>Page 5</span></div>
+        <div class="toc-item"><span>Note 9: Property, Plant and Equipment</span><span>Page 6</span></div>
+        <div class="toc-item"><span>Notes 10-15: Assets (DTA, Inventories, Receivables, Cash, Loans, Other CA)</span><span>Page 7</span></div>
+        <div class="toc-item"><span>Notes 16-24: Revenue, Income, Expenses</span><span>Page 8</span></div>
+        <div class="toc-item"><span>Notes 25-27: EPS, Ratios, Disclosures</span><span>Page 9</span></div>
+        <div class="toc-item"><span>Notes 28-31: Related Parties, Contingent Liabilities, MSME, Segment</span><span>Page 10</span></div>
+        <div class="toc-item"><span>Tax Computation (ITR Format)</span><span>Page 11</span></div>
+      </div>
+    </div>
+    ${pageFooter()}
+  </div>`;
+}
+
+/* ═══════════ BALANCE SHEET ═══════════ */
+function renderBS(){
+  const d = CY, dPY = PY;
+  const pyv = (path) => HAS_PY ? fmt(safePath(dPY, path)) : '';
+  const pyvSum = (...paths) => HAS_PY ? fmt(paths.reduce((s,p) => s + (Number(safePath(dPY, p)) || 0), 0)) : '';
+  const bsn = d.bsNotes || {};
+  const bs = d.bs || {};
+  const pl = d.pl || {};
+
+  let h = `<div class="fs-page page-break">
+    ${pageHeader('Balance Sheet', 'As at ' + CY_END)}
+    <table class="fs-tbl">
+      <thead><tr>
+        <th class="left" style="width:52%;">Particulars</th>
+        <th style="width:40px;">Note</th>
+        <th style="width:22%;">As at<br>${CY_END}</th>
+        <th class="py" style="width:22%;">As at<br>${PY_END}</th>
+      </tr></thead>
+      <tbody>
+        <tr class="sec"><td colspan="4"><b>I. EQUITY AND LIABILITIES</b></td></tr>
+        <tr class="subsec"><td colspan="4"><b>Shareholders' Funds</b></td></tr>
+        <tr class="item"><td>Share Capital</td><td>3</td><td class="amt">${fmt(bsn.n3_shareCapital?.total)}</td><td class="amt py">${pyv('bsNotes.n3_shareCapital.total')}</td></tr>
+        <tr class="item"><td>Reserves and Surplus</td><td>4</td><td class="amt">${fmt((bsn.n4_reserves?.total||0) + (pl.profitForYear||0))}</td><td class="amt py">${pyvSum('bsNotes.n4_reserves.total','pl.profitForYear')}</td></tr>
+        <tr class="subtot"><td></td><td></td><td class="amt">${fmt(bs.shareholdersFunds)}</td><td class="amt py">${pyv('bs.shareholdersFunds')}</td></tr>
+        <tr class="blank"><td colspan="4"></td></tr>
+        <tr class="subsec"><td colspan="4"><b>Non-current Liabilities</b></td></tr>
+        <tr class="item"><td>Long-term Borrowings</td><td>5</td><td class="amt">${fmt(bsn.n5_ltBorrowings?.total)}</td><td class="amt py">${pyv('bsNotes.n5_ltBorrowings.total')}</td></tr>
+        <tr class="subtot"><td></td><td></td><td class="amt">${fmt(bs.ncLiabilities)}</td><td class="amt py">${pyv('bs.ncLiabilities')}</td></tr>
+        <tr class="blank"><td colspan="4"></td></tr>
+        <tr class="subsec"><td colspan="4"><b>Current Liabilities</b></td></tr>
+        <tr class="item"><td>Short-term Borrowings</td><td>6</td><td class="amt">${fmt(bsn.n6_stBorrowings?.total)}</td><td class="amt py">${pyv('bsNotes.n6_stBorrowings.total')}</td></tr>
+        <tr class="item"><td>Trade Payables</td><td>7</td><td class="amt">${fmt(bsn.n7_tradePayables?.total)}</td><td class="amt py">${pyv('bsNotes.n7_tradePayables.total')}</td></tr>
+        <tr class="item"><td>Other Current Liabilities</td><td>8</td><td class="amt">${fmt(bsn.n8_otherCL?.total)}</td><td class="amt py">${pyv('bsNotes.n8_otherCL.total')}</td></tr>
+        <tr class="subtot"><td></td><td></td><td class="amt">${fmt(bs.cLiabilities)}</td><td class="amt py">${pyv('bs.cLiabilities')}</td></tr>
+        <tr class="blank"><td colspan="4"></td></tr>
+        <tr class="total"><td><b>TOTAL</b></td><td></td><td class="amt">${fmt(bs.totalEL)}</td><td class="amt py">${pyv('bs.totalEL')}</td></tr>
+        <tr class="blank"><td colspan="4"></td></tr>
+        <tr class="sec"><td colspan="4"><b>II. ASSETS</b></td></tr>
+        <tr class="subsec"><td colspan="4"><b>Non-current Assets</b></td></tr>
+        <tr class="item"><td>Property, Plant and Equipment</td><td>9</td><td class="amt">${fmt(bsn.n9_ppe?.total)}</td><td class="amt py">${pyv('bsNotes.n9_ppe.total')}</td></tr>
+        <tr class="item"><td>Deferred Tax Assets (Net)</td><td>10</td><td class="amt">${fmt(bsn.n10_dta?.total)}</td><td class="amt py">${pyv('bsNotes.n10_dta.total')}</td></tr>
+        <tr class="subtot"><td></td><td></td><td class="amt">${fmt(bs.ncAssets)}</td><td class="amt py">${pyv('bs.ncAssets')}</td></tr>
+        <tr class="blank"><td colspan="4"></td></tr>
+        <tr class="subsec"><td colspan="4"><b>Current Assets</b></td></tr>
+        <tr class="item"><td>Inventories</td><td>11</td><td class="amt">${fmt(bsn.n11_inventories?.total)}</td><td class="amt py">${pyv('bsNotes.n11_inventories.total')}</td></tr>
+        <tr class="item"><td>Trade Receivables</td><td>12</td><td class="amt">${fmt(bsn.n12_tradeReceivables?.total)}</td><td class="amt py">${pyv('bsNotes.n12_tradeReceivables.total')}</td></tr>
+        <tr class="item"><td>Cash and Bank Balances</td><td>13</td><td class="amt">${fmt(bsn.n13_cashBank?.total)}</td><td class="amt py">${pyv('bsNotes.n13_cashBank.total')}</td></tr>
+        <tr class="item"><td>Short-term Loans and Advances</td><td>14</td><td class="amt">${fmt(bsn.n14_stLoans?.total)}</td><td class="amt py">${pyv('bsNotes.n14_stLoans.total')}</td></tr>
+        <tr class="item"><td>Other Current Assets</td><td>15</td><td class="amt">${fmt(bsn.n15_otherCA?.total)}</td><td class="amt py">${pyv('bsNotes.n15_otherCA.total')}</td></tr>
+        <tr class="subtot"><td></td><td></td><td class="amt">${fmt(bs.cAssets)}</td><td class="amt py">${pyv('bs.cAssets')}</td></tr>
+        <tr class="blank"><td colspan="4"></td></tr>
+        <tr class="total"><td><b>TOTAL</b></td><td></td><td class="amt">${fmt(bs.totalAssets)}</td><td class="amt py">${pyv('bs.totalAssets')}</td></tr>
+      </tbody>
+    </table>
+    ${signatureBlock()}
+    ${pageFooter()}
+  </div>`;
+  return h;
+}
+
+/* ═══════════ PROFIT AND LOSS ═══════════ */
+function renderPL(){
+  const d = CY;
+  const pyv = (path) => HAS_PY ? fmt(safePath(PY, path)) : '';
+  const pln = d.plNotes || {};
+  const pl = d.pl || {};
+
+  return `<div class="fs-page page-break">
+    ${pageHeader('Statement of Profit and Loss', 'For the year ended ' + CY_END)}
+    <table class="fs-tbl">
+      <thead><tr>
+        <th class="left" style="width:52%;">Particulars</th>
+        <th style="width:40px;">Note</th>
+        <th style="width:22%;">Year ended<br>${CY_END}</th>
+        <th class="py" style="width:22%;">Year ended<br>${PY_END}</th>
+      </tr></thead>
+      <tbody>
+        <tr class="sec"><td colspan="4"><b>INCOME</b></td></tr>
+        <tr class="item"><td>Revenue from Operations</td><td>16</td><td class="amt">${fmt(pln.n16_revenue?.total)}</td><td class="amt py">${pyv('plNotes.n16_revenue.total')}</td></tr>
+        <tr class="item"><td>Other Income</td><td>17</td><td class="amt">${fmt(pln.n17_otherIncome?.total)}</td><td class="amt py">${pyv('plNotes.n17_otherIncome.total')}</td></tr>
+        <tr class="subtot"><td><b>Total Income</b></td><td></td><td class="amt">${fmt(pl.totalRevenue)}</td><td class="amt py">${pyv('pl.totalRevenue')}</td></tr>
+        <tr class="blank"><td colspan="4"></td></tr>
+        <tr class="sec"><td colspan="4"><b>EXPENSES</b></td></tr>
+        <tr class="item"><td>Cost of Materials Consumed</td><td>18</td><td class="amt">${fmt(pln.n18_materials?.total)}</td><td class="amt py">${pyv('plNotes.n18_materials.total')}</td></tr>
+        <tr class="item"><td>Changes in Inventories</td><td>20</td><td class="amt">${fmt(pln.n19_inventoryChange?.total)}</td><td class="amt py">${pyv('plNotes.n19_inventoryChange.total')}</td></tr>
+        <tr class="item"><td>Employee Benefits Expense</td><td>21</td><td class="amt">${fmt(pln.n20_employee?.total)}</td><td class="amt py">${pyv('plNotes.n20_employee.total')}</td></tr>
+        <tr class="item"><td>Finance Costs</td><td>22</td><td class="amt">${fmt(pln.n21_finance?.total)}</td><td class="amt py">${pyv('plNotes.n21_finance.total')}</td></tr>
+        <tr class="item"><td>Depreciation and Amortisation</td><td>23</td><td class="amt">${fmt(pln.n22_depreciation?.total)}</td><td class="amt py">${pyv('plNotes.n22_depreciation.total')}</td></tr>
+        <tr class="item"><td>Other Expenses</td><td>24</td><td class="amt">${fmt(pln.n23_otherExpenses?.total)}</td><td class="amt py">${pyv('plNotes.n23_otherExpenses.total')}</td></tr>
+        <tr class="subtot"><td><b>Total Expenses</b></td><td></td><td class="amt">${fmt(pl.totalExpenses)}</td><td class="amt py">${pyv('pl.totalExpenses')}</td></tr>
+        <tr class="blank"><td colspan="4"></td></tr>
+        <tr class="total"><td><b>Profit before Tax</b></td><td></td><td class="amt">${fmt(pl.profitBeforeTax)}</td><td class="amt py">${pyv('pl.profitBeforeTax')}</td></tr>
+        <tr class="item"><td>Tax Expenses</td><td>24</td><td class="amt">${fmt((pln.n24_tax?.currentTax||0) + (pln.n24_tax?.adjustments||0) + (pln.n24_tax?.deferredTax||0))}</td><td class="amt py">-</td></tr>
+        <tr class="blank"><td colspan="4"></td></tr>
+        <tr class="total"><td><b>Profit for the Year</b></td><td></td><td class="amt">${fmt(pl.profitForYear)}</td><td class="amt py">${pyv('pl.profitForYear')}</td></tr>
+      </tbody>
+    </table>
+    ${signatureBlock()}
+    ${pageFooter()}
+  </div>`;
+}
+
+/* ═══════════ NOTE 1-2: GENERAL + POLICIES ═══════════ */
+function renderNotes12(){
+  const gen = localStorage.getItem('N1_GEN') || '';
+  const pol = localStorage.getItem('N1') || localStorage.getItem('N1_POL') || '';
+  const toHtml = s => esc(s||'').split('\n\n').map(para => '<p>' + para.replace(/\n/g,'<br>') + '</p>').join('');
+
+  return `<div class="fs-page page-break">
+    ${pageHeader('Notes to the Financial Statements', 'For the year ended ' + CY_END)}
+    <div class="note-block">
+      <div class="note-heading"><span class="num">1.</span><span>General Information</span></div>
+      <div class="note-text">${gen ? toHtml(gen) : '<div class="missing">⚠ General Information not yet entered. Please fill in N1 page.</div>'}</div>
+    </div>
+    <div class="note-block">
+      <div class="note-heading"><span class="num">2.</span><span>Significant Accounting Policies</span></div>
+      <div class="note-text">${pol ? toHtml(pol) : '<div class="missing">⚠ Accounting Policies not yet entered. Please go to N1 page and load an Indian GAAP template.</div>'}</div>
+    </div>
+    ${pageFooter()}
+  </div>`;
+}
+
+/* ═══════════ NOTES 3-8 (from N2) ═══════════ */
+function renderNotes38(){
+  const u = JSON.parse(localStorage.getItem('N2_DATA') || '{}');
+  const g = (k, d) => u[k] !== undefined ? u[k] : d;
+  const meta = JSON.parse(localStorage.getItem('FS_META') || '{}');
+  const fv = Number(g('n3_fv', meta.faceValue || 10));
+  const issuedShares = Number(g('n3_issuedShares', meta.weightedAvgShares || 0));
+  const authShares = Number(g('n3_authShares', 0));
+  const shareCapCY = CY.bsNotes?.n3_shareCapital?.total || 0;
+  const shareCapPY = PY.bsNotes?.n3_shareCapital?.total || 0;
+  const reservesCY = (CY.bsNotes?.n4_reserves?.total || 0) + (CY.pl?.profitForYear || 0);
+  const reservesPY = HAS_PY ? (PY.bsNotes?.n4_reserves?.total || 0) + (PY.pl?.profitForYear || 0) : 0;
+
+  const shareholders = JSON.parse(u.n3_shareholders || '[]');
+  const promoters = JSON.parse(u.n3_promoters || '[]');
+
+  let h = `<div class="fs-page page-break">
+    ${pageHeader('Notes to the Financial Statements', 'For the year ended ' + CY_END)}
+
+    <div class="note-block">
+      <div class="note-heading"><span class="num">3.</span><span>Share capital</span></div>
+      <table class="fs-tbl">
+        <thead><tr><th class="left">Particulars</th><th>As at<br>${CY_END}</th><th class="py">As at<br>${PY_END}</th></tr></thead>
+        <tbody>
+          <tr class="sub"><td colspan="3">Authorised</td></tr>
+          <tr><td>${authShares ? authShares.toLocaleString('en-IN') : '____'} Equity shares of Rs. ${fv} each</td>
+            <td class="amt">${fmt(authShares * fv)}</td>
+            <td class="amt py">${fmt(authShares * fv)}</td></tr>
+          <tr class="sub"><td colspan="3">Issued, subscribed and fully paid up</td></tr>
+          <tr><td>${issuedShares ? issuedShares.toLocaleString('en-IN') : '____'} Equity shares of Rs. ${fv} each</td>
+            <td class="amt">${fmt(issuedShares * fv || shareCapCY)}</td>
+            <td class="amt py">${fmt(issuedShares * fv || shareCapPY)}</td></tr>
+          <tr class="tot"><td style="text-align:right;">Total</td>
+            <td class="amt">${fmt(issuedShares * fv || shareCapCY)}</td>
+            <td class="amt py">${fmt(issuedShares * fv || shareCapPY)}</td></tr>
+        </tbody>
+      </table>
+      <div class="sub-heading">Rights, preferences and restrictions attached to shares</div>
+      <div class="note-text">${esc(g('n3_rights', 'The Company has issued only one class of equity shares having a par value of Rs. ' + fv + ' per share. Each equity shareholder is entitled to one vote per share.'))}</div>`;
+
+  if (shareholders.length > 0 && shareholders.some(s => s.name)) {
+    const totalCY = shareholders.reduce((s,x) => s + Number(x.sharesCY||0), 0) || 1;
+    const totalPY = shareholders.reduce((s,x) => s + Number(x.sharesPY||0), 0) || 1;
+    h += `<div class="sub-heading">Equity Shares held by Shareholders holding more than 5% shares</div>
+      <table class="fs-tbl"><thead>
+        <tr><th class="left" rowspan="2">Name</th><th colspan="2">As at ${CY_END}</th><th class="py" colspan="2">As at ${PY_END}</th></tr>
+        <tr><th>No. of Shares</th><th>% Shares</th><th class="py">No. of Shares</th><th class="py">% Shares</th></tr>
+      </thead><tbody>`;
+    shareholders.forEach(s => {
+      if (!s.name) return;
+      h += `<tr><td>${esc(s.name)}</td>
+        <td class="amt">${Number(s.sharesCY||0).toLocaleString('en-IN')}</td>
+        <td class="amt">${((Number(s.sharesCY||0)/totalCY)*100).toFixed(2)}%</td>
+        <td class="amt py">${Number(s.sharesPY||0).toLocaleString('en-IN')}</td>
+        <td class="amt py">${((Number(s.sharesPY||0)/totalPY)*100).toFixed(2)}%</td></tr>`;
+    });
+    h += `</tbody></table>`;
+  }
+
+  if (promoters.length > 0 && promoters.some(p => p.name)) {
+    const totalCY = promoters.reduce((s,x) => s + Number(x.sharesCY||0), 0) || 1;
+    const totalPY = promoters.reduce((s,x) => s + Number(x.sharesPY||0), 0) || 1;
+    h += `<div class="sub-heading">Equity Shares held by Promoters at the end of the year</div>
+      <table class="fs-tbl"><thead>
+        <tr><th class="left" rowspan="2">Promoter</th><th colspan="2">As at ${CY_END}</th><th class="py" colspan="2">As at ${PY_END}</th><th rowspan="2">% Change</th></tr>
+        <tr><th>Shares</th><th>%</th><th class="py">Shares</th><th class="py">%</th></tr>
+      </thead><tbody>`;
+    promoters.forEach(p => {
+      if (!p.name) return;
+      const pctCY = (Number(p.sharesCY||0)/totalCY)*100;
+      const pctPY = (Number(p.sharesPY||0)/totalPY)*100;
+      h += `<tr><td>${esc(p.name)}</td>
+        <td class="amt">${Number(p.sharesCY||0).toLocaleString('en-IN')}</td>
+        <td class="amt">${pctCY.toFixed(2)}%</td>
+        <td class="amt py">${Number(p.sharesPY||0).toLocaleString('en-IN')}</td>
+        <td class="amt py">${pctPY.toFixed(2)}%</td>
+        <td class="amt">${pctPY === 0 ? '-' : (pctCY-pctPY).toFixed(2)+'%'}</td></tr>`;
+    });
+    h += `</tbody></table>`;
+  }
+
+  h += `</div>
+    <div class="note-block">
+      <div class="note-heading"><span class="num">4.</span><span>Reserves and Surplus</span></div>
+      <table class="fs-tbl">
+        <thead><tr><th class="left">Particulars</th><th>As at<br>${CY_END}</th><th class="py">As at<br>${PY_END}</th></tr></thead>
+        <tbody>
+          <tr class="sub"><td colspan="3">Surplus in Statement of Profit and Loss</td></tr>
+          <tr><td>Opening Balance</td><td class="amt">${fmt(reservesPY)}</td><td class="amt py">${fmt(Number(g('n4_openPY',0)))}</td></tr>
+          <tr><td>(+) Net Profit/(Loss) for the period</td><td class="amt">${fmt(CY.pl?.profitForYear)}</td><td class="amt py">${fmt(PY.pl?.profitForYear)}</td></tr>
+          <tr><td>(-) Dividend Paid</td><td class="amt">${fmt(Number(g('n4_divPaid',0)))}</td><td class="amt py">${fmt(Number(g('n4_divPaidPY',0)))}</td></tr>
+          <tr class="tot"><td>Closing Balance</td>
+            <td class="amt">${fmt(reservesCY - Number(g('n4_divPaid',0)))}</td>
+            <td class="amt py">${fmt(reservesPY - Number(g('n4_divPaidPY',0)))}</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note-block">
+      <div class="note-heading"><span class="num">5.</span><span>Long-Term Borrowings</span></div>
+      <table class="fs-tbl">
+        <thead><tr><th class="left">Particulars</th><th>As at<br>${CY_END}</th><th class="py">As at<br>${PY_END}</th></tr></thead>
+        <tbody>
+          <tr class="sub"><td colspan="3">Secured</td></tr>
+          <tr><td>Term loans from Banks</td><td class="amt">${fmt(Number(g('n5_secBank',0)))}</td><td class="amt py">${fmt(Number(g('n5_secBankPY',0)))}</td></tr>
+          <tr><td>Term loans from others</td><td class="amt">${fmt(Number(g('n5_secOther', CY.bsNotes?.n5_ltBorrowings?.total || 0)))}</td><td class="amt py">${fmt(Number(g('n5_secOtherPY', PY.bsNotes?.n5_ltBorrowings?.total || 0)))}</td></tr>
+          <tr class="tot"><td style="text-align:right;">Total</td>
+            <td class="amt">${fmt(Number(g('n5_secBank',0)) + Number(g('n5_secOther', CY.bsNotes?.n5_ltBorrowings?.total || 0)))}</td>
+            <td class="amt py">${fmt(Number(g('n5_secBankPY',0)) + Number(g('n5_secOtherPY', PY.bsNotes?.n5_ltBorrowings?.total || 0)))}</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note-block">
+      <div class="note-heading"><span class="num">6.</span><span>Trade Payables</span></div>
+      <table class="fs-tbl">
+        <thead><tr><th class="left">Particulars</th><th>As at<br>${CY_END}</th><th class="py">As at<br>${PY_END}</th></tr></thead>
+        <tbody>
+          <tr><td>Total outstanding dues of MSME</td>
+            <td class="amt">${fmt(Number(g('n6_msme',0)))}</td>
+            <td class="amt py">${fmt(Number(g('n6_msmePY',0)))}</td></tr>
+          <tr><td>Total outstanding dues of other than MSME</td>
+            <td class="amt">${fmt(Number(g('n6_oth', CY.bsNotes?.n7_tradePayables?.total || 0)))}</td>
+            <td class="amt py">${fmt(Number(g('n6_othPY', PY.bsNotes?.n7_tradePayables?.total || 0)))}</td></tr>
+          <tr class="tot"><td style="text-align:right;">Total</td>
+            <td class="amt">${fmt(Number(g('n6_msme',0)) + Number(g('n6_oth', CY.bsNotes?.n7_tradePayables?.total || 0)))}</td>
+            <td class="amt py">${fmt(Number(g('n6_msmePY',0)) + Number(g('n6_othPY', PY.bsNotes?.n7_tradePayables?.total || 0)))}</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note-block">
+      <div class="note-heading"><span class="num">7.</span><span>Other current liabilities</span></div>
+      <table class="fs-tbl">
+        <thead><tr><th class="left">Particulars</th><th>As at<br>${CY_END}</th><th class="py">As at<br>${PY_END}</th></tr></thead>
+        <tbody>`;
+  [['adv','Advance from Customers'],['emp','Employee Dues Payable'],['tds','TDS Payable'],['gst','GST Payable'],['stat','Statutory Dues Payable'],['oth','Other payables']].forEach(([k, lbl]) => {
+    const cyVal = Number(g('n7_'+k, 0));
+    const pyVal = Number(g('n7_'+k+'PY', 0));
+    if (cyVal || pyVal) h += `<tr><td>${lbl}</td><td class="amt">${fmt(cyVal)}</td><td class="amt py">${fmt(pyVal)}</td></tr>`;
+  });
+  const oclTotCY = ['adv','emp','tds','gst','stat','oth'].reduce((s,k)=>s+Number(g('n7_'+k,0)),0) || CY.bsNotes?.n8_otherCL?.total || 0;
+  const oclTotPY = ['adv','emp','tds','gst','stat','oth'].reduce((s,k)=>s+Number(g('n7_'+k+'PY',0)),0) || PY.bsNotes?.n8_otherCL?.total || 0;
+  h += `<tr class="tot"><td style="text-align:right;">Total</td><td class="amt">${fmt(oclTotCY)}</td><td class="amt py">${fmt(oclTotPY)}</td></tr>
+      </tbody></table>
+    </div>
+
+    <div class="note-block">
+      <div class="note-heading"><span class="num">8.</span><span>Short-Term Provisions</span></div>
+      <table class="fs-tbl">
+        <thead><tr><th class="left">Particulars</th><th>As at<br>${CY_END}</th><th class="py">As at<br>${PY_END}</th></tr></thead>
+        <tbody>
+          <tr><td>Provision for Employee benefits</td><td class="amt">${fmt(Number(g('n8_emp',0)))}</td><td class="amt py">${fmt(Number(g('n8_empPY',0)))}</td></tr>
+          <tr><td>Provision for Income tax</td><td class="amt">${fmt(Number(g('n8_itax',0)))}</td><td class="amt py">${fmt(Number(g('n8_itaxPY',0)))}</td></tr>
+          <tr><td>Provision for Other Expenses</td><td class="amt">${fmt(Number(g('n8_oth',0)))}</td><td class="amt py">${fmt(Number(g('n8_othPY',0)))}</td></tr>
+          <tr class="tot"><td style="text-align:right;">Total</td>
+            <td class="amt">${fmt(Number(g('n8_emp',0))+Number(g('n8_itax',0))+Number(g('n8_oth',0)))}</td>
+            <td class="amt py">${fmt(Number(g('n8_empPY',0))+Number(g('n8_itaxPY',0))+Number(g('n8_othPY',0)))}</td></tr>
+        </tbody>
+      </table>
+    </div>
+    ${pageFooter()}
+  </div>`;
+  return h;
+}
+
+/* ═══════════ NOTE 9 PPE ═══════════ */
+function renderNote9(){
+  const ppe = JSON.parse(localStorage.getItem('N3_PPE') || '[]');
+  if (!Array.isArray(ppe) || ppe.length === 0) {
+    return `<div class="fs-page page-break">
+      ${pageHeader('Notes to the Financial Statements', 'For the year ended ' + CY_END)}
+      <div class="note-block">
+        <div class="note-heading"><span class="num">9.</span><span>Property, Plant and Equipment</span></div>
+        <div class="missing">⚠ PPE schedule not yet entered in N3 page.</div>
+      </div>
+      ${pageFooter()}
+    </div>`;
+  }
+
+  const totCY = ppe.reduce((a,r) => {
+    const gross = Number(r.openPY||0) + Number(r.addCY||0) - Number(r.delCY||0);
+    const dep = Number(r.openCYDep||0) + Number(r.depCY||0) - Number(r.depOnDel||0);
+    return {
+      openGross: a.openGross + Number(r.openPY||0),
+      add: a.add + Number(r.addCY||0),
+      del: a.del + Number(r.delCY||0),
+      closeGross: a.closeGross + gross,
+      openDep: a.openDep + Number(r.openCYDep||0),
+      depFor: a.depFor + Number(r.depCY||0),
+      depOnDel: a.depOnDel + Number(r.depOnDel||0),
+      closeDep: a.closeDep + dep,
+      nbvCY: a.nbvCY + (gross - dep),
+      nbvPY: a.nbvPY + (Number(r.openPY||0) - Number(r.openCYDep||0))
+    };
+  }, {openGross:0,add:0,del:0,closeGross:0,openDep:0,depFor:0,depOnDel:0,closeDep:0,nbvCY:0,nbvPY:0});
+
+  let h = `<div class="fs-page page-break">
+    ${pageHeader('Notes to the Financial Statements', 'For the year ended ' + CY_END)}
+    <div class="note-block">
+      <div class="note-heading"><span class="num">9.</span><span>Property, Plant and Equipment for Current Period</span></div>
+      <table class="fs-tbl" style="font-size:10px;">
+        <thead>
+          <tr><th class="left" rowspan="2">Particulars</th>
+              <th colspan="4">Gross Block</th>
+              <th colspan="4">Depreciation &amp; Amortisation</th>
+              <th colspan="2">Net Book Value</th></tr>
+          <tr><th>As at ${PY_END}</th><th>Additions</th><th>Deductions</th><th>As at ${CY_END}</th>
+              <th>As at ${PY_END}</th><th>For the year</th><th>On Deductions</th><th>As at ${CY_END}</th>
+              <th>As at ${CY_END}</th><th>As at ${PY_END}</th></tr>
+        </thead>
+        <tbody>`;
+  ppe.forEach(r => {
+    const gross = Number(r.openPY||0) + Number(r.addCY||0) - Number(r.delCY||0);
+    const dep = Number(r.openCYDep||0) + Number(r.depCY||0) - Number(r.depOnDel||0);
+    h += `<tr>
+      <td style="text-align:left;">${esc(r.name||'')}</td>
+      <td class="amt">${fmt(r.openPY)}</td>
+      <td class="amt">${fmt(r.addCY)}</td>
+      <td class="amt">${fmt(r.delCY)}</td>
+      <td class="amt">${fmt(gross)}</td>
+      <td class="amt">${fmt(r.openCYDep)}</td>
+      <td class="amt">${fmt(r.depCY)}</td>
+      <td class="amt">${fmt(r.depOnDel)}</td>
+      <td class="amt">${fmt(dep)}</td>
+      <td class="amt">${fmt(gross - dep)}</td>
+      <td class="amt">${fmt(Number(r.openPY||0) - Number(r.openCYDep||0))}</td>
+    </tr>`;
+  });
+  h += `<tr class="tot">
+        <td style="text-align:left;">Total</td>
+        <td class="amt">${fmt(totCY.openGross)}</td>
+        <td class="amt">${fmt(totCY.add)}</td>
+        <td class="amt">${fmt(totCY.del)}</td>
+        <td class="amt">${fmt(totCY.closeGross)}</td>
+        <td class="amt">${fmt(totCY.openDep)}</td>
+        <td class="amt">${fmt(totCY.depFor)}</td>
+        <td class="amt">${fmt(totCY.depOnDel)}</td>
+        <td class="amt">${fmt(totCY.closeDep)}</td>
+        <td class="amt">${fmt(totCY.nbvCY)}</td>
+        <td class="amt">${fmt(totCY.nbvPY)}</td></tr>
+    </tbody></table>
+    </div>
+    ${pageFooter()}
+  </div>`;
+  return h;
+}
+
+/* ═══════════ NOTES 10-15 (from N4) ═══════════ */
+function renderNotes1015(){
+  const u = JSON.parse(localStorage.getItem('N4_DATA') || '{}');
+  const g = (k, d) => u[k] !== undefined ? u[k] : d;
+  const dtaCY = CY.bsNotes?.n10_dta?.total || 0, dtaPY = PY.bsNotes?.n10_dta?.total || 0;
+  const invCY = CY.bsNotes?.n11_inventories?.total || 0, invPY = PY.bsNotes?.n11_inventories?.total || 0;
+  const trCY  = CY.bsNotes?.n12_tradeReceivables?.total || 0, trPY = PY.bsNotes?.n12_tradeReceivables?.total || 0;
+  const cashCY= CY.bsNotes?.n13_cashBank?.total || 0, cashPY = PY.bsNotes?.n13_cashBank?.total || 0;
+  const slaCY = CY.bsNotes?.n14_stLoans?.total || 0, slaPY = PY.bsNotes?.n14_stLoans?.total || 0;
+  const ocaCY = CY.bsNotes?.n15_otherCA?.total || 0, ocaPY = PY.bsNotes?.n15_otherCA?.total || 0;
+
+  const simpleNote = (num, title, rows, totalCY, totalPY) => {
+    let h = `<div class="note-block">
+      <div class="note-heading"><span class="num">${num}.</span><span>${title}</span></div>
+      <table class="fs-tbl">
+        <thead><tr><th class="left">Particulars</th><th>As at<br>${CY_END}</th><th class="py">As at<br>${PY_END}</th></tr></thead>
+        <tbody>`;
+    rows.forEach(r => { if (r.cy || r.py) h += `<tr><td>${r.label}</td><td class="amt">${fmt(r.cy)}</td><td class="amt py">${fmt(r.py)}</td></tr>`; });
+    h += `<tr class="tot"><td style="text-align:right;">Total</td><td class="amt">${fmt(totalCY)}</td><td class="amt py">${fmt(totalPY)}</td></tr></tbody></table>
+    </div>`;
+    return h;
+  };
+
+  let h = `<div class="fs-page page-break">
+    ${pageHeader('Notes to the Financial Statements', 'For the year ended ' + CY_END)}`;
+
+  h += simpleNote(10, 'Deferred Tax Assets (Net)',
+    [{label:'Deferred Tax Asset [Net]', cy: Number(g('n10_dta', dtaCY)), py: Number(g('n10_dtaPY', dtaPY))}],
+    Number(g('n10_dta', dtaCY)), Number(g('n10_dtaPY', dtaPY)));
+
+  h += simpleNote(11, 'Inventories', [
+    {label:'Raw materials', cy: Number(g('n11_rm',0)), py: Number(g('n11_rmPY',0))},
+    {label:'Work-in-progress', cy: Number(g('n11_wip',0)), py: Number(g('n11_wipPY',0))},
+    {label:'Finished goods', cy: Number(g('n11_fg', invCY)), py: Number(g('n11_fgPY', invPY))},
+    {label:'Stock-in-trade', cy: Number(g('n11_sit',0)), py: Number(g('n11_sitPY',0))},
+    {label:'Stores and spares', cy: Number(g('n11_ss',0)), py: Number(g('n11_ssPY',0))}
+  ], Number(g('n11_rm',0))+Number(g('n11_wip',0))+Number(g('n11_fg',invCY))+Number(g('n11_sit',0))+Number(g('n11_ss',0)),
+     Number(g('n11_rmPY',0))+Number(g('n11_wipPY',0))+Number(g('n11_fgPY',invPY))+Number(g('n11_sitPY',0))+Number(g('n11_ssPY',0)));
+
+  h += simpleNote(12, 'Trade Receivables', [
+    {label:'Unsecured, considered good', cy: Number(g('n12_unsec', trCY)), py: Number(g('n12_unsecPY', trPY))},
+    {label:'Secured, considered good', cy: Number(g('n12_sec',0)), py: Number(g('n12_secPY',0))},
+    {label:'Doubtful', cy: Number(g('n12_doubt',0)), py: Number(g('n12_doubtPY',0))},
+    {label:'Less: Provision for doubtful receivables', cy: -Number(g('n12_prov',0)), py: -Number(g('n12_provPY',0))}
+  ], Number(g('n12_unsec',trCY))+Number(g('n12_sec',0))+Number(g('n12_doubt',0))-Number(g('n12_prov',0)),
+     Number(g('n12_unsecPY',trPY))+Number(g('n12_secPY',0))+Number(g('n12_doubtPY',0))-Number(g('n12_provPY',0)));
+
+  h += simpleNote(13, 'Cash and Cash Equivalents', [
+    {label:'Cash on Hand', cy: Number(g('n13_cash',0)), py: Number(g('n13_cashPY',0))},
+    {label:'Balances with Banks', cy: Number(g('n13_bank', cashCY)), py: Number(g('n13_bankPY', cashPY))},
+    {label:'Other bank balances', cy: Number(g('n13_otherBank',0)), py: Number(g('n13_otherBankPY',0))},
+    {label:'Cheques in hand', cy: Number(g('n13_chq',0)), py: Number(g('n13_chqPY',0))}
+  ], Number(g('n13_cash',0))+Number(g('n13_bank',cashCY))+Number(g('n13_otherBank',0))+Number(g('n13_chq',0)),
+     Number(g('n13_cashPY',0))+Number(g('n13_bankPY',cashPY))+Number(g('n13_otherBankPY',0))+Number(g('n13_chqPY',0)));
+
+  h += simpleNote(14, 'Short-term loans and advances', [
+    {label:'Advance Tax and TDS [Net]', cy: Number(g('n14_tax',0)), py: Number(g('n14_taxPY',0))},
+    {label:'GST Receivable', cy: Number(g('n14_gst',0)), py: Number(g('n14_gstPY',0))},
+    {label:'Prepaid Expenses', cy: Number(g('n14_prepaid',0)), py: Number(g('n14_prepaidPY',0))},
+    {label:'Advances to others', cy: Number(g('n14_adv',0)), py: Number(g('n14_advPY',0))}
+  ], Number(g('n14_tax',0))+Number(g('n14_gst',0))+Number(g('n14_prepaid',0))+Number(g('n14_adv',0)),
+     Number(g('n14_taxPY',0))+Number(g('n14_gstPY',0))+Number(g('n14_prepaidPY',0))+Number(g('n14_advPY',0)));
+
+  h += simpleNote(15, 'Other current assets', [
+    {label:'Security Deposits', cy: Number(g('n15_sd',0)), py: Number(g('n15_sdPY',0))},
+    {label:'Other current assets', cy: Number(g('n15_oth', ocaCY)), py: Number(g('n15_othPY', ocaPY))}
+  ], Number(g('n15_sd',0))+Number(g('n15_oth',ocaCY)),
+     Number(g('n15_sdPY',0))+Number(g('n15_othPY',ocaPY)));
+
+  h += `${pageFooter()}</div>`;
+  return h;
+}
+
+/* ═══════════ NOTES 16-24 (from N5) ═══════════ */
+function renderNotes1624(){
+  const u = JSON.parse(localStorage.getItem('N5_DATA') || '{}');
+  const g = (k, d) => u[k] !== undefined ? u[k] : d;
+  const pln = CY.plNotes || {};
+  const plnPY = PY.plNotes || {};
+
+  const note = (num, title, rows, totalCY, totalPY, period='Year') => {
+    let h = `<div class="note-block">
+      <div class="note-heading"><span class="num">${num}.</span><span>${title}</span></div>
+      <table class="fs-tbl">
+        <thead><tr><th class="left">Particulars</th><th>${period} ended<br>${CY_END}</th><th class="py">${period} ended<br>${PY_END}</th></tr></thead>
+        <tbody>`;
+    rows.forEach(r => { if (r.cy || r.py || r.sub) {
+      if (r.sub) h += `<tr class="sub"><td colspan="3">${r.sub}</td></tr>`;
+      else h += `<tr><td>${r.label}</td><td class="amt">${fmt(r.cy)}</td><td class="amt py">${fmt(r.py)}</td></tr>`;
+    }});
+    h += `<tr class="tot"><td style="text-align:right;">Total</td><td class="amt">${fmt(totalCY)}</td><td class="amt py">${fmt(totalPY)}</td></tr></tbody></table>
+    </div>`;
+    return h;
+  };
+
+  let h = `<div class="fs-page page-break">
+    ${pageHeader('Notes to the Financial Statements', 'For the year ended ' + CY_END)}`;
+
+  const revCY = pln.n16_revenue?.total || 0, revPY = plnPY.n16_revenue?.total || 0;
+  h += note(16, 'Revenue From Operations', [
+    {sub:'Revenue from operations'},
+    {label:'Sale of products', cy: Number(g('n16_prod', revCY)), py: Number(g('n16_prodPY', revPY))},
+    {label:'Sale of services', cy: Number(g('n16_svc',0)), py: Number(g('n16_svcPY',0))},
+    {label:'Other operating revenue', cy: Number(g('n16_oth',0)), py: Number(g('n16_othPY',0))}
+  ], Number(g('n16_prod',revCY))+Number(g('n16_svc',0))+Number(g('n16_oth',0)),
+     Number(g('n16_prodPY',revPY))+Number(g('n16_svcPY',0))+Number(g('n16_othPY',0)));
+
+  h += note(17, 'Other Income', [
+    {sub:'Interest income'},
+    {label:'Interest income on Loans', cy: Number(g('n17_intLoans',0)), py: Number(g('n17_intLoansPY',0))},
+    {sub:'Other non-operating income'},
+    {label:'Provisions written back', cy: Number(g('n17_prov',0)), py: Number(g('n17_provPY',0))},
+    {label:'Miscellaneous non-operating Income', cy: Number(g('n17_misc',0)), py: Number(g('n17_miscPY',0))}
+  ], Number(g('n17_intLoans',0))+Number(g('n17_prov',0))+Number(g('n17_misc',0)),
+     Number(g('n17_intLoansPY',0))+Number(g('n17_provPY',0))+Number(g('n17_miscPY',0)));
+
+  const matCY = pln.n18_materials?.total || 0, matPY = plnPY.n18_materials?.total || 0;
+  h += note(18, 'Cost of Materials Consumed', [
+    {label:'Raw materials consumed', cy: Number(g('n18_rm', matCY)), py: Number(g('n18_rmPY', matPY))}
+  ], Number(g('n18_rm', matCY)), Number(g('n18_rmPY', matPY)));
+
+  const empCY = pln.n20_employee?.total || 0, empPY = plnPY.n20_employee?.total || 0;
+  h += note(21, 'Employee Benefits Expense', [
+    {label:'Salaries and wages', cy: Number(g('n21_sal', empCY)), py: Number(g('n21_salPY', empPY))},
+    {label:'Contribution to provident and other funds', cy: Number(g('n21_pf',0)), py: Number(g('n21_pfPY',0))},
+    {label:'Staff welfare expenses', cy: Number(g('n21_welf',0)), py: Number(g('n21_welfPY',0))}
+  ], Number(g('n21_sal',empCY))+Number(g('n21_pf',0))+Number(g('n21_welf',0)),
+     Number(g('n21_salPY',empPY))+Number(g('n21_pfPY',0))+Number(g('n21_welfPY',0)));
+
+  const finCY = pln.n21_finance?.total || 0, finPY = plnPY.n21_finance?.total || 0;
+  h += note(22, 'Finance costs', [
+    {label:'Interest expense on Borrowings', cy: Number(g('n22_intBorr', finCY)), py: Number(g('n22_intBorrPY', finPY))},
+    {label:'Interest expense others', cy: Number(g('n22_intOth',0)), py: Number(g('n22_intOthPY',0))},
+    {label:'Bank charges', cy: Number(g('n22_bank',0)), py: Number(g('n22_bankPY',0))}
+  ], Number(g('n22_intBorr',finCY))+Number(g('n22_intOth',0))+Number(g('n22_bank',0)),
+     Number(g('n22_intBorrPY',finPY))+Number(g('n22_intOthPY',0))+Number(g('n22_bankPY',0)));
+
+  const depCY = pln.n22_depreciation?.total || 0, depPY = plnPY.n22_depreciation?.total || 0;
+  h += note(23, 'Depreciation and Amortisation Expense', [
+    {label:'Depreciation on Property, Plant and Equipment', cy: Number(g('n23_ppe', depCY)), py: Number(g('n23_ppePY', depPY))}
+  ], Number(g('n23_ppe', depCY)), Number(g('n23_ppePY', depPY)));
+
+  // Note 24 — Other Expenses with all classified line items
+  const oeLines = [
+    ['power','Electricity, Power and fuel'],['rent','Rent expenses'],['repair','Repairs and maintenance'],
+    ['insurance','Insurance expenses'],['rates','Rates and Taxes'],['proc','Processing and manufacturing charges'],
+    ['recruit','Recruitment and training charges'],['prof','Professional and consultancy charges'],
+    ['audit','Payment to Auditors'],['print','Printing and stationery'],['phone','Telephone and Internet'],
+    ['itsvc','Information technology services'],['office','Office and Administration'],
+    ['sec','Security and Housekeeping'],['travel','Travelling expenses'],['conveyance','Conveyance expenses'],
+    ['freight','Freight and forwarding'],['advert','Advertisement and Marketing'],['donation','Donations and charity'],
+    ['csr','Corporate social responsibility expense'],['stamp','Stamp Duty Expenses'],
+    ['trans','Transporting Expenses'],['misc','Miscellaneous expenses']
+  ];
+  let oeRows = [];
+  let oeTotCY = 0, oeTotPY = 0;
+  oeLines.forEach(([k,label]) => {
+    const cy = Number(g('n24_'+k, 0));
+    const py = Number(g('n24_'+k+'PY', 0));
+    if (cy || py) {
+      oeRows.push({label, cy, py});
+      oeTotCY += cy; oeTotPY += py;
+    }
+  });
+  h += note(24, 'Other Expenses', oeRows, oeTotCY, oeTotPY);
+
+  h += `${pageFooter()}</div>`;
+  return h;
+}
+
+/* ═══════════ NOTES 25-27 (from N6) ═══════════ */
+function renderNotes2527(){
+  const u = JSON.parse(localStorage.getItem('N6_DATA') || '{}');
+  const g = (k, d) => u[k] !== undefined ? u[k] : d;
+  const n2 = JSON.parse(localStorage.getItem('N2_DATA') || '{}');
+  const meta = JSON.parse(localStorage.getItem('FS_META') || '{}');
+  const fv = Number(meta.faceValue || n2.n3_fv || 10);
+  const patCY = CY.pl?.profitForYear || 0, patPY = PY.pl?.profitForYear || 0;
+  const shares = Number(n2.n3_issuedShares || meta.weightedAvgShares || g('n25_shares',0));
+
+  const basicCY = shares > 0 ? patCY / shares : 0;
+  const basicPY = shares > 0 ? patPY / shares : 0;
+
+  let h = `<div class="fs-page page-break">
+    ${pageHeader('Notes to the Financial Statements', 'For the year ended ' + CY_END)}
+    <div class="note-block">
+      <div class="note-heading"><span class="num">25.</span><span>Earnings Per Share</span></div>
+      <table class="fs-tbl">
+        <thead><tr><th class="left">Particulars</th><th>Year ended<br>${CY_END}</th><th class="py">Year ended<br>${PY_END}</th></tr></thead>
+        <tbody>
+          <tr><td>Earnings attributable to equity shareholders (a)</td><td class="amt">${fmt(patCY)}</td><td class="amt py">${fmt(patPY)}</td></tr>
+          <tr><td>Weighted average no. of equity shares (b)</td><td class="amt">${shares.toLocaleString('en-IN')}</td><td class="amt py">${shares.toLocaleString('en-IN')}</td></tr>
+          <tr class="tot"><td>Basic EPS (a/b) in Rs. (Face value Rs. ${fv})</td><td class="amt">${basicCY.toFixed(2)}</td><td class="amt py">${basicPY.toFixed(2)}</td></tr>
+          <tr class="tot"><td>Diluted EPS (Face value Rs. ${fv})</td><td class="amt">${basicCY.toFixed(2)}</td><td class="amt py">${basicPY.toFixed(2)}</td></tr>
+        </tbody>
+      </table>
+    </div>`;
+
+  // Ratios
+  const div = (a,b)=>(!b?0:a/b);
+  const vr = (c,p)=>(!p?0:(c-p)/Math.abs(p));
+  const caCY = CY.bs?.cAssets || 0, caPY = PY.bs?.cAssets || 0;
+  const clCY_ = CY.bs?.cLiabilities || 0, clPY_ = PY.bs?.cLiabilities || 0;
+  const lbCY = CY.bsNotes?.n5_ltBorrowings?.total || 0, lbPY = PY.bsNotes?.n5_ltBorrowings?.total || 0;
+  const sbCY = CY.bsNotes?.n6_stBorrowings?.total || 0, sbPY = PY.bsNotes?.n6_stBorrowings?.total || 0;
+  const eqCY = CY.bs?.shareholdersFunds || 0, eqPY = PY.bs?.shareholdersFunds || 0;
+  const revCY_ = CY.plNotes?.n16_revenue?.total || 0, revPY_ = PY.plNotes?.n16_revenue?.total || 0;
+  const invCY_ = CY.bsNotes?.n11_inventories?.total || 0, invPY_ = PY.bsNotes?.n11_inventories?.total || 0;
+  const trCY_ = CY.bsNotes?.n12_tradeReceivables?.total || 0, trPY_ = PY.bsNotes?.n12_tradeReceivables?.total || 0;
+  const tpCY_ = CY.bsNotes?.n7_tradePayables?.total || 0, tpPY_ = PY.bsNotes?.n7_tradePayables?.total || 0;
+  const finCY_ = CY.plNotes?.n21_finance?.total || 0, finPY_ = PY.plNotes?.n21_finance?.total || 0;
+  const depCY_ = CY.plNotes?.n22_depreciation?.total || 0, depPY_ = PY.plNotes?.n22_depreciation?.total || 0;
+  const pbtCY = CY.pl?.profitBeforeTax || 0, pbtPY = PY.pl?.profitBeforeTax || 0;
+
+  const ratios = [
+    ['Current ratio (times)','Current assets','Current liabilities', div(caCY,clCY_), div(caPY,clPY_), false],
+    ['Debt - Equity ratio (times)','Long + Short Borrowings',"Equity shareholders' funds", div(lbCY+sbCY,eqCY), div(lbPY+sbPY,eqPY), false],
+    ['Debt Service coverage (times)','EBITDA','Total debt service', div(pbtCY+finCY_+depCY_,finCY_), div(pbtPY+finPY_+depPY_,finPY_), false],
+    ['Return on equity (%)','Profit after taxes','Avg equity', div(patCY,(eqCY+eqPY)/2||eqCY), div(patPY,eqPY), true],
+    ['Inventory Turnover (times)','Revenue from operations','Average inventories', div(revCY_,(invCY_+invPY_)/2||invCY_), div(revPY_,invPY_), false],
+    ['Trade receivables turnover (times)','Revenue','Average receivables', div(revCY_,(trCY_+trPY_)/2||trCY_), div(revPY_,trPY_), false],
+    ['Trade payables turnover (times)','COGS + Other Exp','Average payables', div((CY.plNotes?.n18_materials?.total||0)+(CY.plNotes?.n23_otherExpenses?.total||0)-depCY_,(tpCY_+tpPY_)/2||tpCY_), div((PY.plNotes?.n18_materials?.total||0)+(PY.plNotes?.n23_otherExpenses?.total||0)-depPY_,tpPY_), false],
+    ['Net capital turnover (times)','Revenue','Working capital', div(revCY_,caCY-clCY_), div(revPY_,caPY-clPY_), false],
+    ['Net profit ratio (%)','Profit after taxes','Revenue', div(patCY,revCY_), div(patPY,revPY_), true],
+    ['Return on capital employed (%)','PBT + Finance costs','Avg capital employed', div(pbtCY+finCY_,eqCY+lbCY+sbCY), div(pbtPY+finPY_,eqPY+lbPY+sbPY), true],
+    ['Return on investment (%)','Income from Investments','Avg Investments', 0, 0, true]
+  ];
+  const fmtR = (v,isPct) => isPct ? (v*100).toFixed(2)+'%' : v.toFixed(2);
+
+  h += `<div class="note-block">
+    <div class="note-heading"><span class="num">26.</span><span>Analytical Ratios</span></div>
+    <table class="fs-tbl" style="font-size:10px;">
+      <thead><tr><th class="left">Ratio</th><th class="left">Numerator</th><th class="left">Denominator</th><th>${CY_END}</th><th class="py">${PY_END}</th><th>% Variance</th></tr></thead>
+      <tbody>`;
+  ratios.forEach(r => {
+    h += `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td>
+      <td class="amt">${fmtR(r[3], r[5])}</td>
+      <td class="amt py">${fmtR(r[4], r[5])}</td>
+      <td class="amt">${(vr(r[3],r[4])*100).toFixed(2)}%</td></tr>`;
+  });
+  h += `</tbody></table>
+    ${g('n26_reasons','') ? '<div class="note-text"><b>Reasons for material change:</b> ' + esc(g('n26_reasons','')) + '</div>' : ''}
+  </div>`;
+
+  h += `<div class="note-block">
+    <div class="note-heading"><span class="num">27.</span><span>Other Disclosures</span></div>
+    <div class="note-text">
+      <b>Disclosure requirements as notified by MCA pursuant to amended Schedule III:</b>
+      <ul>
+        <li>The Company has not traded or invested in Crypto currency or Virtual Currency during the financial year.</li>
+        <li>The Company does not have any Benami Property under Prohibition of Benami Property Transactions Act, 1988.</li>
+        <li>The Company has not been declared a wilful defaulter by any lender.</li>
+        <li>The Company has no Scheme of Arrangement approved under Section 230-237 of the Companies Act, 2013.</li>
+      </ul>
+      <p>Previous Period figures have been re-grouped / re-classified, wherever necessary, to make them comparable with Current Period's classification.</p>
+    </div>
+  </div>
+
+  ${signatureBlock()}
+  ${pageFooter()}
+  </div>`;
+
+  return h;
+}
+
+/* ═══════════ TX — TAX COMPUTATION ═══════════ */
+/* ═══════════ N7: Related Party + Contingent + MSME ═══════════ */
+function renderNotesN7(){
+  const u = JSON.parse(localStorage.getItem('N7_DATA') || '{}');
+  const rp_list = JSON.parse(u.rp_list || '[]').filter(p => p.name);
+  const rp_txn = JSON.parse(u.rp_txn || '[]').filter(t => t.name || t.nature);
+  const cl_items = JSON.parse(u.cl_items || '[]').filter(i => i.desc || i.cy || i.py);
+  const commit_items = JSON.parse(u.commit_items || '[]').filter(i => i.desc || i.cy || i.py);
+
+  // Skip entirely if nothing entered
+  const hasAny = rp_list.length || rp_txn.length || cl_items.length || commit_items.length ||
+                 u.msme_principal || u.msme_interest;
+  if (!hasAny) return '';
+
+  let h = `<div class="fs-page page-break">
+    ${pageHeader('Notes to the Financial Statements', 'For the year ended ' + CY_END)}`;
+
+  if (rp_list.length > 0 || rp_txn.length > 0) {
+    h += `<div class="note-block">
+      <div class="note-heading"><span class="num">28.</span><span>Related Party Disclosures (AS 18)</span></div>`;
+    if (rp_list.length > 0) {
+      h += `<div class="sub-heading">List of Related Parties</div>
+        <table class="fs-tbl"><thead><tr><th class="left">Name</th><th class="left">Relationship</th></tr></thead><tbody>`;
+      rp_list.forEach(p => h += `<tr><td>${esc(p.name)}</td><td>${esc(p.relation)}</td></tr>`);
+      h += `</tbody></table>`;
+    }
+    if (rp_txn.length > 0) {
+      h += `<div class="sub-heading">Transactions with Related Parties</div>
+        <table class="fs-tbl"><thead>
+          <tr><th class="left">Name</th><th class="left">Relationship</th><th class="left">Nature</th>
+              <th>Year ended<br>${CY_END}</th><th class="py">Year ended<br>${PY_END}</th>
+              <th>Outstanding<br>${CY_END}</th><th class="py">Outstanding<br>${PY_END}</th></tr>
+        </thead><tbody>`;
+      rp_txn.forEach(t => {
+        h += `<tr><td>${esc(t.name)}</td><td>${esc(t.relation)}</td><td>${esc(t.nature)}</td>
+          <td class="amt">${fmt(t.cy)}</td><td class="amt py">${fmt(t.py)}</td>
+          <td class="amt">${fmt(t.cyOut)}</td><td class="amt py">${fmt(t.pyOut)}</td></tr>`;
+      });
+      h += `</tbody></table>`;
+    }
+    h += `</div>`;
+  }
+
+  if (cl_items.length > 0 || commit_items.length > 0) {
+    h += `<div class="note-block">
+      <div class="note-heading"><span class="num">29.</span><span>Contingent Liabilities and Commitments</span></div>`;
+    if (cl_items.length > 0) {
+      h += `<div class="sub-heading">Contingent Liabilities</div>
+        <table class="fs-tbl"><thead><tr><th class="left">Particulars</th><th>As at<br>${CY_END}</th><th class="py">As at<br>${PY_END}</th></tr></thead><tbody>`;
+      let cyT=0, pyT=0;
+      cl_items.forEach(it => {
+        h += `<tr><td>${esc(it.desc)}</td><td class="amt">${fmt(it.cy)}</td><td class="amt py">${fmt(it.py)}</td></tr>`;
+        cyT += Number(it.cy) || 0; pyT += Number(it.py) || 0;
+      });
+      h += `<tr class="tot"><td style="text-align:right;">Total</td><td class="amt">${fmt(cyT)}</td><td class="amt py">${fmt(pyT)}</td></tr></tbody></table>`;
+    }
+    if (commit_items.length > 0) {
+      h += `<div class="sub-heading">Capital and Other Commitments</div>
+        <table class="fs-tbl"><thead><tr><th class="left">Particulars</th><th>As at<br>${CY_END}</th><th class="py">As at<br>${PY_END}</th></tr></thead><tbody>`;
+      let cyT=0, pyT=0;
+      commit_items.forEach(it => {
+        h += `<tr><td>${esc(it.desc)}</td><td class="amt">${fmt(it.cy)}</td><td class="amt py">${fmt(it.py)}</td></tr>`;
+        cyT += Number(it.cy) || 0; pyT += Number(it.py) || 0;
+      });
+      h += `<tr class="tot"><td style="text-align:right;">Total</td><td class="amt">${fmt(cyT)}</td><td class="amt py">${fmt(pyT)}</td></tr></tbody></table>`;
+    }
+    h += `</div>`;
+  }
+
+  if (u.msme_principal || u.msme_interest) {
+    h += `<div class="note-block">
+      <div class="note-heading"><span class="num">30.</span><span>Disclosure under MSMED Act, 2006</span></div>
+      <table class="fs-tbl"><thead><tr><th class="left">Particulars</th><th>As at<br>${CY_END}</th><th class="py">As at<br>${PY_END}</th></tr></thead>
+      <tbody>
+        <tr><td>(a) Principal amount unpaid at year end</td><td class="amt">${fmt(u.msme_principal)}</td><td class="amt py">${fmt(u.msme_principalPY)}</td></tr>
+        <tr><td>(b) Interest accrued &amp; unpaid</td><td class="amt">${fmt(u.msme_interest)}</td><td class="amt py">${fmt(u.msme_interestPY)}</td></tr>
+        <tr><td>(c) Payments beyond appointed day</td><td class="amt">${fmt(u.msme_delay)}</td><td class="amt py">${fmt(u.msme_delayPY)}</td></tr>
+        <tr><td>(d) Interest paid u/s 16 of MSMED Act</td><td class="amt">${fmt(u.msme_intPaid)}</td><td class="amt py">${fmt(u.msme_intPaidPY)}</td></tr>
+        <tr><td>(e) Interest due &amp; payable for delay</td><td class="amt">${fmt(u.msme_intDue)}</td><td class="amt py">${fmt(u.msme_intDuePY)}</td></tr>
+      </tbody></table>
+    </div>`;
+  }
+
+  if (u.seg_text) {
+    h += `<div class="note-block">
+      <div class="note-heading"><span class="num">31.</span><span>Segment Reporting (AS 17)</span></div>
+      <div class="note-text">${esc(u.seg_text).replace(/\n/g, '<br>')}</div>
+    </div>`;
+  }
+
+  h += `${pageFooter()}</div>`;
+  return h;
+}
+
+function renderTX(){
+  const tx = JSON.parse(localStorage.getItem('TX_DATA') || '{}');
+  const t = (k, d) => tx[k] !== undefined ? tx[k] : d;
+  const pbt = CY.pl?.profitBeforeTax || 0;
+  const totalTI = pbt + Number(t('tx_cg',0)) + Number(t('tx_os',0)) - Number(t('tx_via',0));
+  const totalNT = Number(t('tx_basic',0)) + Number(t('tx_sur',0)) + Number(t('tx_cess',0)) + Number(t('tx_int',0));
+  const totalMAT = Number(t('mat_basic',0)) + Number(t('mat_sur',0)) + Number(t('mat_cess',0)) + Number(t('mat_int',0));
+  const finalTax = Math.max(totalNT, totalMAT);
+
+  return `<div class="fs-page page-break">
+    ${pageHeader('Income Tax Return — Computation', 'For the year ended ' + CY_END)}
+    <div class="note-block">
+      <div class="note-heading"><span>COMPUTATION OF INCOME TAX</span></div>
+      <table class="fs-tbl">
+        <thead><tr><th class="left">Particulars</th><th>Year ended<br>${CY_END}</th><th>Totals</th></tr></thead>
+        <tbody>
+          <tr class="sub"><td colspan="3"><u>NORMAL TAX</u></td></tr>
+          <tr><td><b>Business or Profession</b></td><td></td><td></td></tr>
+          <tr><td style="padding-left:20px;">Profit or Loss before tax</td><td class="amt">${fmt(pbt)}</td><td class="amt">${fmt(pbt)}</td></tr>
+          <tr><td><b>Capital Gains</b></td><td class="amt">${fmt(Number(t('tx_cg',0)))}</td><td class="amt">${fmt(Number(t('tx_cg',0)))}</td></tr>
+          <tr><td><b>Other Sources</b></td><td class="amt">${fmt(Number(t('tx_os',0)))}</td><td class="amt">${fmt(Number(t('tx_os',0)))}</td></tr>
+          <tr><td><b>Chapter VIA Deductions</b></td><td class="amt">${fmt(Number(t('tx_via',0)))}</td><td class="amt">${fmt(-Number(t('tx_via',0)))}</td></tr>
+          <tr class="tot"><td><b>Total Taxable Income</b></td><td></td><td class="amt">${fmt(totalTI)}</td></tr>
+          <tr><td style="padding-left:20px;">Basic Tax</td><td class="amt">${fmt(Number(t('tx_basic',0)))}</td><td></td></tr>
+          <tr><td style="padding-left:20px;">Surcharge</td><td class="amt">${fmt(Number(t('tx_sur',0)))}</td><td></td></tr>
+          <tr><td style="padding-left:20px;">Health &amp; Education Cess</td><td class="amt">${fmt(Number(t('tx_cess',0)))}</td><td></td></tr>
+          <tr><td style="padding-left:20px;">Interest u/s 234A/B/C</td><td class="amt">${fmt(Number(t('tx_int',0)))}</td><td></td></tr>
+          <tr class="tot"><td><b>Total TAX (Normal)</b></td><td></td><td class="amt">${fmt(totalNT)}</td></tr>
+          <tr class="blank"><td colspan="3"></td></tr>
+          <tr class="sub"><td colspan="3"><u>MINIMUM ALTERNATE TAX</u></td></tr>
+          <tr><td style="padding-left:20px;">Profit or Loss before tax</td><td class="amt">${fmt(pbt)}</td><td></td></tr>
+          <tr class="tot"><td><b>Total Book Profits</b></td><td></td><td class="amt">${fmt(pbt)}</td></tr>
+          <tr><td style="padding-left:20px;">Basic Tax</td><td class="amt">${fmt(Number(t('mat_basic',0)))}</td><td></td></tr>
+          <tr><td style="padding-left:20px;">Surcharge</td><td class="amt">${fmt(Number(t('mat_sur',0)))}</td><td></td></tr>
+          <tr><td style="padding-left:20px;">Health &amp; Education Cess</td><td class="amt">${fmt(Number(t('mat_cess',0)))}</td><td></td></tr>
+          <tr><td style="padding-left:20px;">Interest u/s 234A/B/C</td><td class="amt">${fmt(Number(t('mat_int',0)))}</td><td></td></tr>
+          <tr class="tot"><td><b>Total MAT</b></td><td></td><td class="amt">${fmt(totalMAT)}</td></tr>
+          <tr class="total"><td><b>Final Tax Liability</b></td><td></td><td class="amt">${fmt(finalTax)}</td></tr>
+        </tbody>
+      </table>
+    </div>
+    ${signatureBlock()}
+    ${pageFooter()}
+  </div>`;
+}
+
+/* ═══════════ CASH FLOW STATEMENT (AS 3 Indirect Method — Oaks format) ═══════════ */
+function renderCF(){
+  const cf = AccountingEngine.getCashFlowStatement();
+  const o = cf.operating || {}, inv = cf.investing || {}, fin = cf.financing || {}, sum = cf.summary || {};
+  const comp = cf.cashComponents || { cashOnHand:0, bankCurrent:0, otherBank:0 };
+  const compPY = cf.cashComponentsPY || { cashOnHand:0, bankCurrent:0, otherBank:0 };
+  const u = JSON.parse(localStorage.getItem('CF_OVERRIDES') || '{}');
+  const gg = (k, def) => (u[k] !== undefined && u[k] !== '') ? Number(u[k]) : (Number(def) || 0);
+
+  // Resolve all figures (override > auto)
+  const vPBT    = gg('a_pbt',   o.netProfit);
+  const vDep    = gg('a_dep',   o.adjDep);
+  const vIntFD  = gg('a_intFD', o.adjIntFD);
+  const vDiv    = gg('a_div',   o.adjDividend);
+  const vLTCG   = gg('a_ltcg',  o.adjLTCG);
+  const vFnO    = gg('a_fno',   o.adjFnO);
+  const vSTCG   = gg('a_stcg',  o.adjSTCG);
+  const vSpec   = gg('a_spec',  o.adjSpec);
+  const vOth    = gg('a_oth',   o.adjOtherNonOp);
+  const vWB     = gg('a_wb',    o.adjWriteBack);
+  const vIntExp = gg('a_int',   o.adjIntExp);
+  const vPBW    = vPBT + vDep + vIntFD + vDiv + vLTCG + vFnO + vSTCG + vSpec + vOth + vWB + vIntExp;
+
+  const vRec   = gg('wc_rec',  o.wcReceivables);
+  const vStL   = gg('wc_stl',  o.wcStLoans);
+  const vOCA   = gg('wc_oca',  o.wcOtherCA);
+  const vInv   = gg('wc_inv',  o.wcInventories);
+  const vPay   = gg('wc_pay',  o.wcPayables);
+  const vStB   = gg('wc_stb',  o.wcStBorrowings);
+  const vProv  = gg('wc_prov', o.wcStProvisions);
+  const vOCL   = gg('wc_ocl',  o.wcOtherCL);
+  const vWC    = vRec + vStL + vOCA + vInv + vPay + vStB + vProv + vOCL;
+  const vCFO   = vPBW + vWC;
+  const vTax   = gg('a_tax',   o.taxesPaid);
+  const vNetA  = vCFO - vTax;
+
+  const vCapex  = gg('b_capex',  -inv.capexTotal);
+  const vIntRec = gg('b_intRec', inv.interestReceived);
+  const vDivRec = gg('b_divRec', inv.dividendReceived);
+  const vEqInv  = gg('b_equity', inv.equityInvFlow);
+  const vFD     = gg('b_fd',     inv.fdFlow);
+  const vBLtcg  = gg('b_ltcg',   inv.ltcg);
+  const vBFno   = gg('b_fno',    inv.fno);
+  const vBStcg  = gg('b_stcg',   inv.stcg);
+  const vBSpec  = gg('b_spec',   inv.speculation);
+  const vNetB   = vCapex + vIntRec + vDivRec + vEqInv + vFD + vBLtcg + vBFno + vBStcg + vBSpec;
+
+  const vLoans  = gg('c_loans', fin.ltBorrChange);
+  const vEq     = gg('c_eq',    fin.shareCapChange);
+  const vIntPd  = gg('c_int',   -fin.financeCostsPaid);
+  const vNetC   = vLoans + vEq + vIntPd;
+
+  const vTotal  = vNetA + vNetB + vNetC;
+  const vOpen   = gg('s_open',  sum.openingCash);
+  const vClose  = gg('s_close', sum.closingCash);
+
+  const f = (x) => fmt(x);
+  const pyCol = HAS_PY ? `<th style="width:22%;">As at<br>${PY_END}</th>` : '';
+  const pyCell = HAS_PY ? `<td class="amt py">-</td>` : '';
+
+  return `<div class="fs-page page-break">
+    ${pageHeader('Cash Flow Statement', 'For the year ended ' + CY_END)}
+    <table class="fs-tbl">
+      <thead><tr>
+        <th class="left" style="width:56%;">Particulars</th>
+        <th style="width:22%;">Year ended<br>${CY_END}</th>
+        ${pyCol}
+      </tr></thead>
+      <tbody>
+        <tr class="sec"><td colspan="${HAS_PY?3:2}"><b>(A) Cash flows from operating activities:</b></td></tr>
+        <tr class="item"><td>Profit / (loss) before tax</td><td class="amt">${f(vPBT)}</td>${pyCell}</tr>
+        <tr class="subsec"><td colspan="${HAS_PY?3:2}"><i>Adjustments for:</i></td></tr>
+        <tr class="item"><td>Depreciation and amortisation</td><td class="amt">${f(vDep)}</td>${pyCell}</tr>
+        <tr class="item"><td>Interest on fixed deposits and IT refunds</td><td class="amt">${f(vIntFD)}</td>${pyCell}</tr>
+        <tr class="item"><td>Dividend</td><td class="amt">${f(vDiv)}</td>${pyCell}</tr>
+        <tr class="item"><td>Long Term Capital Gain/Loss</td><td class="amt">${f(vLTCG)}</td>${pyCell}</tr>
+        <tr class="item"><td>Profit &amp; Loss on Future and Option</td><td class="amt">${f(vFnO)}</td>${pyCell}</tr>
+        <tr class="item"><td>Short Term Capital Gain/Loss</td><td class="amt">${f(vSTCG)}</td>${pyCell}</tr>
+        <tr class="item"><td>Speculation Income/Loss</td><td class="amt">${f(vSpec)}</td>${pyCell}</tr>
+        <tr class="item"><td>Other non-operating Income</td><td class="amt">${f(vOth)}</td>${pyCell}</tr>
+        <tr class="item"><td>Sundry balances/Assets written back (net)</td><td class="amt">${f(vWB)}</td>${pyCell}</tr>
+        <tr class="item"><td>Interest expenses</td><td class="amt">${f(vIntExp)}</td>${pyCell}</tr>
+        <tr class="subtot"><td><b>Operating profit / (loss) before working capital changes</b></td><td class="amt">${f(vPBW)}</td>${pyCell}</tr>
+
+        <tr class="subsec"><td colspan="${HAS_PY?3:2}"><i>Adjustment for working capital changes:</i></td></tr>
+        <tr class="item"><td>(Increase) / decrease in trade and other receivables</td><td class="amt">${f(vRec)}</td>${pyCell}</tr>
+        <tr class="item"><td>(Increase) / decrease in short-term loans and advances</td><td class="amt">${f(vStL)}</td>${pyCell}</tr>
+        <tr class="item"><td>(Increase) / decrease in Other Current Assets</td><td class="amt">${f(vOCA)}</td>${pyCell}</tr>
+        <tr class="item"><td>(Increase) / decrease in inventories</td><td class="amt">${f(vInv)}</td>${pyCell}</tr>
+        <tr class="item"><td>Increase / (decrease) in trade payables</td><td class="amt">${f(vPay)}</td>${pyCell}</tr>
+        <tr class="item"><td>(Increase) / decrease in Short-term borrowings</td><td class="amt">${f(vStB)}</td>${pyCell}</tr>
+        <tr class="item"><td>Increase / (decrease) in Short Term Provisions</td><td class="amt">${f(vProv)}</td>${pyCell}</tr>
+        <tr class="item"><td>Increase / (decrease) in other liabilities</td><td class="amt">${f(vOCL)}</td>${pyCell}</tr>
+
+        <tr class="subtot"><td><b>Cash generated from Operations</b></td><td class="amt">${f(vCFO)}</td>${pyCell}</tr>
+        <tr class="item"><td>Taxes paid (net of refunds)</td><td class="amt">${f(vTax)}</td>${pyCell}</tr>
+        <tr class="total"><td><b>Net cash generated from / (used in) operating activities (A)</b></td><td class="amt">${f(vNetA)}</td>${pyCell}</tr>
+
+        <tr class="blank"><td colspan="${HAS_PY?3:2}"></td></tr>
+        <tr class="sec"><td colspan="${HAS_PY?3:2}"><b>(B) Cash flows from investing activities:</b></td></tr>
+        <tr class="item"><td>Purchase of fixed assets, capital work-in-progress, capital advances and capital creditors</td><td class="amt">${f(vCapex)}</td>${pyCell}</tr>
+        <tr class="item"><td>Interest income</td><td class="amt">${f(vIntRec)}</td>${pyCell}</tr>
+        <tr class="item"><td>Dividend Income</td><td class="amt">${f(vDivRec)}</td>${pyCell}</tr>
+        <tr class="item"><td>Change in Investment in Equity shares</td><td class="amt">${f(vEqInv)}</td>${pyCell}</tr>
+        <tr class="item"><td>Change In Fixed Deposits</td><td class="amt">${f(vFD)}</td>${pyCell}</tr>
+        <tr class="item"><td>Long Term Capital Gain/Loss</td><td class="amt">${f(vBLtcg)}</td>${pyCell}</tr>
+        <tr class="item"><td>Profit &amp; Loss on Future and Option</td><td class="amt">${f(vBFno)}</td>${pyCell}</tr>
+        <tr class="item"><td>Short Term Capital Gain/Loss</td><td class="amt">${f(vBStcg)}</td>${pyCell}</tr>
+        <tr class="item"><td>Speculation Income/Loss</td><td class="amt">${f(vBSpec)}</td>${pyCell}</tr>
+        <tr class="total"><td><b>Net cash generated from / (used) in investing activities (B)</b></td><td class="amt">${f(vNetB)}</td>${pyCell}</tr>
+
+        <tr class="blank"><td colspan="${HAS_PY?3:2}"></td></tr>
+        <tr class="sec"><td colspan="${HAS_PY?3:2}"><b>(C) Cash flow from financing activities:</b></td></tr>
+        <tr class="item"><td>Loans taken / (repaid) (net)</td><td class="amt">${f(vLoans)}</td>${pyCell}</tr>
+        <tr class="item"><td>Change in Equity</td><td class="amt">${f(vEq)}</td>${pyCell}</tr>
+        <tr class="item"><td>Interest expenses</td><td class="amt">${f(vIntPd)}</td>${pyCell}</tr>
+        <tr class="total"><td><b>Net cash generated from / (used) in financing activities (C)</b></td><td class="amt">${f(vNetC)}</td>${pyCell}</tr>
+
+        <tr class="blank"><td colspan="${HAS_PY?3:2}"></td></tr>
+        <tr class="total"><td><b>Net increase / (decrease) in cash and cash equivalents (A+B+C)</b></td><td class="amt">${f(vTotal)}</td>${pyCell}</tr>
+        <tr class="item"><td>Cash and cash equivalents as at beginning of year</td><td class="amt">${f(vOpen)}</td>${pyCell}</tr>
+        <tr class="total"><td><b>Cash and cash equivalents as at the end of the year</b></td><td class="amt">${f(vClose)}</td>${pyCell}</tr>
+      </tbody>
+    </table>
+
+    <div style="margin-top:14px;font-size:11px;line-height:1.6;">
+      <div style="font-weight:700;text-decoration:underline;margin-bottom:6px;">Notes to cash flow statement :</div>
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <div style="font-weight:700;min-width:18px;">1</div>
+        <div style="flex:1;">
+          Components of cash and cash equivalents
+          <table class="fs-tbl" style="width:60%;margin-top:6px;">
+            <thead><tr><th class="left" style="text-align:left;">Particulars</th><th style="width:22%;">${CY_END}</th>${HAS_PY?`<th style="width:22%;">${PY_END}</th>`:''}</tr></thead>
+            <tbody>
+              <tr class="sub"><td>Cash and cash equivalents</td><td></td>${HAS_PY?'<td></td>':''}</tr>
+              <tr class="item"><td>&nbsp;&nbsp;- Cash on hand</td><td class="amt">${f(comp.cashOnHand)}</td>${HAS_PY?`<td class="amt">${f(compPY.cashOnHand)}</td>`:''}</tr>
+              <tr class="sub"><td>Balances with banks</td><td></td>${HAS_PY?'<td></td>':''}</tr>
+              <tr class="item"><td>&nbsp;&nbsp;- In current accounts</td><td class="amt">${f(comp.bankCurrent)}</td>${HAS_PY?`<td class="amt">${f(compPY.bankCurrent)}</td>`:''}</tr>
+              ${comp.otherBank || compPY.otherBank ? `<tr class="item"><td>&nbsp;&nbsp;- Other bank balances</td><td class="amt">${f(comp.otherBank)}</td>${HAS_PY?`<td class="amt">${f(compPY.otherBank)}</td>`:''}</tr>` : ''}
+              <tr class="tot"><td></td><td class="amt">${f(comp.cashOnHand + comp.bankCurrent + comp.otherBank)}</td>${HAS_PY?`<td class="amt">${f(compPY.cashOnHand + compPY.bankCurrent + compPY.otherBank)}</td>`:''}</tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:6px;">
+        <div style="font-weight:700;min-width:18px;">2</div>
+        <div style="flex:1;">The above Cash Flow Statement has been prepared under the 'Indirect Method' as set out in Accounting Standard 3 "Cash Flow Statement".</div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:6px;">
+        <div style="font-weight:700;min-width:18px;">3</div>
+        <div style="flex:1;">The figures of the previous year have been regrouped / reclassified wherever necessary to conform to the classification / presentation of current year figures.</div>
+      </div>
+    </div>
+    ${signatureBlock()}
+    ${pageFooter()}
+  </div>`;
+}
+
+function render(){
+  loadEverything();
+  const html = renderCover() + renderBS() + renderPL() + renderCF() + renderNotes12() + renderNotes38() + renderNote9() + renderNotes1015() + renderNotes1624() + renderNotes2527() + renderNotesN7() + renderTX();
+  document.getElementById('pkgWrap').innerHTML = html;
+}
+
+window.addEventListener('DOMContentLoaded', render);
+</script>
+
+<!-- BOTTOM TABS -->
+<div class="bottom-tabs">
+  <a href="dashboard.html" class="tab">HOME</a>
+  <a href="balance.html" class="tab">BS</a>
+  <a href="pl.html" class="tab">PL</a>
+  <a href="n1.html" class="tab">N1</a>
+  <a href="n2.html" class="tab">N2</a>
+  <a href="n3.html" class="tab">N3</a>
+  <a href="n4.html" class="tab">N4</a>
+  <a href="n5.html" class="tab">N5</a>
+  <a href="n6.html" class="tab">N6</a>
+  <a href="tx.html" class="tab">TX</a>
+  <a href="fs-package.html" class="tab active">FS</a>
+</div>
+</body>
+</html>

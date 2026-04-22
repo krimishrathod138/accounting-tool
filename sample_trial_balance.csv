@@ -1,0 +1,61 @@
+Ledger Name,Debit,Credit,Group
+Share Capital,,5000000,Capital Account
+Reserves and Surplus,,1200000,Reserves and surplus
+Profit & Loss A/c,,850000,Reserves and surplus
+Long Term Borrowings (SBI Term Loan),,3500000,Secured Loans
+Vehicle Loan (HDFC),,750000,Secured Loans
+Unsecured Loan (Directors),,500000,Unsecured Loans
+Cash Credit (Bank OD - Canara Bank),,2200000,Bank OD
+Trade Payables - ABC Traders,,1450000,Sundry Creditors
+Trade Payables - XYZ Suppliers,,980000,Sundry Creditors
+Trade Payables - PQR Enterprises,,620000,Sundry Creditors
+GST Payable (Output),,185000,Duties & Taxes
+TDS Payable,,42000,Duties & Taxes
+Salary Payable (Outstanding),,120000,Provisions
+Audit Fees Payable,,25000,Provisions
+Other Current Liabilities,,95000,Current Liabilities
+Plant & Machinery,4200000,,Fixed Assets
+Furniture & Fixtures,380000,,Fixed Assets
+Computer & Equipment,220000,,Fixed Assets
+Office Building,3500000,,Fixed Assets
+Vehicles,850000,,Fixed Assets
+Less: Accumulated Depreciation,,1250000,Fixed Assets
+Capital Work-in-Progress,480000,,Fixed Assets
+Non-current Investments (Mutual Funds),750000,,Investments
+Security Deposits (Long Term),180000,,Deposits (Asset)
+Raw Material Stock,2100000,,Stock-in-hand
+Work-in-Progress Stock,450000,,Stock-in-hand
+Finished Goods Stock,980000,,Stock-in-hand
+Trade Receivables - Customer A,1850000,,Sundry Debtors
+Trade Receivables - Customer B,1200000,,Sundry Debtors
+Trade Receivables - Customer C,760000,,Sundry Debtors
+Trade Receivables - Customer D,540000,,Sundry Debtors
+HDFC Bank Current Account,1250000,,Bank Accounts
+SBI Savings Account,380000,,Bank Accounts
+Cash in Hand,45000,,Cash-in-hand
+Petty Cash,12000,,Cash-in-hand
+Advance to Suppliers,320000,,Loans & Advances (Asset)
+Staff Advance,85000,,Loans & Advances (Asset)
+Prepaid Insurance,18000,,Loans & Advances (Asset)
+TDS Receivable (Asset),95000,,Loans & Advances (Asset)
+Input GST Credit (ITC),142000,,Loans & Advances (Asset)
+Sales - Domestic,9500000,,Sales Accounts
+Sales - Export,,1200000,Sales Accounts
+Purchase of Raw Material,6800000,,Purchase Accounts
+Freight Inward,95000,,Direct Expenses
+Power & Fuel,280000,,Direct Expenses
+Factory Wages,420000,,Direct Expenses
+Salary & Wages (Staff),850000,,Indirect Expenses
+Rent Expense,180000,,Indirect Expenses
+Electricity Charges (Office),42000,,Indirect Expenses
+Telephone & Internet,18000,,Indirect Expenses
+Travelling & Conveyance,65000,,Indirect Expenses
+Printing & Stationery,22000,,Indirect Expenses
+Audit & Legal Fees,75000,,Indirect Expenses
+Bank Charges,12000,,Indirect Expenses
+Insurance Expense,38000,,Indirect Expenses
+Repairs & Maintenance,55000,,Indirect Expenses
+Depreciation,320000,,Indirect Expenses
+Interest on Term Loan,285000,,Indirect Expenses
+Interest on CC,168000,,Indirect Expenses
+Other Administrative Expenses,48000,,Indirect Expenses

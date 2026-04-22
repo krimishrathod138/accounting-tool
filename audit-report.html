@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Audit Report — Independent Auditor's Report + CARO 2020 + Director's Report</title>
+<link rel="stylesheet" href="style.css">
+<style>
+body{font-family:Arial,sans-serif;background:#f4f4f4;margin:0;padding:0 0 90px;}
+.doc-wrap{background:#fff;max-width:900px;margin:16px auto;padding:30px 40px;border:1px solid #c0c8d3;box-shadow:0 2px 10px rgba(0,0,0,.07);font-family:Calibri,'Segoe UI',Arial,sans-serif;font-size:11.5px;line-height:1.55;}
+.doc-header{margin-bottom:14px;border-bottom:2px solid #000;padding-bottom:6px;}
+.doc-header .co-name{font-size:14px;font-weight:700;}
+.doc-header .co-title{font-size:12px;font-weight:700;}
+.doc-header .co-date{font-size:10.5px;color:#444;margin-top:4px;}
+
+h2.section-title{color:#14345a;font-size:16px;border-bottom:1px solid #14345a;margin:30px 0 12px;padding-bottom:4px;}
+h3.sub-title{font-size:13px;font-weight:700;margin:16px 0 6px;color:#333;}
+
+.doc-para{margin:8px 0;text-align:justify;}
+.doc-para textarea{width:100%;min-height:80px;padding:8px;border:1px solid #999;border-radius:3px;font-family:Calibri,Arial,sans-serif;font-size:11.5px;line-height:1.55;background:#fffef3;resize:vertical;}
+.doc-para textarea:focus{outline:none;border-color:#ffcc00;background:#fff;}
+
+.caro-table{width:100%;border-collapse:collapse;font-size:11px;border:1px solid #000;margin:8px 0;}
+.caro-table td, .caro-table th{border:1px solid #000;padding:5px 8px;vertical-align:top;}
+.caro-table th{background:#e9ecef;font-weight:700;text-align:left;}
+.caro-table .clause-num{width:40px;font-weight:700;text-align:center;}
+.caro-table .clause-title{font-weight:700;width:220px;}
+.caro-table textarea{width:100%;min-height:40px;border:none;background:#fffef3;padding:4px;font-family:Calibri,Arial,sans-serif;font-size:11px;line-height:1.5;resize:vertical;}
+.caro-table textarea:focus{outline:2px solid #ffcc00;background:#fff;}
+
+.toolbar-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
+.btn-primary{background:#234a7b;color:#fff;border:none;padding:6px 14px;border-radius:3px;cursor:pointer;font-size:12px;font-weight:600;}
+.btn-save{background:#006400;color:#fff;border:none;padding:6px 14px;border-radius:3px;cursor:pointer;font-size:12px;font-weight:600;}
+.btn-secondary{background:#6c757d;color:#fff;border:none;padding:5px 12px;border-radius:3px;cursor:pointer;font-size:11px;}
+button:hover:not(.tab){filter:brightness(1.1);}
+
+#statusBar{max-width:900px;margin:14px auto;padding:8px 12px;font-size:13px;font-weight:600;border-radius:3px;}
+.status-success{background:#d4edda;color:#155724;border:1px solid #c3e6cb;}
+.status-normal{background:#e2e3e5;color:#41464b;border:1px solid #d6d8db;}
+
+.nav-tabs{display:flex;gap:4px;margin-bottom:16px;border-bottom:2px solid #14345a;}
+.nav-tab{padding:8px 16px;background:#e9ecef;color:#14345a;border:1px solid #c0c8d3;border-bottom:none;cursor:pointer;font-size:12px;font-weight:600;border-radius:4px 4px 0 0;}
+.nav-tab.active{background:#14345a;color:#fff;}
+.nav-tab:hover:not(.active){background:#d5dde8;}
+
+.section{display:none;}
+.section.active{display:block;}
+
+.signature-block{margin-top:40px;padding-top:20px;border-top:1px solid #000;}
+
+@media print{
+  body{background:#fff;padding:0;}
+  .toolbar-row, .bottom-tabs, #statusBar, .nav-tabs{display:none !important;}
+  .section{display:block !important;}
+  .section + .section{page-break-before:always;}
+  .doc-wrap{box-shadow:none;border:none;padding:0;margin:0;}
+  @page{margin:1.4cm 1.8cm;size:A4 portrait;}
+}
+</style>
+</head>
+<body>
+<script src="engine.js"></script>
+
+<div id="statusBar" class="status-normal">Loading...</div>
+
+<div class="doc-wrap">
+  <div class="toolbar-row">
+    <div style="font-weight:700;color:#14345a;">Audit Report — Independent Auditor's Report · CARO 2020 · Director's Report</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button type="button" class="btn-primary" onclick="loadTemplate()">Load Standard Template</button>
+      <button type="button" class="btn-save" onclick="saveAll()">💾 Save</button>
+      <button type="button" class="btn-primary" onclick="window.print()">🖨 Print</button>
+    </div>
+  </div>
+
+  <div class="nav-tabs">
+    <div class="nav-tab active" data-section="iar" onclick="switchSection('iar')">Independent Auditor's Report</div>
+    <div class="nav-tab" data-section="caro" onclick="switchSection('caro')">CARO 2020</div>
+    <div class="nav-tab" data-section="dir" onclick="switchSection('dir')">Director's Report</div>
+  </div>
+
+  <!-- Page header (auto from company details) -->
+  <div class="doc-header">
+    <div class="co-name" id="coName">Company Name</div>
+    <div class="co-title" id="docTitle">Independent Auditor's Report</div>
+    <div class="co-date">For the year ended <span id="cyLabel">March 31, 2024</span></div>
+  </div>
+
+  <!-- ═══════════ SECTION 1: INDEPENDENT AUDITOR'S REPORT ═══════════ -->
+  <div class="section active" id="sec-iar">
+
+    <h2 class="section-title">To The Members of <span id="iarCoRef">____</span></h2>
+
+    <h3 class="sub-title">Report on the Audit of the Financial Statements</h3>
+
+    <h3 class="sub-title">Opinion</h3>
+    <div class="doc-para">
+      <textarea id="iar_opinion" rows="6"></textarea>
+    </div>
+
+    <h3 class="sub-title">Basis for Opinion</h3>
+    <div class="doc-para">
+      <textarea id="iar_basis" rows="5"></textarea>
+    </div>
+
+    <h3 class="sub-title">Key Audit Matters</h3>
+    <div class="doc-para">
+      <textarea id="iar_kam" rows="4"></textarea>
+    </div>
+
+    <h3 class="sub-title">Other Information (if applicable)</h3>
+    <div class="doc-para">
+      <textarea id="iar_other_info" rows="3"></textarea>
+    </div>
+
+    <h3 class="sub-title">Management's Responsibility for the Financial Statements</h3>
+    <div class="doc-para">
+      <textarea id="iar_mgt_resp" rows="6"></textarea>
+    </div>
+
+    <h3 class="sub-title">Auditor's Responsibility for the Audit of the Financial Statements</h3>
+    <div class="doc-para">
+      <textarea id="iar_aud_resp" rows="8"></textarea>
+    </div>
+
+    <h3 class="sub-title">Report on Other Legal and Regulatory Requirements</h3>
+    <div class="doc-para">
+      <textarea id="iar_legal" rows="10"></textarea>
+    </div>
+
+    <div class="signature-block">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:30px;font-size:11px;">
+        <div>
+          <div style="font-weight:700;">For <span id="iarCaFirm">_______________</span></div>
+          <div>Chartered Accountants</div>
+          <div>Firm Regn. No: <span id="iarCaReg">_____</span></div>
+          <div style="margin-top:40px;font-weight:700;"><span id="iarPartner">_______________</span></div>
+          <div>Partner</div>
+          <div>Membership No: <span id="iarMemNo">_____</span></div>
+          <div>UDIN: <input type="text" id="iar_udin" value="" style="width:60%;padding:2px;border:1px solid #ccc;background:#fffef3;"></div>
+        </div>
+        <div>
+          <div style="margin-top:40px;">Place: <input type="text" id="iar_place" value="Mumbai" style="width:60%;padding:2px;border:1px solid #ccc;background:#fffef3;"></div>
+          <div>Date: <input type="text" id="iar_date" value="" style="width:60%;padding:2px;border:1px solid #ccc;background:#fffef3;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SECTION 2: CARO 2020 ═══════════ -->
+  <div class="section" id="sec-caro">
+
+    <h2 class="section-title">Annexure 'A' — CARO 2020 Report</h2>
+    <div class="doc-para" style="font-style:italic;color:#555;">
+      (Referred to in paragraph 2 under 'Report on Other Legal and Regulatory Requirements' of our Independent Auditor's Report of even date on the financial statements of <span id="caroCoRef">____</span> for the year ended <span id="caroYr">____</span>)
+    </div>
+
+    <div class="doc-para">
+      To the best of our information and according to the explanations provided to us by the Company and the books of account and records examined by us in the normal course of audit, we state that:
+    </div>
+
+    <table class="caro-table" id="caroTable">
+      <thead>
+        <tr><th class="clause-num">#</th><th class="clause-title">Matter</th><th>Auditor's Response</th></tr>
+      </thead>
+      <tbody id="caroBody"></tbody>
+    </table>
+
+    <div class="signature-block">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:30px;font-size:11px;">
+        <div>
+          <div style="font-weight:700;">For <span class="caFirmEcho">_______________</span></div>
+          <div>Chartered Accountants</div>
+          <div>Firm Regn. No: <span class="caRegEcho">_____</span></div>
+          <div style="margin-top:40px;font-weight:700;"><span class="partnerEcho">_______________</span></div>
+          <div>Partner</div>
+          <div>Membership No: <span class="memNoEcho">_____</span></div>
+        </div>
+        <div>
+          <div style="margin-top:40px;">Place: <span class="placeEcho">Mumbai</span></div>
+          <div>Date: <span class="dateEcho">____</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SECTION 3: DIRECTOR'S REPORT ═══════════ -->
+  <div class="section" id="sec-dir">
+
+    <h2 class="section-title">Board's Report</h2>
+
+    <div class="doc-para">
+      To the Members,<br>
+      <span id="dirCoRef">____</span>
+    </div>
+
+    <div class="doc-para">
+      Your Directors have pleasure in presenting their Annual Report on the business and operations of your Company together with the Audited Financial Statements for the financial year ended <span id="dirYr">____</span>.
+    </div>
+
+    <h3 class="sub-title">1. Financial Performance</h3>
+    <div class="doc-para">
+      <textarea id="dir_finperf" rows="6"></textarea>
+    </div>
+
+    <h3 class="sub-title">2. State of Company's Affairs</h3>
+    <div class="doc-para">
+      <textarea id="dir_affairs" rows="4"></textarea>
+    </div>
+
+    <h3 class="sub-title">3. Dividend</h3>
+    <div class="doc-para">
+      <textarea id="dir_dividend" rows="3"></textarea>
+    </div>
+
+    <h3 class="sub-title">4. Transfer to Reserves</h3>
+    <div class="doc-para">
+      <textarea id="dir_reserves" rows="2"></textarea>
+    </div>
+
+    <h3 class="sub-title">5. Change in the Nature of Business, if any</h3>
+    <div class="doc-para">
+      <textarea id="dir_bizchange" rows="2"></textarea>
+    </div>
+
+    <h3 class="sub-title">6. Material Changes and Commitments</h3>
+    <div class="doc-para">
+      <textarea id="dir_material" rows="3"></textarea>
+    </div>
+
+    <h3 class="sub-title">7. Directors and Key Managerial Personnel</h3>
+    <div class="doc-para">
+      <textarea id="dir_dirs" rows="3"></textarea>
+    </div>
+
+    <h3 class="sub-title">8. Number of Meetings of the Board</h3>
+    <div class="doc-para">
+      <textarea id="dir_meetings" rows="2"></textarea>
+    </div>
+
+    <h3 class="sub-title">9. Details of Subsidiary, Joint Venture or Associate Companies</h3>
+    <div class="doc-para">
+      <textarea id="dir_subsi" rows="2"></textarea>
+    </div>
+
+    <h3 class="sub-title">10. Deposits</h3>
+    <div class="doc-para">
+      <textarea id="dir_deposits" rows="2"></textarea>
+    </div>
+
+    <h3 class="sub-title">11. Particulars of Loans, Guarantees and Investments u/s 186</h3>
+    <div class="doc-para">
+      <textarea id="dir_loans186" rows="3"></textarea>
+    </div>
+
+    <h3 class="sub-title">12. Particulars of Contracts / Arrangements with Related Parties u/s 188</h3>
+    <div class="doc-para">
+      <textarea id="dir_rpt188" rows="3"></textarea>
+    </div>
+
+    <h3 class="sub-title">13. Corporate Social Responsibility</h3>
+    <div class="doc-para">
+      <textarea id="dir_csr" rows="3"></textarea>
+    </div>
+
+    <h3 class="sub-title">14. Risk Management</h3>
+    <div class="doc-para">
+      <textarea id="dir_risk" rows="3"></textarea>
+    </div>
+
+    <h3 class="sub-title">15. Conservation of Energy, Technology Absorption &amp; Foreign Exchange Earnings/Outgo</h3>
+    <div class="doc-para">
+      <textarea id="dir_energy" rows="4"></textarea>
+    </div>
+
+    <h3 class="sub-title">16. Directors' Responsibility Statement</h3>
+    <div class="doc-para">
+      <textarea id="dir_resp" rows="8"></textarea>
+    </div>
+
+    <h3 class="sub-title">17. Auditors</h3>
+    <div class="doc-para">
+      <textarea id="dir_auditors" rows="3"></textarea>
+    </div>
+
+    <h3 class="sub-title">18. Acknowledgements</h3>
+    <div class="doc-para">
+      <textarea id="dir_ack" rows="3"></textarea>
+    </div>
+
+    <div class="signature-block">
+      <div style="font-weight:700;margin-bottom:40px;">For and on behalf of the Board of Directors</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:30px;font-size:11px;">
+        <div>
+          <div style="font-weight:700;"><span class="d1Echo">_______________</span></div>
+          <div>Director</div>
+          <div>DIN: <span class="d1dinEcho">_____</span></div>
+        </div>
+        <div>
+          <div style="font-weight:700;"><span class="d2Echo">_______________</span></div>
+          <div>Director</div>
+          <div>DIN: <span class="d2dinEcho">_____</span></div>
+        </div>
+      </div>
+      <div style="margin-top:20px;font-size:11px;">Place: <span class="placeEcho">Mumbai</span> | Date: <span class="dateEcho">____</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="bottom-tabs">
+  <a href="dashboard.html" class="tab">HOME</a>
+  <a href="balance.html" class="tab">BS</a>
+  <a href="pl.html" class="tab">PL</a>
+  <a href="cf.html" class="tab">CF</a>
+  <a href="n1.html" class="tab">N1</a>
+  <a href="n2.html" class="tab">N2</a>
+  <a href="n3.html" class="tab">N3</a>
+  <a href="n4.html" class="tab">N4</a>
+  <a href="n5.html" class="tab">N5</a>
+  <a href="n6.html" class="tab">N6</a>
+  <a href="n7.html" class="tab">N7</a>
+  <a href="tx.html" class="tab">TX</a>
+  <a href="audit-report.html" class="tab active">AR</a>
+  <a href="fs-package.html" class="tab">FS</a>
+  <button type="button" class="tab plus">+</button>
+</div>
+
+<script>
+const status = document.getElementById('statusBar');
+
+// CARO 2020 clauses (paraphrased standard list)
+const CARO_CLAUSES = [
+  ['(i)', 'Property, Plant and Equipment / Intangible Assets', '(a) Whether the Company is maintaining proper records showing full particulars including quantitative details and situation of PPE and intangible assets.\n(b) Whether these assets have been physically verified by management at reasonable intervals and whether any material discrepancies were noticed on such verification.\n(c) Whether title deeds of all immovable properties disclosed in the financial statements are held in the name of the Company.\n(d) Whether the Company has revalued its PPE during the year; details thereof.\n(e) Whether any proceedings have been initiated or are pending against the Company for holding benami property.'],
+  ['(ii)', 'Inventory', '(a) Whether physical verification of inventory has been conducted at reasonable intervals by management and whether material discrepancies were noticed.\n(b) Whether during the year the Company has been sanctioned working capital limits in excess of ₹5 crore from banks/FIs on the basis of security of current assets; whether quarterly returns filed agree with books of account.'],
+  ['(iii)', 'Loans / Advances / Guarantees / Securities given', '(a) Whether during the year the Company has made investments, provided guarantees, security, granted loans (secured/unsecured) to companies, firms, LLPs or other parties; if so, details and compliance with provisions of Section 185 and 186.\n(b) Whether the terms and conditions of grant of loans, investments, guarantees or securities are prejudicial to the interests of the Company.\n(c) Schedule of repayment, regularity of receipt.\n(d) Overdue amounts > 90 days.\n(e) Fresh loans granted to settle overdues.\n(f) Loans granted on demand without specifying terms — aggregate, percentage.'],
+  ['(iv)', 'Compliance with Sections 185 and 186', 'Whether provisions of sections 185 and 186 have been complied with regarding loans, investments, guarantees, and security; if not, provide details.'],
+  ['(v)', 'Deposits', 'Whether the Company has accepted deposits/amounts deemed to be deposits during the year; if so, whether directives issued by RBI, provisions of Sections 73 to 76 and other relevant provisions of the Companies Act, 2013 and rules framed thereunder have been complied with.'],
+  ['(vi)', 'Cost Records', 'Whether maintenance of cost records has been specified by the Central Government under sub-section (1) of Section 148 of the Companies Act, 2013, and whether such accounts and records have been so made and maintained.'],
+  ['(vii)', 'Statutory Dues', '(a) Whether the Company is regular in depositing undisputed statutory dues including GST, PF, ESI, Income Tax, Sales Tax, Service Tax, Duty of Customs, Duty of Excise, Value Added Tax, Cess and any other statutory dues to appropriate authorities.\n(b) Where disputed dues remain unpaid, provide particulars — amount involved, period, forum where dispute is pending.'],
+  ['(viii)', 'Undisclosed Income', 'Whether any transactions not recorded in the books of account have been surrendered or disclosed as income during the year in tax assessments under Income Tax Act, 1961; if so, provide details.'],
+  ['(ix)', 'Default in Repayment of Loans', '(a) Whether the Company has defaulted in repayment of loans or borrowings to any lender; if so, provide details.\n(b) Whether the Company has been declared a wilful defaulter by any bank/FI/other lender.\n(c) Whether term loans were applied for the purpose for which obtained.\n(d) Whether funds raised on short-term basis have been utilized for long-term purposes.\n(e)(f) Details of funds raised from any person/entity on account of or to meet obligations of its subsidiaries, associates or JVs.'],
+  ['(x)', 'IPO / Preferential Allotment', '(a) Whether moneys raised by initial public offer/further public offer were applied for the purposes for which raised; any deviation to be indicated.\n(b) Whether preferential allotment or private placement of shares/convertible debentures made during the year; if so, compliance with Sections 42 and 62 of the Companies Act, 2013.'],
+  ['(xi)', 'Fraud', '(a) Whether any fraud by the Company or on the Company has been noticed or reported during the year; if yes, nature and amount.\n(b) Whether any report u/s 143(12) has been filed with the Central Government.\n(c) Whistle-blower complaints received and considered.'],
+  ['(xii)', 'Nidhi Company', 'Whether the Company is a Nidhi Company; if yes, compliance with the Nidhi Rules, 2014.'],
+  ['(xiii)', 'Related Party Transactions', 'Whether all transactions with related parties are in compliance with Sections 177 and 188 of the Companies Act, 2013, where applicable, and whether details have been disclosed in the financial statements as required.'],
+  ['(xiv)', 'Internal Audit', '(a) Whether the Company has an internal audit system commensurate with its size and nature of business.\n(b) Whether reports of the internal auditors for the period under audit have been considered by the statutory auditor.'],
+  ['(xv)', 'Non-cash Transactions with Directors', 'Whether the Company has entered into any non-cash transactions with directors or persons connected with them; if so, compliance with provisions of Section 192.'],
+  ['(xvi)', 'Registration with RBI', '(a) Whether the Company is required to be registered under Section 45-IA of the RBI Act, 1934; if so, whether registration has been obtained.\n(b) Whether the Company has conducted any NBFC activities without a valid CoR from RBI.\n(c) Whether the Company is a CIC and compliance thereof.\n(d) Group Companies count of CICs.'],
+  ['(xvii)', 'Cash Losses', 'Whether the Company has incurred cash losses in the financial year and in the immediately preceding financial year; if so, amounts.'],
+  ['(xviii)', 'Resignation of Statutory Auditors', 'Whether there has been any resignation of statutory auditors during the year; if so, whether the auditor has taken into consideration issues, objections or concerns raised by the outgoing auditor.'],
+  ['(xix)', 'Material Uncertainty — Going Concern', 'On the basis of financial ratios, ageing and expected dates of realisation of financial assets and payment of financial liabilities, other information and management plans, whether the auditor is of the opinion that no material uncertainty exists as on the date of the audit report regarding the Company\'s ability to meet its liabilities existing at the date of balance sheet as and when they fall due within a period of one year from the balance sheet date.'],
+  ['(xx)', 'Corporate Social Responsibility', '(a) Whether any unspent amount pursuant to sub-section (5) of section 135 has been transferred to a Fund specified in Schedule VII within the stipulated time.\n(b) Whether amount remaining unspent, pursuant to ongoing project, has been transferred to special account in compliance with sub-section (6) of section 135.'],
+  ['(xxi)', 'Consolidated Financial Statements', 'Whether there have been any qualifications or adverse remarks by the respective auditors in the CARO reports of the companies included in the consolidated financial statements; if yes, indicate the details of the companies and paragraph numbers of the CARO report containing the qualifications or adverse remarks.']
+];
+
+const TEMPLATES = {
+  iar_opinion: `We have audited the accompanying Financial Statements of {{COMPANY}} ("the Company"), which comprise the Balance Sheet as at {{CY_END}}, the Statement of Profit and Loss and the Cash Flow Statement for the year then ended, and a summary of significant accounting policies and other explanatory information.
+
+In our opinion and to the best of our information and according to the explanations given to us, the aforesaid financial statements give the information required by the Companies Act, 2013 in the manner so required and give a true and fair view in conformity with the accounting principles generally accepted in India, of the state of affairs of the Company as at {{CY_END}}, its profit/(loss) and its cash flows for the year ended on that date.`,
+
+  iar_basis: `We conducted our audit in accordance with the Standards on Auditing (SAs) specified under Section 143(10) of the Companies Act, 2013. Our responsibilities under those Standards are further described in the Auditor's Responsibility section of our report. We are independent of the Company in accordance with the Code of Ethics issued by ICAI, and we have fulfilled our other ethical responsibilities in accordance with these requirements and the Code of Ethics. We believe that the audit evidence we have obtained is sufficient and appropriate to provide a basis for our opinion.`,
+
+  iar_kam: `We have determined that there are no key audit matters to communicate in our report. (Or, if applicable, list matters with a description and how the audit addressed them.)`,
+
+  iar_other_info: `Not applicable — the Company is a Private Limited Company and is not required to issue an annual report containing other information.`,
+
+  iar_mgt_resp: `The Company's Board of Directors is responsible for the matters stated in Section 134(5) of the Companies Act, 2013 with respect to the preparation of these financial statements that give a true and fair view of the financial position, financial performance and cash flows of the Company in accordance with the accounting principles generally accepted in India, including the Accounting Standards specified under Section 133 of the Act.
+
+This responsibility also includes maintenance of adequate accounting records in accordance with the provisions of the Act for safeguarding the assets of the Company and for preventing and detecting frauds and other irregularities; selection and application of appropriate accounting policies; making judgments and estimates that are reasonable and prudent; and design, implementation and maintenance of adequate internal financial controls, that were operating effectively for ensuring the accuracy and completeness of the accounting records, relevant to the preparation and presentation of the financial statements that give a true and fair view and are free from material misstatement, whether due to fraud or error.`,
+
+  iar_aud_resp: `Our objectives are to obtain reasonable assurance about whether the financial statements as a whole are free from material misstatement, whether due to fraud or error, and to issue an auditor's report that includes our opinion. Reasonable assurance is a high level of assurance, but is not a guarantee that an audit conducted in accordance with SAs will always detect a material misstatement when it exists.
+
+As part of an audit in accordance with SAs, we exercise professional judgment and maintain professional skepticism throughout the audit. We also:
+• Identify and assess the risks of material misstatement, whether due to fraud or error, design and perform audit procedures responsive to those risks, and obtain audit evidence that is sufficient and appropriate.
+• Obtain an understanding of internal financial controls relevant to the audit in order to design audit procedures that are appropriate in the circumstances.
+• Evaluate the appropriateness of accounting policies used and the reasonableness of accounting estimates and related disclosures made by management.
+• Conclude on the appropriateness of management's use of the going concern basis of accounting.
+• Evaluate the overall presentation, structure and content of the financial statements.
+
+We communicate with those charged with governance regarding, among other matters, the planned scope and timing of the audit and significant audit findings.`,
+
+  iar_legal: `1. As required by the Companies (Auditor's Report) Order, 2020 ("the Order"), issued by the Central Government of India in terms of sub-section (11) of Section 143 of the Companies Act, 2013, we give in "Annexure A" a statement on the matters specified in paragraphs 3 and 4 of the Order, to the extent applicable.
+
+2. As required by Section 143(3) of the Act, we report that:
+   (a) We have sought and obtained all the information and explanations which to the best of our knowledge and belief were necessary for the purposes of our audit.
+   (b) In our opinion, proper books of account as required by law have been kept by the Company so far as appears from our examination of those books.
+   (c) The Balance Sheet, the Statement of Profit and Loss and the Cash Flow Statement dealt with by this Report are in agreement with the books of account.
+   (d) In our opinion, the aforesaid financial statements comply with the Accounting Standards specified under Section 133 of the Act.
+   (e) On the basis of written representations received from the directors as on {{CY_END}}, none of the directors is disqualified from being appointed as a director in terms of Section 164(2) of the Act.
+   (f) Internal Financial Controls over Financial Reporting: Not applicable to the Company since it falls under the exempted class under Section 143(3)(i).
+   (g) With respect to other matters to be included in the Auditor's Report in accordance with Rule 11 of the Companies (Audit and Auditors) Rules, 2014, in our opinion and to the best of our information and according to the explanations given to us:
+       i. The Company does not have any pending litigations that would impact its financial position.
+       ii. The Company did not have any long-term contracts including derivative contracts for which there were any material foreseeable losses.
+       iii. There were no amounts required to be transferred to the Investor Education and Protection Fund.`,
+
+  dir_finperf: `The summarised financial performance of your Company for the year under review is as follows:
+
+(All amounts in ₹)
+
+Particulars                              Current Year        Previous Year
+─────────────────────────────────────    ───────────────     ───────────────
+Revenue from operations                   {{REV_CY}}          {{REV_PY}}
+Other income                              {{OI_CY}}           {{OI_PY}}
+Total Revenue                             {{TOTREV_CY}}       {{TOTREV_PY}}
+Total Expenses                            {{EXP_CY}}          {{EXP_PY}}
+Profit / (Loss) before Tax                {{PBT_CY}}          {{PBT_PY}}
+Tax expense                               {{TAX_CY}}          {{TAX_PY}}
+Profit / (Loss) for the year              {{PAT_CY}}          {{PAT_PY}}`,
+
+  dir_affairs: `The Company is engaged in {{BUSINESS}}. During the year under review, the Company {{PERFORMANCE_BRIEF}}. The Directors look forward to a continuing upward trajectory in the forthcoming years.`,
+
+  dir_dividend: `In view of the need to conserve resources and fund future growth plans, the Directors do not recommend any dividend for the financial year under review.`,
+
+  dir_reserves: `The Company does not propose to transfer any amount to general reserves.`,
+
+  dir_bizchange: `There has been no change in the nature of business of the Company during the year under review.`,
+
+  dir_material: `No material changes and commitments affecting the financial position of the Company have occurred between the end of the financial year to which these financial statements relate and the date of this report.`,
+
+  dir_dirs: `As on the date of this report, the Board comprises the following Directors:
+• {{D1}} — Director (DIN: {{D1DIN}})
+• {{D2}} — Director (DIN: {{D2DIN}})
+
+During the year under review, there were no changes in the composition of the Board.`,
+
+  dir_meetings: `During the year under review, {{N_MEETINGS}} meetings of the Board of Directors were held, the details of which are maintained by the Company as per the requirements of the Companies Act, 2013. The intervening gap between any two meetings did not exceed the period prescribed under the Act.`,
+
+  dir_subsi: `The Company does not have any subsidiary, joint venture or associate company as on the date of this report.`,
+
+  dir_deposits: `The Company has neither accepted nor renewed any deposits from the public within the meaning of Sections 73 to 76 of the Companies Act, 2013, and the rules made thereunder during the financial year.`,
+
+  dir_loans186: `Details of loans, guarantees and investments under Section 186 of the Companies Act, 2013 are given in the notes to the financial statements.`,
+
+  dir_rpt188: `All contracts / arrangements / transactions entered into by the Company during the financial year with related parties were on an arm's length basis and in the ordinary course of business. Details are disclosed in Note 28 to the financial statements.`,
+
+  dir_csr: `The provisions of Section 135 of the Companies Act, 2013 relating to Corporate Social Responsibility are not applicable to the Company during the year under review.`,
+
+  dir_risk: `The Company has in place a risk management framework commensurate with its size and nature of business. The Board regularly reviews the key risks and mitigation steps.`,
+
+  dir_energy: `Particulars with respect to conservation of energy, technology absorption, and foreign exchange earnings and outgo under Section 134(3)(m) of the Companies Act, 2013 read with Rule 8 of the Companies (Accounts) Rules, 2014 are as follows:
+
+(A) Conservation of Energy: The Company has taken reasonable steps to conserve energy.
+(B) Technology Absorption: Not applicable.
+(C) Foreign Exchange Earnings and Outgo:
+    Foreign exchange earnings: ₹ ___
+    Foreign exchange outgo:    ₹ ___`,
+
+  dir_resp: `Pursuant to Section 134(5) of the Companies Act, 2013, the Board of Directors, to the best of their knowledge and ability, confirm that:
+
+(a) in the preparation of the annual accounts, the applicable accounting standards have been followed along with proper explanation relating to material departures;
+(b) the directors have selected such accounting policies and applied them consistently and made judgments and estimates that are reasonable and prudent so as to give a true and fair view of the state of affairs of the Company at the end of the financial year and of the profit/(loss) of the Company for that year;
+(c) the directors have taken proper and sufficient care for the maintenance of adequate accounting records in accordance with the provisions of the Companies Act, 2013 for safeguarding the assets of the Company and for preventing and detecting fraud and other irregularities;
+(d) the directors have prepared the annual accounts on a going concern basis;
+(e) the directors have devised proper systems to ensure compliance with the provisions of all applicable laws and that such systems were adequate and operating effectively.`,
+
+  dir_auditors: `{{CA_FIRM}}, Chartered Accountants (Firm Regn No: {{CA_REG}}), are the statutory auditors of the Company. They hold office till the conclusion of the next Annual General Meeting.`,
+
+  dir_ack: `Your Directors place on record their sincere appreciation for the continued support and cooperation extended by the shareholders, banks, financial institutions, government authorities, suppliers, customers and employees of the Company.`
+};
+
+function loadCompany(){
+  const bd = AccountingEngine.getCompanyDetails();
+  const fy = bd.financialYear || '1-Apr-23 to 31-Mar-24';
+  const endDate = (fy.split(' to ')[1] || 'March 31, 2024').trim();
+  const meta = JSON.parse(localStorage.getItem('FS_META') || '{}');
+  const n6 = JSON.parse(localStorage.getItem('N6_DATA') || '{}');
+  const coName = meta.companyName || bd.name || 'Company Name';
+  document.getElementById('coName').textContent = coName;
+  document.getElementById('cyLabel').textContent = endDate;
+  document.getElementById('iarCoRef').textContent = coName;
+  document.getElementById('caroCoRef').textContent = coName;
+  document.getElementById('caroYr').textContent = endDate;
+  document.getElementById('dirCoRef').textContent = coName;
+  document.getElementById('dirYr').textContent = endDate;
+  // Signature echoes
+  document.getElementById('iarCaFirm').textContent = n6.sig_caFirm || '_______________';
+  document.getElementById('iarCaReg').textContent = n6.sig_caReg || '_____';
+  document.getElementById('iarPartner').textContent = n6.sig_partner || '_______________';
+  document.getElementById('iarMemNo').textContent = n6.sig_memNo || '_____';
+  document.querySelectorAll('.caFirmEcho').forEach(e => e.textContent = n6.sig_caFirm || '_______________');
+  document.querySelectorAll('.caRegEcho').forEach(e => e.textContent = n6.sig_caReg || '_____');
+  document.querySelectorAll('.partnerEcho').forEach(e => e.textContent = n6.sig_partner || '_______________');
+  document.querySelectorAll('.memNoEcho').forEach(e => e.textContent = n6.sig_memNo || '_____');
+  document.querySelectorAll('.d1Echo').forEach(e => e.textContent = n6.sig_d1 || '_______________');
+  document.querySelectorAll('.d1dinEcho').forEach(e => e.textContent = n6.sig_d1din || '_____');
+  document.querySelectorAll('.d2Echo').forEach(e => e.textContent = n6.sig_d2 || '_______________');
+  document.querySelectorAll('.d2dinEcho').forEach(e => e.textContent = n6.sig_d2din || '_____');
+  document.querySelectorAll('.placeEcho').forEach(e => e.textContent = n6.sig_placeCA || 'Mumbai');
+  document.querySelectorAll('.dateEcho').forEach(e => e.textContent = n6.sig_dateCA || '____');
+
+  return { coName, endDate, meta, n6 };
+}
+
+function loadSaved(){
+  const data = JSON.parse(localStorage.getItem('AUDIT_REPORT') || '{}');
+  Object.keys(data).forEach(k => {
+    const el = document.getElementById(k);
+    if (el) el.value = data[k];
+  });
+  // Restore CARO answers
+  const caro = data.caro || {};
+  CARO_CLAUSES.forEach((c, i) => {
+    const el = document.getElementById('caro_' + i);
+    if (el && caro[i]) el.value = caro[i];
+  });
+}
+
+function loadTemplate(){
+  if (!confirm('Load standard template text? Any existing text in this section will be REPLACED.')) return;
+  const { coName, endDate, meta, n6 } = loadCompany();
+  const cy = AccountingEngine.getScheduleIIIReport('CY') || {};
+  const py = AccountingEngine.hasPYData && AccountingEngine.hasPYData() ? AccountingEngine.getScheduleIIIReport('PY') : {};
+
+  const fmtAmt = v => (v || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 });
+
+  const replacements = {
+    '{{COMPANY}}': coName,
+    '{{CY_END}}': endDate,
+    '{{BUSINESS}}': meta.natureOfBusiness || 'the business of ________',
+    '{{PERFORMANCE_BRIEF}}': 'continued to operate in its normal course of business',
+    '{{D1}}': n6.sig_d1 || '_____',
+    '{{D2}}': n6.sig_d2 || '_____',
+    '{{D1DIN}}': n6.sig_d1din || '_____',
+    '{{D2DIN}}': n6.sig_d2din || '_____',
+    '{{N_MEETINGS}}': '4',
+    '{{CA_FIRM}}': n6.sig_caFirm || '_____',
+    '{{CA_REG}}': n6.sig_caReg || '_____',
+    '{{REV_CY}}': fmtAmt(cy.plNotes?.n16_revenue?.total),
+    '{{REV_PY}}': fmtAmt(py.plNotes?.n16_revenue?.total),
+    '{{OI_CY}}': fmtAmt(cy.plNotes?.n17_otherIncome?.total),
+    '{{OI_PY}}': fmtAmt(py.plNotes?.n17_otherIncome?.total),
+    '{{TOTREV_CY}}': fmtAmt(cy.pl?.totalRevenue),
+    '{{TOTREV_PY}}': fmtAmt(py.pl?.totalRevenue),
+    '{{EXP_CY}}': fmtAmt(cy.pl?.totalExpenses),
+    '{{EXP_PY}}': fmtAmt(py.pl?.totalExpenses),
+    '{{PBT_CY}}': fmtAmt(cy.pl?.profitBeforeTax),
+    '{{PBT_PY}}': fmtAmt(py.pl?.profitBeforeTax),
+    '{{TAX_CY}}': fmtAmt(cy.plNotes?.n24_tax?.currentTax || 0),
+    '{{TAX_PY}}': fmtAmt(py.plNotes?.n24_tax?.currentTax || 0),
+    '{{PAT_CY}}': fmtAmt(cy.pl?.profitForYear),
+    '{{PAT_PY}}': fmtAmt(py.pl?.profitForYear),
+  };
+
+  Object.keys(TEMPLATES).forEach(key => {
+    let text = TEMPLATES[key];
+    Object.keys(replacements).forEach(r => { text = text.split(r).join(replacements[r]); });
+    const el = document.getElementById(key);
+    if (el) el.value = text;
+  });
+
+  // Seed CARO with "Favourable" default answers
+  CARO_CLAUSES.forEach((c, i) => {
+    const el = document.getElementById('caro_' + i);
+    if (el && !el.value.trim()) el.value = 'Based on our examination and information provided, the Company has complied with the applicable requirements of this clause. No adverse observations are to be reported.';
+  });
+  saveAll(true);
+  status.textContent = '✓ Standard template loaded across all 3 sections.';
+  status.className = 'status-success';
+}
+
+function renderCARO(){
+  const tbody = document.getElementById('caroBody');
+  const data = JSON.parse(localStorage.getItem('AUDIT_REPORT') || '{}');
+  const caro = data.caro || {};
+  tbody.innerHTML = CARO_CLAUSES.map((c, i) => {
+    const val = caro[i] || '';
+    const matterHtml = c[2].split('\n').map(line => line.trim()).join('<br>');
+    return `<tr>
+      <td class="clause-num">${c[0]}</td>
+      <td class="clause-title">${c[1]}<div style="font-size:10px;font-weight:normal;color:#555;margin-top:4px;">${matterHtml}</div></td>
+      <td><textarea id="caro_${i}" rows="3">${val}</textarea></td>
+    </tr>`;
+  }).join('');
+  tbody.querySelectorAll('textarea').forEach(t => t.addEventListener('change', () => saveAll(true)));
+}
+
+function switchSection(id){
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.section === id));
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById('sec-' + id).classList.add('active');
+  // Update header title
+  const titleMap = {iar:"Independent Auditor's Report", caro:"CARO 2020 Report", dir:"Board's / Director's Report"};
+  document.getElementById('docTitle').textContent = titleMap[id] || '';
+}
+
+function saveAll(silent){
+  const data = {};
+  document.querySelectorAll('textarea, input[type="text"]').forEach(el => {
+    if (el.id && !el.id.startsWith('caro_')) data[el.id] = el.value;
+  });
+  const caro = {};
+  CARO_CLAUSES.forEach((c, i) => {
+    const el = document.getElementById('caro_' + i);
+    if (el && el.value.trim()) caro[i] = el.value;
+  });
+  data.caro = caro;
+  localStorage.setItem('AUDIT_REPORT', JSON.stringify(data));
+  AccountingEngine.persistToElectron && AccountingEngine.persistToElectron();
+  if (!silent) { status.textContent = '✓ Audit Report saved.'; status.className = 'status-success'; }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  loadCompany();
+  renderCARO();
+  loadSaved();
+  document.querySelectorAll('textarea, input[type="text"]').forEach(el => el.addEventListener('change', () => saveAll(true)));
+  status.textContent = 'Audit Report loaded. Click "Load Standard Template" to pre-fill with ICAI-standard text.';
+  status.className = 'status-success';
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') window.history.back();
+  if ((e.key.toLowerCase() === 's') && (e.ctrlKey || e.altKey)) { e.preventDefault(); saveAll(); }
+});
+</script>
+</body>
+</html>

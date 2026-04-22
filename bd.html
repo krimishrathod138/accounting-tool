@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Basic Details</title>
+
+    <link rel="stylesheet" href="style.css">
+    <style>
+
+
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        h2 {
+            margin-top: 20px;
+        }
+
+        .outer-wrapper {
+            background: #ffffff;
+            max-width: 600px;
+            margin: 20px auto 40px auto;
+            padding: 20px 25px;
+            border: 1px solid #ccc;
+            box-shadow: 0 0 6px rgba(0, 0, 0, 0.08);
+            position: relative;
+        }
+
+        .outer-wrapper h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 20px;
+            text-decoration: underline;
+        }
+
+        form label {
+            display: block;
+            margin-top: 12px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 8px 10px;
+            margin-top: 4px;
+            border: 1px solid #999;
+            border-radius: 3px;
+            font-size: 14px;
+            box-sizing: border-box;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        /* Tally-style active field highlight */
+        input[type="text"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #ffcc00;
+            box-shadow: 0 0 0 2px rgba(255, 204, 0, 0.4);
+            background: #fffef5;
+        }
+
+        button[type="button"] {
+            margin-top: 18px;
+            padding: 8px 20px;
+            font-size: 14px;
+            border-radius: 3px;
+            border: none;
+            background: #006400;
+            color: #ffffff;
+            cursor: pointer;
+        }
+
+        button[type="button"]:hover {
+            background: #008000;
+        }
+
+        /* Status bar like Tally messages */
+        #bd_status {
+            max-width: 600px;
+            margin: 0 auto 10px auto;
+            padding: 8px 12px;
+            font-size: 13px;
+            font-weight: bold;
+            border-radius: 3px;
+        }
+
+        /* Default neutral */
+        .status-neutral {
+            color: #004085;
+            background: #cce5ff;
+            border: 1px solid #b8daff;
+        }
+
+        .status-success {
+            color: #155724;
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-error {
+            color: #721c24;
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+        }
+
+        /* Right-side Tally-style panel */
+        .tally-side-panel {
+            position: fixed;
+            top: 70px;
+            right: 15px;
+            width: 180px;
+            background: #fffbe6;
+            border: 1px solid #e0c36e;
+            box-shadow: 0 0 4px rgba(0, 0, 0, 0.15);
+            font-size: 13px;
+            z-index: 20;
+        }
+
+        .tally-side-panel-header {
+            background: #f2df95;
+            padding: 6px 10px;
+            font-weight: bold;
+            border-bottom: 1px solid #e0c36e;
+        }
+
+        .tally-side-panel ul {
+            list-style: none;
+            margin: 0;
+            padding: 6px 10px 8px 10px;
+        }
+
+        .tally-side-panel li {
+            margin: 4px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .tally-key {
+            font-weight: bold;
+            margin-right: 6px;
+        }
+
+        .tally-action {
+            text-align: right;
+        }
+
+        .tally-side-panel li span {
+            cursor: pointer;
+        }
+
+        /* Configuration modal (F12) */
+        .config-modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            display: none; /* hidden by default */
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+        }
+
+        .config-modal {
+            background: #ffffff;
+            padding: 16px 20px;
+            max-width: 420px;
+            width: 90%;
+            border-radius: 4px;
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
+            font-size: 14px;
+        }
+
+        .config-modal h4 {
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+
+        .config-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 6px 0;
+        }
+
+        .config-modal button {
+            margin-top: 10px;
+            padding: 6px 14px;
+            font-size: 13px;
+            border-radius: 3px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-close-config {
+            background: #444;
+            color: #fff;
+        }
+
+        .hint-bar {
+            max-width: 600px;
+            margin: 0 auto;
+            font-size: 12px;
+            color: #555;
+            text-align: right;
+        }
+
+        .hint-bar span {
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .tally-side-panel {
+                display: none; /* hide on small screens if it disturbs layout */
+            }
+            .hint-bar {
+                padding: 0 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h2 style="text-align:center; margin-top:20px;">Basic Details</h2>
+
+    <!-- Status bar -->
+    <div id="bd_status" class="status-neutral">
+        Loading...
+    </div>
+
+    <!-- Small hint bar like Tally bottom line -->
+    <div class="hint-bar">
+        <span>ESC</span> : Back &nbsp;&nbsp; <span>F12</span> : Configure &nbsp;&nbsp; <span>ENTER</span> / <span>↑↓</span> : Navigate
+    </div>
+
+    <!-- Main form -->
+    <div class="outer-wrapper">
+        <h3>Enter Company Details</h3>
+
+        <form id="bdForm" onsubmit="return false;">
+            <label for="bd_name">Company Name</label>
+            <input type="text" id="bd_name">
+
+            <label for="bd_fy">Financial Year</label>
+            <input type="text" id="bd_fy" placeholder="e.g. 2025-2026">
+
+            <label for="bd_address">Address</label>
+            <textarea id="bd_address" rows="3"></textarea>
+
+            <button type="button" id="bd_save_btn">Save (ALT+S)</button>
+        </form>
+    </div>
+
+    <!-- Tally-style Right Side Panel -->
+    <div class="tally-side-panel">
+        <div class="tally-side-panel-header">
+            Tally Actions
+        </div>
+        <ul>
+            <li>
+                <span class="tally-key">Alt+G</span>
+                <span class="tally-action">Go To</span>
+            </li>
+            <li>
+                <span class="tally-key">F11</span>
+                <span class="tally-action">Features</span>
+            </li>
+            <li>
+                <span class="tally-key" id="openConfigKey">F12</span>
+                <span class="tally-action">Configure</span>
+            </li>
+            <li>
+                <span class="tally-key">ESC</span>
+                <span class="tally-action">Back</span>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Configuration Modal (F12) -->
+    <div class="config-modal-backdrop" id="configModalBackdrop">
+        <div class="config-modal">
+            <h4>Configuration (F12)</h4>
+            <div class="config-row">
+                <span>Auto save company details</span>
+                <input type="checkbox" id="cfg_auto_save" checked>
+            </div>
+            <div class="config-row">
+                <span>Show success message on save</span>
+                <input type="checkbox" id="cfg_show_success" checked>
+            </div>
+            <button class="btn-close-config" id="closeConfigBtn">Close (ESC)</button>
+        </div>
+    </div>
+
+
+    <!-- BOTTOM TABS -->
+<div class="bottom-tabs">
+    <a href="dashboard.html" class="tab">HOME</a>
+    <a href="bd.html" class="tab">BD</a>
+    <a href="tb.html" class="tab">TB</a>
+    <a href="ae.html" class="tab">AE</a>
+    <a href="balance.html" class="tab">BS</a>
+    <a href="pl.html" class="tab">PL</a>
+    <a href="cf.html" class="tab">CF</a>
+    <a href="n1.html" class="tab">N1</a>
+    <a href="n2.html" class="tab">N2</a>
+    <a href="n3.html" class="tab">N3</a>
+    <a href="n4.html" class="tab">N4</a>
+    <a href="n5.html" class="tab">N5</a>
+    <a href="n6.html" class="tab">N6</a>
+    <a href="n7.html" class="tab">N7</a>
+    <a href="tx.html" class="tab">TX</a>
+    <a href="audit-report.html" class="tab">AR</a>
+    <a href="fs-package.html" class="tab">FS</a>
+    <button class="tab plus">+</button>
+</div>
+
+
+
+
+
+    <!-- Main script -->
+    <script src="engine.js"></script>
+    <script>
+    // ===============================
+    // BASIC DETAILS SOFTWARE ENGINE
+    // Tally-style behaviour
+    // ===============================
+
+    const statusEl = document.getElementById("bd_status");
+    const nameEl = document.getElementById("bd_name");
+    const fyEl = document.getElementById("bd_fy");
+    const addrEl = document.getElementById("bd_address");
+    const saveBtn = document.getElementById("bd_save_btn");
+    const configBackdrop = document.getElementById("configModalBackdrop");
+    const cfgAutoSave = document.getElementById("cfg_auto_save");
+    const cfgShowSuccess = document.getElementById("cfg_show_success");
+    const closeConfigBtn = document.getElementById("closeConfigBtn");
+    const openConfigKey = document.getElementById("openConfigKey");
+
+    const inputFields = [nameEl, fyEl, addrEl];
+
+    // Show status helper
+    function showStatus(message, type = "neutral") {
+        statusEl.textContent = message;
+
+        statusEl.classList.remove("status-neutral", "status-success", "status-error");
+        if (type === "success") {
+            statusEl.classList.add("status-success");
+        } else if (type === "error") {
+            statusEl.classList.add("status-error");
+        } else {
+            statusEl.classList.add("status-neutral");
+        }
+    }
+
+    // Load BD on page open
+    window.addEventListener("DOMContentLoaded", () => {
+        try {
+            const data = AccountingEngine.getCompanyDetails();
+            nameEl.value = data.name || "";
+            fyEl.value = data.financialYear || "";
+            addrEl.value = data.address || "";
+            showStatus("Loaded saved company profile", "success");
+        } catch (e) {
+            console.error(e);
+            showStatus("Unable to load saved data", "error");
+        }
+
+        // Focus first field like Tally
+        nameEl.focus();
+    });
+
+    // Save BD data
+    function saveBD(mode = "manual") {
+        const bd = {
+            name: nameEl.value.trim(),
+            financialYear: fyEl.value.trim(),
+            address: addrEl.value.trim()
+        };
+
+        if (mode === "manual") {
+            if (bd.name === "") {
+                showStatus("Company name is required", "error");
+                nameEl.focus();
+                return;
+            }
+            if (bd.financialYear === "") {
+                showStatus("Select Financial Year", "error");
+                fyEl.focus();
+                return;
+            }
+        } else {
+            if (!bd.name || !bd.financialYear) {
+                return;
+            }
+        }
+
+        try {
+            AccountingEngine.saveCompanyDetails(bd);
+            if (cfgShowSuccess.checked) {
+                showStatus("Company created / updated successfully (Basic Details Saved)", "success");
+            }
+        } catch (e) {
+            console.error(e);
+            showStatus("Error saving data", "error");
+        }
+    }
+
+    // Auto-save on input if enabled
+    function autoSaveHandler() {
+        if (cfgAutoSave.checked) {
+            saveBD("auto");
+        }
+    }
+
+    inputFields.forEach(el => {
+        el.addEventListener("input", autoSaveHandler);
+    });
+
+    // Manual save button
+    saveBtn.addEventListener("click", () => {
+        saveBD("manual");
+    });
+
+    // Open/close configuration modal
+    function openConfig() {
+        configBackdrop.style.display = "flex";
+    }
+
+    function closeConfig() {
+        configBackdrop.style.display = "none";
+    }
+
+    openConfigKey.addEventListener("click", openConfig);
+    closeConfigBtn.addEventListener("click", closeConfig);
+
+    // Clicking outside modal closes it
+    configBackdrop.addEventListener("click", (e) => {
+        if (e.target === configBackdrop) {
+            closeConfig();
+        }
+    });
+
+    // Keyboard handling for Tally-style behaviour
+    document.addEventListener("keydown", (event) => {
+        const key = event.key;
+
+        // ESC -> Back (like closing screen)
+        if (key === "Escape") {
+            // If config modal is open, close that first
+            if (configBackdrop.style.display === "flex") {
+                event.preventDefault();
+                closeConfig();
+                return;
+            }
+
+            event.preventDefault();
+            // behave like going back one page
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                showStatus("ESC pressed: No previous page to go back to", "neutral");
+            }
+            return;
+        }
+
+        // F12 -> Open config (and prevent dev tools if possible)
+        if (key === "F12") {
+            event.preventDefault();
+            openConfig();
+            return;
+        }
+
+        // Alt+S -> Save
+        if (key.toLowerCase() === "s" && event.altKey) {
+            event.preventDefault();
+            saveBD("manual");
+            return;
+        }
+
+        // Up/Down/Enter -> move between fields (like Tally)
+        const activeIndex = inputFields.indexOf(document.activeElement);
+        if (activeIndex !== -1) {
+            if (key === "ArrowDown" || key === "Enter") {
+                event.preventDefault();
+                const nextIndex = (activeIndex + 1) % inputFields.length;
+                inputFields[nextIndex].focus();
+            } else if (key === "ArrowUp") {
+                event.preventDefault();
+                const prevIndex = (activeIndex - 1 + inputFields.length) % inputFields.length;
+                inputFields[prevIndex].focus();
+            }
+        }
+    });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,2177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Accounting Tool - Balance Sheet Builder</title>
+    <link rel="stylesheet" href="style.css" />
+
+    <!-- SheetJS for Excel Import / Export -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="engine.js"></script>
+
+    <!-- Extra visual styling for toolbar + file menu (same layout, just nicer) -->
+    <style>
+        /* RIBBON TOOLBAR (Tally-like) */
+        .bs-toolbar {
+            background: linear-gradient(180deg, #f8fbff 0%, #e4efff 100%);
+            padding: 8px 16px;
+            border-top: 1px solid #d3e0ff;
+            border-bottom: 2px solid #c0d3ff;
+            display: flex;
+            gap: 28px;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+        }
+
+        .tool-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .tool {
+            background: #f7f9ff;
+            padding: 8px 10px;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.22s ease;
+            width: 82px;
+            border: 1px solid #dde5ff;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+        }
+
+        .tool:hover {
+            background: #e9f1ff;
+            border-color: #b0c6ff;
+            transform: translateY(-2px);
+            box-shadow: 0 3px 8px rgba(0,70,180,0.15);
+        }
+
+        .tool:active {
+            transform: translateY(0px) scale(0.97);
+            background: #dbe6ff;
+        }
+
+        .tool-icon {
+            width: 30px;
+            height: 30px;
+            margin: 0 auto;
+            display: block;
+        }
+
+        .tool-icon svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .tool-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #234a7b;
+            margin-top: 4px;
+            line-height: 1.1;
+        }
+
+        .tool-sub {
+            font-size: 10px;
+            color: #6b7b96;
+            line-height: 1.1;
+        }
+
+        /* Make File menu look a bit nicer */
+        .menu-bar {
+            background: #f4f4f4;
+            color: #333;
+            padding: 6px 12px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            border-bottom: 1px solid #dcdcdc;
+        }
+
+        .menu-item {
+            cursor: pointer;
+            padding: 3px 8px;
+            border-radius: 4px;
+            transition: 0.2s;
+        }
+
+        .menu-item:hover {
+            background: rgba(255,255,255,0.15);
+        }
+
+        .file-dropdown {
+            background: #ffffff;
+            border: 1px solid #cfd6ea;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.15);
+        }
+
+        .file-item {
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+
+        .file-item:hover {
+            background: #eef3ff;
+        }
+
+        .toolbar-btn {
+            background: #ffffff;
+            color: #333;
+            border: 1px solid #d1d1d1;
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            transition: 0.2s ease;
+        }
+
+        .toolbar-btn:hover {
+            background: #f2f2f2;
+            border-color: #bfbfbf;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+        }
+
+        /* MODALS */
+        .bs-modal-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.45);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 99999;
+        }
+
+        .bs-modal {
+            background: #ffffff;
+            padding: 24px;
+            width: 380px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+        }
+
+        .bs-modal h3 {
+            margin: 0 0 18px 0;
+            font-size: 16px;
+            color: #234a7b;
+            border-bottom: 2px solid #e4efff;
+            padding-bottom: 10px;
+        }
+
+        .bs-modal label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 4px;
+        }
+
+        .bs-modal input[type="text"],
+        .bs-modal input[type="password"],
+        .bs-modal input[type="number"],
+        .bs-modal select {
+            width: 100%;
+            padding: 7px 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 13px;
+            margin-bottom: 12px;
+            box-sizing: border-box;
+        }
+
+        .bs-modal input[type="range"] {
+            width: 100%;
+            margin-bottom: 12px;
+        }
+
+        .bs-modal button {
+            background: #234a7b;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .bs-modal button:hover { background: #1a3a62; }
+
+        .bs-modal button.btn-secondary {
+            background: #6c757d;
+        }
+        .bs-modal button.btn-secondary:hover { background: #565e64; }
+
+        .bs-modal button.btn-danger {
+            background: #dc3545;
+        }
+        .bs-modal button.btn-danger:hover { background: #b02a37; }
+    </style>
+</head>
+<body>
+
+    <!-- TOP MENU BAR -->
+    <div class="menu-bar">
+        <span id="menu-file" class="menu-item">File</span>
+        <!-- FILE MENU DROPDOWN -->
+        <div id="file-menu" class="file-dropdown" style="display:none; position:absolute; margin-top:24px; z-index:1000;">
+            <div id="newFile" class="file-item">New</div>
+            <div id="openFile" class="file-item">Open</div>
+            <div id="saveFile" class="file-item">Save</div>
+            <div id="saveAsFile" class="file-item">Save As</div>
+
+            <hr>
+
+            <div id="importTally" class="file-item">Import Tally Data</div>
+            <div id="loadSorich" class="file-item">Load Demo Data</div>
+            <div id="importExcel" class="file-item">Import Excel</div>
+            <div id="importCSV" class="file-item">Import CSV/JSON</div>
+
+            <hr>
+
+            <div id="exportPDF" class="file-item">Export as PDF</div>
+            <div id="exportExcel" class="file-item">Export as Excel</div>
+
+            <hr>
+
+            <div id="backup" class="file-item">Backup Data</div>
+            <div id="restore" class="file-item">Restore Backup</div>
+
+            <hr>
+
+            <div id="clearDataMenu" class="file-item" style="color:#c0392b;font-weight:600;">Clear All Data</div>
+
+            <hr>
+
+            <div id="printPage" class="file-item">Print</div>
+            <div id="exitApp" class="file-item">Exit</div>
+        </div>
+
+        <span id="menu-bsb" class="menu-item">Balance Sheet Builder (AS)</span>
+    </div>
+
+    <!-- HEADER -->
+    <header class="top-bar">
+        <div class="logo-area">
+            <span class="title">AccountingTool</span>
+        </div>
+
+        <div class="version-info">
+            <p>Version : v1.4.1</p>
+            <p>License : Dev {Lifetime}</p>
+            <a href="#" class="tool-link">Tool Website [Click Here]</a>
+        </div>
+    </header>
+
+    <hr class="thin-hr" />
+
+    <!-- PAGE TITLE -->
+    <h2 class="page-title">Balance Sheet Builder (AS)</h2>
+
+    <!-- CLIENT SELECTOR BAR -->
+    <div id="clientBar" style="max-width:1100px;margin:0 auto 10px;padding:10px 16px;background:#fff;border:1px solid #ccd6e5;border-radius:6px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+        <label style="font-weight:700;color:#14345a;font-size:13px;">Active Client:</label>
+        <select id="clientSelect" onchange="onClientSwitch()" style="flex:1;min-width:200px;padding:6px 10px;border:1px solid #999;border-radius:3px;font-size:13px;"></select>
+        <button type="button" onclick="addNewClient()" style="padding:6px 14px;background:#006400;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:12px;font-weight:600;">+ Add Client</button>
+        <button type="button" onclick="renameActiveClient()" style="padding:6px 12px;background:#234a7b;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:12px;">Rename</button>
+        <button type="button" onclick="deleteActiveClient()" style="padding:6px 12px;background:#c0392b;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:12px;">Delete</button>
+        <button type="button" onclick="openCompanyEditor()" title="Edit company details, CIN, address, CA firm, directors, share capital" style="padding:6px 12px;background:#14345a;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:12px;">✎ Company Details</button>
+        <span style="border-left:1px solid #ccc;height:20px;margin:0 4px;"></span>
+        <button type="button" onclick="exportBackup()" title="Download backup JSON of all clients + data" style="padding:6px 12px;background:#6c757d;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:12px;">⬇ Backup</button>
+        <button type="button" onclick="importBackup()" title="Restore from a backup JSON file" style="padding:6px 12px;background:#6c757d;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:12px;">⬆ Restore</button>
+        <input type="file" id="backupFileInput" accept=".json" style="display:none;" onchange="onBackupFileChosen(event)">
+        <span id="clientCount" style="font-size:11px;color:#666;margin-left:auto;"></span>
+    </div>
+
+    <!-- ═══════════════ COMPANY DETAILS MODAL (FS_META editor) ═══════════════ -->
+    <div id="metaModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;overflow-y:auto;">
+      <div style="max-width:720px;margin:30px auto;background:#fff;border-radius:6px;padding:22px 28px;box-shadow:0 10px 40px rgba(0,0,0,.3);">
+        <h3 style="margin:0 0 14px;color:#14345a;border-bottom:2px solid #14345a;padding-bottom:6px;">Edit Company &amp; Financial Details</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;font-size:12px;">
+          <label style="grid-column:span 2;"><b>Company Name</b><input id="m_name" style="width:100%;padding:6px;border:1px solid #999;border-radius:3px;"></label>
+          <label><b>CIN / PAN</b><input id="m_cin" style="width:100%;padding:6px;border:1px solid #999;border-radius:3px;"></label>
+          <label><b>Nature of Business</b><input id="m_biz" style="width:100%;padding:6px;border:1px solid #999;border-radius:3px;" placeholder="e.g. Manufacturing of dates"></label>
+          <label style="grid-column:span 2;"><b>Registered Address</b><input id="m_addr" style="width:100%;padding:6px;border:1px solid #999;border-radius:3px;"></label>
+          <label><b>Financial Year (from → to)</b><input id="m_fy" style="width:100%;padding:6px;border:1px solid #999;border-radius:3px;" placeholder="e.g. 1-Apr-23 to 31-Mar-24"></label>
+          <label><b>Rounding</b>
+            <select id="m_round" style="width:100%;padding:6px;border:1px solid #999;border-radius:3px;">
+              <option value="unrounded">Unrounded (INR)</option>
+              <option value="rounded">Thousands (000s)</option>
+              <option value="lakhs">Lakhs</option>
+            </select>
+          </label>
+          <label><b>Face Value / Share (Rs.)</b><input id="m_fv" type="number" style="width:100%;padding:6px;border:1px solid #999;border-radius:3px;"></label>
+          <label><b>Weighted Avg Shares</b><input id="m_shares" type="number" style="width:100%;padding:6px;border:1px solid #999;border-radius:3px;"></label>
+          <div style="grid-column:span 2;border-top:1px solid #ddd;margin-top:8px;padding-top:8px;font-weight:700;font-size:13px;color:#14345a;">CA Firm (echoed on all signature blocks)</div>
+          <label><b>CA Firm Name</b><input id="m_ca" style="width:100%;padding:6px;border:1px solid #999;border-radius:3px;"></label>
+          <label><b>Firm Regn No</b><input id="m_caReg" style="width:100%;padding:6px;border:1px solid #999;border-radius:3px;"></label>
+          <label><b>Partner Name</b><input id="m_partner" style="width:100%;padding:6px;border:1px solid #999;border-radius:3px;"></label>
+          <label><b>Membership No</b><input id="m_mem" style="width:100%;padding:6px;border:1px solid #999;border-radius:3px;"></label>
+          <div style="grid-column:span 2;border-top:1px solid #ddd;margin-top:8px;padding-top:8px;font-weight:700;font-size:13px;color:#14345a;">Directors</div>
+          <label><b>Director 1 Name</b><input id="m_d1" style="width:100%;padding:6px;border:1px solid #999;border-radius:3px;"></label>
+          <label><b>Director 1 DIN</b><input id="m_d1din" style="width:100%;padding:6px;border:1px solid #999;border-radius:3px;"></label>
+          <label><b>Director 2 Name</b><input id="m_d2" style="width:100%;padding:6px;border:1px solid #999;border-radius:3px;"></label>
+          <label><b>Director 2 DIN</b><input id="m_d2din" style="width:100%;padding:6px;border:1px solid #999;border-radius:3px;"></label>
+          <label><b>Place (for signatures)</b><input id="m_place" style="width:100%;padding:6px;border:1px solid #999;border-radius:3px;" placeholder="Mumbai"></label>
+          <label><b>Date (for signatures)</b><input id="m_date" style="width:100%;padding:6px;border:1px solid #999;border-radius:3px;" placeholder="e.g. Sep 30, 2024"></label>
+        </div>
+        <div style="margin-top:18px;display:flex;gap:10px;justify-content:flex-end;">
+          <button type="button" onclick="saveMeta()" style="background:#006400;color:#fff;border:none;padding:9px 22px;border-radius:3px;cursor:pointer;font-weight:600;">💾 Save &amp; Close</button>
+          <button type="button" onclick="closeMetaModal()" style="padding:9px 18px;border:1px solid #ccc;border-radius:3px;cursor:pointer;background:#fff;">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+    function openCompanyEditor(){
+      const m = JSON.parse(localStorage.getItem('FS_META') || '{}');
+      const bd = AccountingEngine.getCompanyDetails();
+      const n6 = JSON.parse(localStorage.getItem('N6_DATA') || '{}');
+      const sig = m.signatures || {};
+      document.getElementById('m_name').value = m.companyName || bd.name || '';
+      document.getElementById('m_cin').value = m.cin || '';
+      document.getElementById('m_biz').value = m.natureOfBusiness || '';
+      document.getElementById('m_addr').value = m.address || '';
+      document.getElementById('m_fy').value = bd.financialYear || '';
+      document.getElementById('m_round').value = localStorage.getItem('ROUNDING') || 'unrounded';
+      document.getElementById('m_fv').value = m.faceValue || 10;
+      document.getElementById('m_shares').value = m.weightedAvgShares || '';
+      // Read from FS_META.signatures OR N6_DATA (whichever has it)
+      document.getElementById('m_ca').value = sig.caFirm || n6.sig_caFirm || '';
+      document.getElementById('m_caReg').value = sig.caRegNo || n6.sig_caReg || '';
+      document.getElementById('m_partner').value = sig.partnerName || n6.sig_partner || '';
+      document.getElementById('m_mem').value = sig.membershipNo || n6.sig_memNo || '';
+      document.getElementById('m_d1').value = sig.d1Name || n6.sig_d1 || '';
+      document.getElementById('m_d1din').value = sig.d1DIN || n6.sig_d1din || '';
+      document.getElementById('m_d2').value = sig.d2Name || n6.sig_d2 || '';
+      document.getElementById('m_d2din').value = sig.d2DIN || n6.sig_d2din || '';
+      document.getElementById('m_place').value = sig.place || n6.sig_placeCA || 'Mumbai';
+      document.getElementById('m_date').value = sig.date || n6.sig_dateCA || '';
+      document.getElementById('metaModal').style.display = 'block';
+    }
+    function closeMetaModal(){ document.getElementById('metaModal').style.display = 'none'; }
+    function saveMeta(){
+      const m = JSON.parse(localStorage.getItem('FS_META') || '{}');
+      m.companyName = document.getElementById('m_name').value;
+      m.cin = document.getElementById('m_cin').value;
+      m.natureOfBusiness = document.getElementById('m_biz').value;
+      m.address = document.getElementById('m_addr').value;
+      m.faceValue = Number(document.getElementById('m_fv').value) || 10;
+      m.weightedAvgShares = Number(document.getElementById('m_shares').value) || 0;
+      m.signatures = m.signatures || {};
+      m.signatures.caFirm = document.getElementById('m_ca').value;
+      m.signatures.caRegNo = document.getElementById('m_caReg').value;
+      m.signatures.partnerName = document.getElementById('m_partner').value;
+      m.signatures.membershipNo = document.getElementById('m_mem').value;
+      m.signatures.d1Name = document.getElementById('m_d1').value;
+      m.signatures.d1DIN = document.getElementById('m_d1din').value;
+      m.signatures.d2Name = document.getElementById('m_d2').value;
+      m.signatures.d2DIN = document.getElementById('m_d2din').value;
+      m.signatures.place = document.getElementById('m_place').value;
+      m.signatures.date = document.getElementById('m_date').value;
+      localStorage.setItem('FS_META', JSON.stringify(m));
+
+      // Mirror into BD_DATA
+      const bd = AccountingEngine.getCompanyDetails();
+      bd.name = m.companyName;
+      bd.financialYear = document.getElementById('m_fy').value || bd.financialYear;
+      AccountingEngine.saveCompanyDetails(bd);
+
+      // Mirror into N6_DATA (notes signature block)
+      const n6 = JSON.parse(localStorage.getItem('N6_DATA') || '{}');
+      n6.sig_caFirm = m.signatures.caFirm;
+      n6.sig_caReg = m.signatures.caRegNo;
+      n6.sig_partner = m.signatures.partnerName;
+      n6.sig_memNo = m.signatures.membershipNo;
+      n6.sig_d1 = m.signatures.d1Name;
+      n6.sig_d1din = m.signatures.d1DIN;
+      n6.sig_d2 = m.signatures.d2Name;
+      n6.sig_d2din = m.signatures.d2DIN;
+      n6.sig_placeCA = m.signatures.place;
+      n6.sig_dateCA = m.signatures.date;
+      n6.sig_placeD1 = m.signatures.place;
+      n6.sig_dateD1 = m.signatures.date;
+      n6.sig_placeD2 = m.signatures.place;
+      n6.sig_dateD2 = m.signatures.date;
+      localStorage.setItem('N6_DATA', JSON.stringify(n6));
+
+      // Rounding
+      localStorage.setItem('ROUNDING', document.getElementById('m_round').value);
+
+      AccountingEngine.persistToElectron && AccountingEngine.persistToElectron();
+      closeMetaModal();
+      alert('✓ Company details saved.\n\nThese values will now appear on all notes, signature blocks, the Audit Report, and the Financial Statements Package.');
+      refreshHomeCards && refreshHomeCards();
+    }
+    </script>
+
+    <script>
+    // Initialise client context on dashboard load
+    (function initClientContext(){
+      if (!window.AccountingEngine) return;
+      AccountingEngine.ensureClientContext();
+      refreshClientBar();
+    })();
+
+    function refreshClientBar(){
+      const clients = AccountingEngine.getClients();
+      const activeId = AccountingEngine.getActiveClientId();
+      const sel = document.getElementById('clientSelect');
+      if (!sel) return;
+      sel.innerHTML = '';
+      clients.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = c.name + (c.id === activeId ? ' (active)' : '');
+        if (c.id === activeId) opt.selected = true;
+        sel.appendChild(opt);
+      });
+      if (clients.length === 0) {
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = '(no clients yet)';
+        sel.appendChild(opt);
+      }
+      const cnt = document.getElementById('clientCount');
+      if (cnt) cnt.textContent = clients.length + ' client' + (clients.length === 1 ? '' : 's');
+    }
+
+    function onClientSwitch(){
+      const sel = document.getElementById('clientSelect');
+      const newId = sel.value;
+      if (!newId || newId === AccountingEngine.getActiveClientId()) return;
+      if (!confirm('Switch to this client? Any unsaved in-memory changes on the current client will be preserved in its vault.')) {
+        refreshClientBar();
+        return;
+      }
+      AccountingEngine.switchClient(newId);
+      location.reload();
+    }
+
+    function addNewClient(){
+      const name = prompt('New client / company name:');
+      if (!name || !name.trim()) return;
+      AccountingEngine.addClient(name.trim());
+      alert('✓ Client "' + name.trim() + '" created.\n\nYou are now working on this client. Import a Trial Balance to start.');
+      location.reload();
+    }
+
+    function renameActiveClient(){
+      const active = AccountingEngine.getActiveClient();
+      if (!active) { alert('No active client.'); return; }
+      const name = prompt('Rename client:', active.name);
+      if (!name || !name.trim()) return;
+      AccountingEngine.renameClient(active.id, name.trim());
+      alert('✓ Renamed.');
+      location.reload();
+    }
+
+    function exportBackup(){
+      try {
+        const filename = AccountingEngine.downloadBackup();
+        alert('✓ Backup saved: ' + filename + '\n\nKeep this file safe — it contains all your clients, TB data, notes, drafts and settings.');
+      } catch(e) {
+        alert('Backup failed: ' + e.message);
+      }
+    }
+
+    function importBackup(){
+      document.getElementById('backupFileInput').click();
+    }
+
+    function onBackupFileChosen(event){
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e){
+        let dump;
+        try { dump = JSON.parse(e.target.result); }
+        catch(err) { alert('❌ Invalid backup file: ' + err.message); return; }
+        if (!dump.storage) { alert('❌ This does not look like a valid backup file (missing "storage" section).'); return; }
+        const exportedAt = dump.__meta && dump.__meta.exportedAt ? new Date(dump.__meta.exportedAt).toLocaleString() : 'unknown';
+        const keyCount = Object.keys(dump.storage).length;
+        const confirmMsg = 'Restore from backup?\n\n' +
+                          'Exported: ' + exportedAt + '\n' +
+                          'Contains: ' + keyCount + ' data items\n\n' +
+                          '⚠ THIS WILL OVERWRITE ALL CURRENT DATA.\n' +
+                          'Consider downloading a current backup first if you have unsaved work.\n\n' +
+                          'Proceed?';
+        if (!confirm(confirmMsg)) return;
+        try {
+          AccountingEngine.restoreFromBackup(dump, true);
+          alert('✓ Backup restored successfully.\n\nReloading page to apply changes...');
+          location.reload();
+        } catch(err) {
+          alert('❌ Restore failed: ' + err.message);
+        }
+      };
+      reader.readAsText(file);
+      // Reset the input so same file can be chosen again later
+      event.target.value = '';
+    }
+
+    function deleteActiveClient(){
+      const active = AccountingEngine.getActiveClient();
+      if (!active) { alert('No active client.'); return; }
+      const clients = AccountingEngine.getClients();
+      if (clients.length === 1) { alert('Cannot delete the only client. Create another client first.'); return; }
+      if (!confirm('Delete client "' + active.name + '"?\n\nALL data (ledgers, TB, notes, BS, P&L) for this client will be PERMANENTLY DELETED.\n\nType YES in next prompt to confirm.')) return;
+      const conf = prompt('Type YES to confirm deletion:');
+      if (conf !== 'YES') { alert('Delete cancelled.'); return; }
+      AccountingEngine.deleteClient(active.id);
+      alert('✓ Client deleted.');
+      location.reload();
+    }
+    </script>
+
+
+    <!-- WORKSPACE (if you want to load dynamic content later) -->
+    <div id="workspace"></div>
+
+    <!-- RIBBON TOOLBAR -->
+    <div id="bs-toolbar" class="bs-toolbar">
+
+        <!-- GROUP 1 -->
+        <div class="tool-group">
+            <!-- Login -->
+            <div class="tool">
+                <div class="tool-icon">
+                    <svg viewBox="0 0 24 24">
+                        <circle cx="9" cy="9" r="3.2" fill="#2f76d2"/>
+                        <path d="M3.5 18c.9-2.5 3-4.2 5.5-4.2s4.6 1.7 5.5 4.2" fill="none" stroke="#2f76d2" stroke-width="1.5" stroke-linecap="round"/>
+                        <path d="M14.5 7.5h3v-3h3v15h-3v-3h-3" fill="none" stroke="#274b7a" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="tool-title">Login</div>
+                <div class="tool-sub">Open</div>
+            </div>
+
+            <!-- Previous FY -->
+            <div class="tool">
+                <div class="tool-icon">
+                    <svg viewBox="0 0 24 24">
+                        <rect x="6" y="5" width="13" height="14" rx="1.5" fill="#e5efff" stroke="#2f76d2" stroke-width="1.3"/>
+                        <path d="M11 9L8 12l3 3" fill="none" stroke="#2f76d2" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                        <line x1="9" y1="12" x2="16" y2="12" stroke="#2f76d2" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <div class="tool-title">Previous</div>
+                <div class="tool-sub">FY</div>
+            </div>
+
+            <!-- Next FY -->
+            <div class="tool">
+                <div class="tool-icon">
+                    <svg viewBox="0 0 24 24">
+                        <rect x="5" y="5" width="13" height="14" rx="1.5" fill="#e5efff" stroke="#2f76d2" stroke-width="1.3"/>
+                        <path d="M13 9l3 3-3 3" fill="none" stroke="#2f76d2" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                        <line x1="8" y1="12" x2="15" y2="12" stroke="#2f76d2" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <div class="tool-title">Next</div>
+                <div class="tool-sub">FY</div>
+            </div>
+
+            <!-- Tally Import -->
+            <div class="tool">
+                <div class="tool-icon">
+                    <svg viewBox="0 0 24 24">
+                        <rect x="5" y="4" width="14" height="6" rx="1.2" fill="#2f76d2" opacity="0.9"/>
+                        <rect x="5" y="10" width="14" height="6" rx="1.2" fill="#6aa4ff" opacity="0.9"/>
+                        <path d="M12 12v5" stroke="#ffffff" stroke-width="1.7" stroke-linecap="round"/>
+                        <path d="M10 15l2 2 2-2" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="tool-title">Tally</div>
+                <div class="tool-sub">Import</div>
+            </div>
+
+            <!-- Tally Settings -->
+            <div class="tool">
+                <div class="tool-icon">
+                    <svg viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="2.4" fill="#2f76d2"/>
+                        <path d="M12 5.2v1.8M12 17v1.8M6.6 7.1l1.3 1.3M16.1 16.6l1.3 1.3M5.2 12h1.8M17 12h1.8M7 16.1l1.3-1.3M15.7 7.4L17 6.1"
+                              stroke="#2f76d2" stroke-width="1.4" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <div class="tool-title">Tally</div>
+                <div class="tool-sub">Settings</div>
+            </div>
+        </div>
+
+        <!-- GROUP 2 -->
+        <div class="tool-group">
+            <!-- PDF -->
+            <div class="tool">
+                <div class="tool-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M7 4h7l4 4v12H7z" fill="#e9f0ff" stroke="#2f76d2" stroke-width="1.2"/>
+                        <path d="M14 4v4h4" fill="#c5d8ff"/>
+                        <rect x="8.5" y="11" width="7" height="1.3" rx="0.6" fill="#2f76d2"/>
+                        <rect x="8.5" y="14" width="5" height="1.3" rx="0.6" fill="#2f76d2"/>
+                    </svg>
+                </div>
+                <div class="tool-title">PDF</div>
+                <div class="tool-sub">Financials</div>
+            </div>
+
+            <!-- Reset -->
+            <div class="tool">
+                <div class="tool-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M8 7H4V3" fill="none" stroke="#2f76d2" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M5 7.5A7 7 0 0 1 19 12" fill="none" stroke="#2f76d2" stroke-width="1.4" stroke-linecap="round"/>
+                        <path d="M16 17h4v4" fill="none" stroke="#2f76d2" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M19 16.5A7 7 0 0 1 5 12" fill="none" stroke="#2f76d2" stroke-width="1.4" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <div class="tool-title">Reset</div>
+                <div class="tool-sub">Pages</div>
+            </div>
+
+            <!-- Change Font -->
+            <div class="tool">
+                <div class="tool-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M7 18l4-11h2l4 11" fill="none" stroke="#2f76d2" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M9.5 13h5" stroke="#2f76d2" stroke-width="1.4" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <div class="tool-title">Change</div>
+                <div class="tool-sub">Font</div>
+            </div>
+        </div>
+
+        <!-- GROUP 3 -->
+        <div class="tool-group">
+            <!-- Remove Data -->
+            <div class="tool">
+                <div class="tool-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M9 5h6" stroke="#2f76d2" stroke-width="1.6" stroke-linecap="round"/>
+                        <path d="M7 6.5h10l-.8 10a1.5 1.5 0 0 1-1.5 1.4H9.3A1.5 1.5 0 0 1 7.8 16.5L7 6.5z"
+                              fill="#e9f0ff" stroke="#2f76d2" stroke-width="1.3"/>
+                        <path d="M11 10v4M13 10v4" stroke="#2f76d2" stroke-width="1.3" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <div class="tool-title">Remove</div>
+                <div class="tool-sub">All Data</div>
+            </div>
+
+            <!-- Screen AutoSize -->
+            <div class="tool">
+                <div class="tool-icon">
+                    <svg viewBox="0 0 24 24">
+                        <rect x="4" y="6" width="16" height="10" rx="1.6"
+                              fill="#e9f0ff" stroke="#2f76d2" stroke-width="1.3"/>
+                        <path d="M8 9h2.5M8 12h3.5M8 15h2" stroke="#2f76d2" stroke-width="1.2" stroke-linecap="round"/>
+                        <path d="M14 9h3M14 12h3M14 15h3" stroke="#a0b4e5" stroke-width="1.1" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <div class="tool-title">Screen</div>
+                <div class="tool-sub">AutoSize</div>
+            </div>
+
+            <!-- Cell AutoFit -->
+            <div class="tool">
+                <div class="tool-icon">
+                    <svg viewBox="0 0 24 24">
+                        <rect x="5" y="6" width="14" height="12" rx="1.2"
+                              fill="#e9f0ff" stroke="#2f76d2" stroke-width="1.3"/>
+                        <path d="M9 6v12M15 6v12M5 11h14" stroke="#2f76d2" stroke-width="1.1" stroke-linecap="round"/>
+                        <path d="M7.2 9l-1-1m1 1l-1 1M16.8 9l1-1m-1 1l1 1"
+                              stroke="#2f76d2" stroke-width="1.1" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <div class="tool-title">Cell</div>
+                <div class="tool-sub">AutoFit</div>
+            </div>
+
+            <!-- Save As -->
+            <div class="tool">
+                <div class="tool-icon">
+                    <svg viewBox="0 0 24 24">
+                        <rect x="6" y="4" width="12" height="16" rx="1.6"
+                              fill="#e9f0ff" stroke="#2f76d2" stroke-width="1.3"/>
+                        <rect x="8" y="6" width="6" height="4" fill="#2f76d2"/>
+                        <path d="M10 15l2 2 3-3" fill="none" stroke="#2f76d2" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="tool-title">Save</div>
+                <div class="tool-sub">As</div>
+            </div>
+        </div>
+
+        <!-- GROUP 4 -->
+        <div class="tool-group">
+            <!-- Activate -->
+            <div class="tool">
+                <div class="tool-icon">
+                    <svg viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="6" fill="#e9f0ff" stroke="#2f76d2" stroke-width="1.4"/>
+                        <path d="M12 9.5a1.5 1.5 0 1 1 1.5 1.5H12v2"
+                              fill="none" stroke="#2f76d2" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <circle cx="12" cy="16" r="0.9" fill="#2f76d2"/>
+                    </svg>
+                </div>
+                <div class="tool-title">Activate</div>
+            </div>
+
+            <!-- About -->
+            <div class="tool">
+                <div class="tool-icon">
+                    <svg viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="7" fill="#e9f0ff" stroke="#2f76d2" stroke-width="1.4"/>
+                        <circle cx="12" cy="9" r="0.9" fill="#2f76d2"/>
+                        <path d="M11.3 11.5H12v3.2" stroke="#2f76d2" stroke-width="1.4" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <div class="tool-title">About</div>
+            </div>
+
+            <!-- Update -->
+            <div class="tool">
+                <div class="tool-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M7 7.5A6 6 0 0 1 19 12" fill="none" stroke="#2f76d2" stroke-width="1.4" stroke-linecap="round"/>
+                        <path d="M7 4v3.5H10" fill="none" stroke="#2f76d2" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M17 16.5A6 6 0 0 1 5 12" fill="none" stroke="#2f76d2" stroke-width="1.4" stroke-linecap="round"/>
+                        <path d="M17 20v-3.5h-3" fill="none" stroke="#2f76d2" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="tool-title">Update</div>
+            </div>
+        </div>
+
+        <!-- GROUP 5: AUTOMATION -->
+        <div class="tool-group" style="border-left:2px solid #d6f5ec;padding-left:20px;">
+            <!-- Generate All Reports -->
+            <div class="tool" id="generateAllTool" title="Open all financial reports for printing">
+                <div class="tool-icon">
+                    <svg viewBox="0 0 24 24">
+                        <rect x="5" y="3" width="14" height="18" rx="1.5" fill="#e8faf5" stroke="#15c39a" stroke-width="1.3"/>
+                        <path d="M8 8h8M8 11h8M8 14h5" stroke="#15c39a" stroke-width="1.3" stroke-linecap="round"/>
+                        <circle cx="17" cy="17" r="4.5" fill="#15c39a"/>
+                        <path d="M15.2 17l1.5 1.5L19 15" stroke="white" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="tool-title" style="color:#0a8068;">Generate</div>
+                <div class="tool-sub" style="color:#0a8068;">All Reports</div>
+            </div>
+
+            <!-- Auto Re-group -->
+            <div class="tool" id="reGroupTool" title="Auto-classify all ledgers by keyword">
+                <div class="tool-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M4 6h16M4 11h11M4 16h13" stroke="#15c39a" stroke-width="1.5" stroke-linecap="round"/>
+                        <path d="M18 13l3 3-3 3" fill="none" stroke="#15c39a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="tool-title" style="color:#0a8068;">Auto</div>
+                <div class="tool-sub" style="color:#0a8068;">Re-group</div>
+            </div>
+
+            <!-- Balance Status + Save Indicator -->
+            <div class="tool" id="balanceCheckTool" title="Trial balance status — click to open TB">
+                <div class="tool-icon">
+                    <svg viewBox="0 0 24 24">
+                        <line x1="12" y1="5" x2="12" y2="19" stroke="#15c39a" stroke-width="1.5" stroke-linecap="round"/>
+                        <path d="M6 10l6-5 6 5" fill="none" stroke="#15c39a" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                        <circle cx="7.5" cy="15" r="2.5" fill="#e8faf5" stroke="#15c39a" stroke-width="1.2"/>
+                        <circle cx="16.5" cy="15" r="2.5" fill="#e8faf5" stroke="#15c39a" stroke-width="1.2"/>
+                        <line x1="4" y1="20" x2="20" y2="20" stroke="#15c39a" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <div class="tool-title" id="balanceStatusBadge" style="color:#0a8068;font-size:11px;">TB Check</div>
+                <div class="tool-sub" id="autoSaveIndicator" style="color:#15c39a;">✓ Saved</div>
+            </div>
+        </div>
+    </div>
+    <!-- MAIN CONTENT WRAPPER -->
+    <div class="outer-wrapper">
+        <div class="main-container">
+
+            <!-- LEFT PANEL -->
+            <div class="left-panel">
+
+                <a href="bd.html">
+                    <button class="left-btn">BD - Basic Details</button>
+                </a>
+
+                <a href="n1.html">
+                    <button class="left-btn">N1 - Accounting Policies</button>
+                </a>
+
+                <a href="tb.html">
+                    <button class="left-btn">TB - Ledger Groupings</button>
+                </a>
+
+                <a href="n2.html">
+                    <button class="left-btn">N2 - Liabilities</button>
+                </a>
+
+                <a href="ae.html">
+                    <button class="left-btn">AE - Adjustment Entries</button>
+                </a>
+
+                <a href="n3.html">
+                    <button class="left-btn">N3 - Fixed Assets</button>
+                </a>
+
+                <a href="balance.html">
+                    <button class="left-btn">BS - Balance Sheet</button>
+                </a>
+
+                <a href="n4.html">
+                    <button class="left-btn">N4 - Assets</button>
+                </a>
+
+                <a href="pl.html">
+                    <button class="left-btn">PL - Profit & Loss</button>
+                </a>
+
+                <a href="n5.html">
+                    <button class="left-btn">N5 - Income & Expense</button>
+                </a>
+
+                <a href="cf.html">
+                    <button class="left-btn">CF - Cash Flow</button>
+                </a>
+
+                <a href="n6.html">
+                    <button class="left-btn">N6 - Other Notes</button>
+                </a>
+
+                <hr style="border:none;border-top:1px solid #ccc;margin:12px 0 8px;">
+
+                <button class="left-btn" style="background:#234a7b;color:#fff;border-color:#1a3a62;" onclick="openModal('fyModal');refreshFYModal();">FY - Year Management</button>
+
+                <button class="left-btn" style="background:#555;color:#fff;border-color:#444;" onclick="openModal('auditModal');refreshAuditLog();">Audit Trail</button>
+
+                <button class="left-btn" style="background:#c0392b;color:#fff;border-color:#a93226;" onclick="clearAllData()">Clear All Data</button>
+
+            </div>
+
+            <!-- RIGHT PANEL (DASHBOARD) -->
+            <div class="right-panel">
+                <div class="info-card">
+                    <span class="title-small">Balance Sheet</span>
+                    <span class="value">No Data</span>
+                </div>
+                <div class="info-card">
+                    <span class="title-small">Cash Flow</span>
+                    <span class="value">No Data</span>
+                </div>
+                <div class="info-card">
+                    <span class="title-small">Notes Count</span>
+                    <span class="value">No Data</span>
+                </div>
+                <div class="info-card">
+                    <span class="title-small">Financial Year</span>
+                    <span class="value">—</span>
+                </div>
+                <div class="info-card">
+                    <span class="title-small">Revenue</span>
+                    <span class="value">-</span>
+                </div>
+                <div class="info-card">
+                    <span class="title-small">Profit (Loss)</span>
+                    <span class="value">-</span>
+                </div>
+
+                <button class="toolbar-btn">Show Toolbar</button>
+
+                <div class="rounding-box">
+                    <label>Rounding</label>
+                    <select id="roundingSelect">
+                        <option value="unrounded">Unrounded</option>
+                        <option value="rounded">Rounded (in Thousands)</option>
+                        <option value="lakhs">Rounded (in Lakhs)</option>
+                    </select>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- BOTTOM TABS -->
+    <div class="bottom-tabs">
+        <a href="index.html" class="tab" id="tab-home">HOME</a>
+        <a href="bd.html" class="tab" id="tab-bd">BD</a>
+        <a href="tb.html" class="tab" id="tab-tb">TB</a>
+        <a href="ae.html" class="tab" id="tab-ae">AE</a>
+        <a href="balance.html" class="tab" id="tab-bs">BS</a>
+        <a href="pl.html" class="tab" id="tab-pl">PL</a>
+        <a href="cf.html" class="tab" id="tab-cf">CF</a>
+        <a href="n1.html" class="tab" id="tab-n1">N1</a>
+        <a href="n2.html" class="tab" id="tab-n2">N2</a>
+        <a href="n3.html" class="tab" id="tab-n3">N3</a>
+        <a href="n4.html" class="tab" id="tab-n4">N4</a>
+        <a href="n5.html" class="tab" id="tab-n5">N5</a>
+        <a href="n6.html" class="tab" id="tab-n6">N6</a>
+        <a href="n7.html" class="tab" id="tab-n7">N7</a>
+        <a href="tx.html" class="tab" id="tab-tx">TX</a>
+        <a href="audit-report.html" class="tab" id="tab-ar">AR</a>
+        <a href="fs-package.html" class="tab" id="tab-fs">FS</a>
+        <button type="button" class="tab plus" id="addEntryTab">+</button>
+    </div>
+
+    <!-- HIDDEN INPUTS FOR IMPORT / RESTORE / OPEN -->
+    <input type="file" id="excelInput" accept=".xls,.xlsx" style="display:none;">
+    <input type="file" id="tallyInput" accept=".xml" style="display:none;">
+    <input type="file" id="csvInput" accept=".csv,.json" style="display:none;">
+    <input type="file" id="restoreInput" accept=".json" style="display:none;">
+    <input type="file" id="openInput" accept=".json" style="display:none;">
+
+    <script>
+        // Highlight active tab
+        const currentPage = window.location.pathname.split("/").pop().toLowerCase() || "dashboard.html";
+        document.querySelectorAll(".bottom-tabs .tab").forEach(tab => {
+            const href = tab.getAttribute("href");
+            if (href && (href.toLowerCase() === currentPage || (currentPage === "" && href === "dashboard.html"))) {
+                tab.classList.add("active");
+            }
+        });
+
+        // Keyboard Shortcuts (Alt + Key)
+        document.addEventListener("keydown", (e) => {
+            if (e.altKey) {
+                const shortcuts = {
+                    'h': 'index.html',
+                    'b': 'bd.html',
+                    't': 'tb.html',
+                    'a': 'ae.html',
+                    's': 'balance.html',
+                    'p': 'pl.html',
+                    'c': 'cf.html',
+                    '1': 'n1.html',
+                    '2': 'n2.html',
+                    '3': 'n3.html',
+                    '4': 'n4.html',
+                    '5': 'n5.html',
+                    '6': 'n6.html'
+                };
+                const target = shortcuts[e.key.toLowerCase()];
+                if (target) {
+                    e.preventDefault();
+                    window.location.href = target;
+                }
+            }
+        });
+    </script>
+
+    <!-- AUTOMATION TOOLS -->
+    <script>
+    // Generate All Reports — open each in a new tab
+    document.getElementById('generateAllTool').onclick = function() {
+        const reports = ['balance.html', 'pl.html', 'cf.html', 'tb.html', 'n1.html', 'n2.html', 'n3.html', 'n4.html', 'n5.html', 'n6.html'];
+        if (confirm('Open all 10 financial reports in new tabs for printing?\n\nTip: Each tab will open with live data ready to print.')) {
+            reports.forEach(function(r, i) {
+                setTimeout(function() { window.open(r, '_blank'); }, i * 250);
+            });
+        }
+    };
+
+    // Auto Re-group All Ledgers
+    document.getElementById('reGroupTool').onclick = function() {
+        const count = AccountingEngine.reGroupAllLedgers();
+        if (count) {
+            alert(count + ' ledgers re-grouped using smart keyword classification!\n\nOpen TB Groupings to review and adjust assignments.');
+            AccountingEngine.syncTallyUI();
+        } else {
+            alert('No ledgers found. Please import a trial balance first.');
+        }
+    };
+
+    // Balance Check — click to go to TB
+    document.getElementById('balanceCheckTool').onclick = function() {
+        window.location.href = 'tb.html';
+    };
+
+    // Update balance badge and save indicator on load
+    (function() {
+        try {
+            const bs = AccountingEngine.getBalanceStatus();
+            const el = document.getElementById('balanceStatusBadge');
+            if (el) {
+                el.textContent = bs.balanced ? '✓ Balanced' : '⚠ Unbalanced';
+                el.style.color = bs.balanced ? '#0a8068' : '#e65100';
+            }
+        } catch(e) {}
+    })();
+    </script>
+
+    <!-- ADD ENTRY POPUP FOR + BUTTON (same layout, now really used) -->
+    <div id="addEntryPopup" style="
+        display:none;
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(0,0,0,0.4);
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    ">
+        <div style="
+            background: #ffffff;
+            padding: 20px;
+            width: 360px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        ">
+            <h3 style="margin-top:0; margin-bottom:15px;">Add New Entry</h3>
+
+            <label>Ledger Name</label>
+            <input id="new_ledger" style="width:100%; margin-bottom:10px;">
+
+            <label>Debit</label>
+            <input id="new_debit" type="number" style="width:100%; margin-bottom:10px;">
+
+            <label>Credit</label>
+            <input id="new_credit" type="number" style="width:100%; margin-bottom:10px;">
+
+            <label>Description</label>
+            <input id="new_desc" style="width:100%; margin-bottom:15px;">
+
+            <div style="text-align:right;">
+                <button id="saveEntryBtn">Save</button>
+                <button id="closeEntryPopup" style="margin-left:10px;">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================================ -->
+    <!-- MODALS                                           -->
+    <!-- ================================================ -->
+
+    <!-- LOGIN MODAL -->
+    <div id="loginModal" class="bs-modal-overlay" style="display:none;">
+        <div class="bs-modal">
+            <h3>Login</h3>
+            <div id="loginStatus" style="display:none;padding:8px;border-radius:4px;font-size:13px;margin-bottom:10px;"></div>
+            <label>Username</label>
+            <input id="loginUser" type="text" placeholder="admin">
+            <label>Password</label>
+            <input id="loginPass" type="password" placeholder="••••••">
+            <div style="font-size:11px;color:#888;margin-bottom:14px;">Default: admin / admin</div>
+            <div style="text-align:right;gap:8px;display:flex;justify-content:flex-end;">
+                <button id="loginSubmitBtn">Login</button>
+                <button id="loginCloseBtn" class="btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TALLY SETTINGS MODAL -->
+    <div id="tallySettingsModal" class="bs-modal-overlay" style="display:none;">
+        <div class="bs-modal">
+            <h3>Tally Settings</h3>
+            <label>Tally Host</label>
+            <input id="tallyHost" type="text" placeholder="localhost">
+            <label>Tally Port</label>
+            <input id="tallyPort" type="number" placeholder="9000">
+            <label>Company Name <span style="font-weight:400;color:#888;">(leave blank for all)</span></label>
+            <input id="tallyCompany" type="text" placeholder="e.g. My Business Pvt Ltd">
+            <label>Sync Mode</label>
+            <select id="tallySyncMode" style="width:100%;padding:7px 10px;border:1px solid #ccc;border-radius:6px;font-size:13px;margin-bottom:12px;">
+                <option value="pull">Pull from Tally</option>
+                <option value="push">Push to Tally</option>
+                <option value="both">Bidirectional</option>
+            </select>
+            <div style="text-align:right;display:flex;justify-content:flex-end;gap:8px;">
+                <button id="tallySettingsSaveBtn">Save Settings</button>
+                <button id="tallyTestBtn" class="btn-secondary">Test Connection</button>
+                <button id="tallySettingsCloseBtn" class="btn-secondary">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHANGE FONT MODAL -->
+    <div id="changeFontModal" class="bs-modal-overlay" style="display:none;">
+        <div class="bs-modal">
+            <h3>Change Font</h3>
+            <label>Font Family</label>
+            <select id="fontFamily" style="width:100%;padding:7px 10px;border:1px solid #ccc;border-radius:6px;font-size:13px;margin-bottom:12px;">
+                <option value="Arial, sans-serif">Arial</option>
+                <option value="Calibri, sans-serif">Calibri</option>
+                <option value="'Times New Roman', serif">Times New Roman</option>
+                <option value="Verdana, sans-serif">Verdana</option>
+                <option value="Tahoma, sans-serif">Tahoma</option>
+                <option value="Georgia, serif">Georgia</option>
+                <option value="'Courier New', monospace">Courier New</option>
+                <option value="'Segoe UI', sans-serif">Segoe UI</option>
+            </select>
+            <label>Font Size: <span id="fontSizeLabel">13</span>px</label>
+            <input id="fontSize" type="range" min="10" max="18" value="13">
+            <div id="fontPreview" style="border:1px solid #dde5ff;padding:10px;border-radius:6px;margin-bottom:14px;background:#f8fbff;font-size:13px;">
+                The quick brown fox jumps over the lazy dog. 1234567890
+            </div>
+            <div style="text-align:right;display:flex;justify-content:flex-end;gap:8px;">
+                <button id="fontApplyBtn">Apply</button>
+                <button id="fontResetBtn" class="btn-secondary">Reset Default</button>
+                <button id="fontCloseBtn" class="btn-secondary">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ACTIVATE MODAL -->
+    <div id="activateModal" class="bs-modal-overlay" style="display:none;">
+        <div class="bs-modal">
+            <h3>Activate License</h3>
+            <p style="font-size:13px;color:#555;margin-top:0;">Enter your license key to unlock all features.</p>
+            <div id="activateStatus" style="display:none;padding:8px;border-radius:4px;font-size:13px;margin-bottom:10px;"></div>
+            <label>License Key</label>
+            <input id="licenseKey" type="text" placeholder="XXXX-XXXX-XXXX-XXXX" style="font-family:monospace;letter-spacing:2px;text-transform:uppercase;">
+            <div style="font-size:11px;color:#888;margin-bottom:14px;">Format: 4 groups of 4 alphanumeric characters separated by dashes.</div>
+            <div style="text-align:right;display:flex;justify-content:flex-end;gap:8px;">
+                <button id="activateBtn">Activate</button>
+                <button id="activateCloseBtn" class="btn-secondary">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ABOUT MODAL -->
+    <div id="aboutModal" class="bs-modal-overlay" style="display:none;">
+        <div class="bs-modal">
+            <h3>About AccountingTool</h3>
+            <div style="text-align:center;padding:10px 0 16px;">
+                <div style="font-size:42px;margin-bottom:8px;">📊</div>
+                <p style="font-size:16px;font-weight:700;color:#234a7b;margin:0 0 4px;">AccountingTool</p>
+                <p style="font-size:13px;color:#555;margin:0 0 4px;">Balance Sheet Builder (AS Edition)</p>
+                <p style="font-size:13px;color:#888;margin:0;">Version 1.4.1 &nbsp;|&nbsp; License: Dev {Lifetime}</p>
+                <hr style="margin:14px 0;border-color:#e4efff;">
+                <div style="font-size:12px;color:#666;line-height:1.8;text-align:left;">
+                    <p style="margin:2px 0;">✔ Import: Tally XML, Excel (.xlsx/.xls), CSV, JSON</p>
+                    <p style="margin:2px 0;">✔ Reports: Balance Sheet, P&amp;L, Cash Flow, Notes (N1–N6)</p>
+                    <p style="margin:2px 0;">✔ Export: PDF, Excel &nbsp;|&nbsp; Backup &amp; Restore</p>
+                    <p style="margin:2px 0;">✔ Auto-grouping with 200+ ledger keyword rules</p>
+                </div>
+                <p style="font-size:11px;color:#aaa;margin-top:12px;">© 2026 AccountingTool. All rights reserved.</p>
+            </div>
+            <div style="text-align:right;">
+                <button id="aboutCloseBtn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- UPDATE MODAL -->
+    <div id="updateModal" class="bs-modal-overlay" style="display:none;">
+        <div class="bs-modal">
+            <h3>Check for Updates</h3>
+            <div id="updateContent" style="text-align:center;padding:16px 0;">
+                <div style="font-size:40px;margin-bottom:10px;">⏳</div>
+                <p style="font-weight:bold;font-size:15px;margin:0 0 4px;">Checking for updates…</p>
+                <p style="color:#888;font-size:13px;margin:0;">Please wait.</p>
+            </div>
+            <div style="text-align:right;">
+                <button id="updateCloseBtn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FY MANAGEMENT MODAL -->
+    <div id="fyModal" class="bs-modal-overlay" style="display:none;">
+        <div class="bs-modal" style="width:480px;">
+            <h3>Financial Year Management</h3>
+            <div style="background:#f0f7ff;border:1px solid #d3e0ff;border-radius:8px;padding:14px;margin-bottom:16px;">
+                <div style="font-size:12px;color:#555;margin-bottom:4px;">Current Financial Year</div>
+                <div id="fyCurrentLabel" style="font-size:16px;font-weight:700;color:#234a7b;">—</div>
+            </div>
+
+            <div style="display:flex;gap:8px;margin-bottom:16px;">
+                <button id="fySaveBtn" style="flex:1;padding:10px;font-size:13px;">Save Current FY Snapshot</button>
+                <button id="fyCarryBtn" style="flex:1;padding:10px;font-size:13px;background:#15c39a;">Carry Forward to Next FY</button>
+            </div>
+
+            <div style="font-size:12px;font-weight:600;color:#555;margin-bottom:6px;">Saved Financial Years</div>
+            <div id="fyList" style="max-height:200px;overflow-y:auto;border:1px solid #dde5ff;border-radius:6px;margin-bottom:14px;">
+                <div style="padding:12px;color:#888;text-align:center;font-size:12px;">No saved snapshots</div>
+            </div>
+
+            <div style="text-align:right;">
+                <button id="fyCloseBtn" class="btn-secondary">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AUDIT LOG MODAL -->
+    <div id="auditModal" class="bs-modal-overlay" style="display:none;">
+        <div class="bs-modal" style="width:560px;">
+            <h3>Audit Trail</h3>
+            <div id="auditLogContent" style="max-height:400px;overflow-y:auto;border:1px solid #dde5ff;border-radius:6px;font-size:12px;margin-bottom:14px;">
+                <div style="padding:12px;color:#888;text-align:center;">No audit entries</div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <button id="auditClearBtn" class="btn-danger" style="font-size:11px;">Clear Log</button>
+                <button id="auditCloseBtn" class="btn-secondary">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOGGLE TOOLBAR -->
+    <script>
+    const bsToolbar = document.getElementById("bs-toolbar");
+    const menuBSB = document.getElementById("menu-bsb");
+    const toolbarBtn = document.querySelector(".toolbar-btn");
+
+    menuBSB.onclick = () => {
+        bsToolbar.classList.toggle("show");
+    };
+
+    if (toolbarBtn) {
+        toolbarBtn.onclick = () => {
+            bsToolbar.classList.toggle("show");
+        };
+    }
+    </script>
+
+    <!-- FILE MENU SHOW / HIDE -->
+    <script>
+    const fileBtn = document.getElementById("menu-file");
+    const fileMenu = document.getElementById("file-menu");
+
+    fileBtn.onclick = (e) => {
+        e.stopPropagation();
+        fileMenu.style.display =
+            fileMenu.style.display === "block" ? "none" : "block";
+    };
+
+    // Hide menu when clicking outside
+    document.addEventListener("click", function (e) {
+        if (!fileBtn.contains(e.target) && !fileMenu.contains(e.target)) {
+            fileMenu.style.display = "none";
+        }
+    });
+    </script>
+
+    <!-- FILE MENU LOGIC + IMPORT / EXPORT / BACKUP -->
+    <script>
+    // ===============================
+    // PAGE KEY DETECTOR
+    // ===============================
+    function getPageKey() {
+        let page = window.location.pathname.split("/").pop().toLowerCase();
+
+        if (page.includes("tb")) return "TB";
+        if (page.includes("ae")) return "AE";
+        if (page.includes("bd")) return "BD";
+        if (page.includes("pl")) return "PL";
+        if (page.includes("cf")) return "CF";
+        if (page.includes("bs")) return "BS";
+        if (page.includes("n1")) return "N1";
+        if (page.includes("n2")) return "N2";
+        if (page.includes("n3")) return "N3";
+        if (page.includes("n4")) return "N4";
+        if (page.includes("n5")) return "N5";
+        if (page.includes("n6")) return "N6";
+        return "HOME";
+    }
+
+    // CLEAR ALL DATA (left panel button + File menu)
+    async function clearAllData() {
+        if (!confirm('Clear ALL imported data (Ledgers, Vouchers, Adjustment Entries, Notes)?\n\nThis cannot be undone.')) return;
+        localStorage.setItem('LEDGERS', '[]');
+        localStorage.setItem('VOUCHERS', '[]');
+        ['AE','BD_DATA','BS_BUILDER_V2','PL_BUILDER_V2','N1','N1_POL','N1_GEN','N2','N2_DATA','N3','N3_FA','N3_PPE','N4','N4_DATA','N5','N5_DATA','N6','N6_DATA','N7_DATA','TX_DATA','AUDIT_REPORT','ROUNDING','FAR','CF_DATA','CARO_DATA','GST_DATA','STC_DATA','AUDIT_LOG','TB_GRAND_TOTAL','FS_META','NOTES_V1'].forEach(k => localStorage.removeItem(k));
+        await AccountingEngine.persistToElectron();
+        alert('All data cleared successfully.');
+        location.reload();
+    }
+    document.getElementById("clearDataMenu").onclick = () => clearAllData();
+
+    // FILE → NEW
+    document.getElementById("newFile").onclick = async () => {
+        if (confirm("Start a new file? All data will be cleared.")) {
+            localStorage.clear();
+            await AccountingEngine.persistToElectron();
+            location.reload();
+        }
+    };
+
+    // FILE → OPEN (current page json)
+    document.getElementById("openFile").onclick = () => {
+        document.getElementById("openInput").click();
+    };
+
+    document.getElementById("openInput").addEventListener("change", function (e) {
+        let file = e.target.files[0];
+        if (!file) return;
+
+        let reader = new FileReader();
+        reader.onload = () => {
+            try {
+                let data = JSON.parse(reader.result);
+                let key = getPageKey();
+                localStorage.setItem(key, JSON.stringify(data));
+                alert("File opened and data loaded for this page.");
+                location.reload();
+            } catch (err) {
+                alert("Invalid JSON file.");
+            }
+        };
+        reader.readAsText(file);
+    });
+
+    // FILE → SAVE
+    document.getElementById("saveFile").onclick = () => {
+        alert("Your data is automatically saved in your browser (localStorage).");
+    };
+
+    // FILE → SAVE AS (download current page json)
+    document.getElementById("saveAsFile").onclick = async () => {
+        let key = getPageKey();
+        let data = localStorage.getItem(key) || "[]";
+
+        if (window.electronAPI && window.electronAPI.exportFile) {
+            const result = await window.electronAPI.exportFile({
+                content: data,
+                fileName: key + "_data.json",
+                type: "JSON"
+            });
+            if (result.success) {
+                alert("File saved successfully to: " + result.filePath);
+            }
+        } else {
+            let blob = new Blob([data], { type: "application/json" });
+            let link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = key + "_data.json";
+            link.click();
+            alert("File saved successfully.");
+        }
+    };
+
+    // IMPORT TALLY XML
+    const tallyInput = document.getElementById("tallyInput");
+    document.getElementById("importTally").onclick = () => {
+        tallyInput.value = "";
+        tallyInput.click();
+    };
+
+    // LOAD SORICH DATA
+    document.getElementById("loadSorich").onclick = async () => {
+        if (confirm("Load demo data? This will reset all current data.")) {
+            if (AccountingEngine.loadSorichData()) {
+                await AccountingEngine.persistToElectron();
+                alert("Demo Data Loaded Successfully!");
+                location.reload();
+            } else {
+                alert("Failed to load demo data.");
+            }
+        }
+    };
+
+    tallyInput.addEventListener("change", function (e) {
+        let file = e.target.files[0];
+        if (!file) return;
+
+        let reader = new FileReader();
+        reader.onload = async function () {
+            if (AccountingEngine.importTallyXML(reader.result)) {
+                await AccountingEngine.persistToElectron();
+                alert("Tally Data Imported Successfully!");
+                location.reload();
+            } else {
+                alert("Failed to parse Tally XML.");
+            }
+        };
+        reader.readAsText(file);
+    });
+
+    // IMPORT EXCEL
+    const excelInput = document.getElementById("excelInput");
+
+    document.getElementById("importExcel").onclick = () => {
+        excelInput.value = "";
+        excelInput.click();
+    };
+
+    excelInput.addEventListener("change", function (e) {
+        let file = e.target.files[0];
+        if (!file) return;
+
+        let reader = new FileReader();
+        reader.onload = async function (ev) {
+            try {
+                let data = new Uint8Array(ev.target.result);
+                let workbook = XLSX.read(data, { type: "array" });
+
+                let success = false;
+                // Try all sheets in the workbook until one works
+                for (let sheetName of workbook.SheetNames) {
+                    let sheet = workbook.Sheets[sheetName];
+                    let json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+                    if (AccountingEngine.importExcelTB(json)) {
+                        success = true;
+                        break;
+                    }
+                }
+
+                if (success) {
+                    await AccountingEngine.persistToElectron();
+                    alert("Excel Imported Successfully! Ledgers have been loaded.");
+                    location.reload();
+                } else {
+                    alert("Failed to import Excel. Please ensure your sheet has columns for 'Ledger Name' and 'Debit'/'Credit' amounts.\n\nTip: We checked " + workbook.SheetNames.length + " sheet(s) in your file.");
+                }
+            } catch (err) {
+                alert("Error reading Excel file: " + err.message);
+            }
+        };
+
+        reader.readAsArrayBuffer(file);
+    });
+
+    // IMPORT CSV / JSON
+    const csvInput = document.getElementById("csvInput");
+
+    document.getElementById("importCSV").onclick = () => {
+        csvInput.value = "";
+        csvInput.click();
+    };
+
+    csvInput.addEventListener("change", function (e) {
+        let file = e.target.files[0];
+        if (!file) return;
+
+        let reader = new FileReader();
+        reader.onload = async function () {
+            let content;
+            if (file.name.toLowerCase().endsWith(".json")) {
+                try {
+                    content = JSON.parse(reader.result);
+                } catch (err) {
+                    alert("Invalid JSON file.");
+                    return;
+                }
+            } else {
+                // Simple CSV → array of arrays (header:1 format for importExcelTB)
+                let text = reader.result.trim();
+                content = text.split("\n").map(r => r.split(",").map(c => c.trim()));
+            }
+
+            // Route through the engine so data is stored as LEDGERS
+            let success = false;
+            if (Array.isArray(content)) {
+                success = AccountingEngine.importExcelTB(content);
+            }
+
+            if (success) {
+                await AccountingEngine.persistToElectron();
+                alert("CSV/JSON Imported Successfully! Ledgers have been loaded.");
+                location.reload();
+            } else {
+                alert("Failed to import. Please ensure your file has columns for Ledger Name and Debit/Credit amounts.");
+            }
+        };
+
+        reader.readAsText(file);
+    });
+
+    // EXPORT AS PDF
+    document.getElementById("exportPDF").onclick = () => {
+        alert("Exporting as PDF using browser print…");
+        window.print();
+    };
+
+    // EXPORT AS EXCEL
+    document.getElementById("exportExcel").onclick = () => {
+        let key = getPageKey();
+        let stored = localStorage.getItem(key) || "[]";
+        let data = [];
+
+        try {
+            data = JSON.parse(stored);
+        } catch (err) {
+            alert("No valid data to export.");
+            return;
+        }
+
+        if (!Array.isArray(data) || data.length === 0) {
+            alert("No data available for this page.");
+            return;
+        }
+
+        let worksheet = XLSX.utils.json_to_sheet(data);
+        let workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, key);
+
+        XLSX.writeFile(workbook, key + "_export.xlsx");
+
+        alert("Excel Exported Successfully!");
+    };
+
+    // BACKUP (download ALL localStorage)
+    document.getElementById("backup").onclick = async () => {
+        let snapshot = {};
+
+        for (let i = 0; i < localStorage.length; i++) {
+            let k = localStorage.key(i);
+            snapshot[k] = localStorage.getItem(k);
+        }
+
+        const data = JSON.stringify(snapshot);
+
+        if (window.electronAPI && window.electronAPI.exportFile) {
+            const result = await window.electronAPI.exportFile({
+                content: data,
+                fileName: "backup_all_pages.json",
+                type: "JSON"
+            });
+            if (result.success) {
+                alert("Full backup created at: " + result.filePath);
+            }
+        } else {
+            let blob = new Blob([data], { type: "application/json" });
+            let link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "backup_all_pages.json";
+            link.click();
+            alert("Full backup created.");
+        }
+    };
+
+    // RESTORE BACKUP (all pages)
+    const restoreInput = document.getElementById("restoreInput");
+
+    document.getElementById("restore").onclick = () => {
+        restoreInput.value = "";
+        restoreInput.click();
+    };
+
+    restoreInput.addEventListener("change", function (e) {
+        let file = e.target.files[0];
+        if (!file) return;
+
+        let reader = new FileReader();
+        reader.onload = async () => {
+            try {
+                let data = JSON.parse(reader.result);
+                localStorage.clear();
+
+                for (let key in data) {
+                    localStorage.setItem(key, data[key]);
+                }
+
+                await AccountingEngine.persistToElectron();
+                alert("Backup Restored Successfully!");
+                location.reload();
+            } catch (err) {
+                alert("Invalid backup file.");
+            }
+        };
+
+        reader.readAsText(file);
+    });
+
+    // PRINT
+    document.getElementById("printPage").onclick = () => {
+        window.print();
+    };
+
+    // EXIT
+    document.getElementById("exitApp").onclick = () => {
+        if (confirm("Are you sure you want to exit?")) {
+            window.close();
+        }
+    };
+    </script>
+
+    <!-- SIMPLE DASHBOARD SUMMARY ENGINE (HOME PAGE) -->
+    <script>
+    function getHomeEntries() {
+        let raw = localStorage.getItem("HOME") || "[]";
+        try {
+            const arr = JSON.parse(raw);
+            return Array.isArray(arr) ? arr : [];
+        } catch(e) {
+            return [];
+        }
+    }
+
+    function getHomeSummary() {
+        // Use central AccountingEngine for dashboard summary
+        const tb = AccountingEngine.getTrialBalance();
+        const entries = tb.items;
+        
+        let totalDebit = tb.totalDr;
+        let totalCredit = tb.totalCr;
+
+        // Simplistic net profit calculation for dashboard
+        const netProfit = totalCredit - totalDebit;
+        const totalMovement = totalDebit + totalCredit;
+
+        return {
+            count: entries.length,
+            totalDebit,
+            totalCredit,
+            netProfit,
+            totalMovement
+        };
+    }
+
+    function refreshHomeCards() {
+        const cards = document.querySelectorAll(".right-panel .info-card");
+        if (!cards || cards.length < 6) return;
+
+        const s = AccountingEngine.getDashboardSummary();
+        const bd = AccountingEngine.getCompanyDetails();
+        const rounding = localStorage.getItem('ROUNDING') || 'unrounded';
+        const ledgers = JSON.parse(localStorage.getItem('LEDGERS') || '[]');
+        const hasData = ledgers.length > 0;
+
+        function format(val) {
+            let amount = val;
+            if (rounding === 'rounded') amount = val / 1000;
+            if (rounding === 'lakhs') amount = val / 100000;
+            return amount.toLocaleString('en-IN', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        const prefix = (rounding === 'rounded') ? "k " : (rounding === 'lakhs' ? "L " : "₹ ");
+
+        if (!hasData) {
+            // No TB uploaded — show empty state for all cards
+            cards[0].querySelector(".value").textContent = "No Data";
+            cards[1].querySelector(".value").textContent = "No Data";
+            cards[2].querySelector(".value").textContent = "No Data";
+            cards[3].querySelector(".value").textContent = bd.financialYear || "-";
+            cards[4].querySelector(".value").textContent = "-";
+            cards[5].querySelector(".value").textContent = "-";
+        } else {
+            // 1. Balance Sheet status
+            cards[0].querySelector(".value").textContent =
+                s.isBalanced ? "Balanced" : "Not Balanced";
+
+            // 2. Cash Flow (Total Movement)
+            cards[1].querySelector(".value").textContent =
+                s.totalMovement > 0 ? prefix + format(s.totalMovement) : "-";
+
+            // 3. Notes Count (Ledger Count)
+            cards[2].querySelector(".value").textContent = s.ledgerCount;
+
+            // 4. Financial Year
+            cards[3].querySelector(".value").textContent = bd.financialYear || "-";
+
+            // 5. Revenue
+            cards[4].querySelector(".value").textContent =
+                s.revenue !== 0 ? prefix + format(Math.abs(s.revenue)) : "-";
+
+            // 6. Profit (Loss)
+            const pfx = s.netProfit >= 0 ? prefix : prefix + "(-) ";
+            cards[5].querySelector(".value").textContent = pfx + format(Math.abs(s.netProfit));
+        }
+    }
+
+    // Rounding listener
+    document.addEventListener("DOMContentLoaded", () => {
+        const rSelect = document.getElementById('roundingSelect');
+        if (rSelect) {
+            rSelect.value = localStorage.getItem('ROUNDING') || 'unrounded';
+            rSelect.onchange = () => {
+                localStorage.setItem('ROUNDING', rSelect.value);
+                refreshHomeCards();
+            };
+        }
+        refreshHomeCards();
+    });
+    </script>
+
+    <!-- + BUTTON POPUP LOGIC (KEEPING YOUR FORMAT) -->
+    <script>
+    // OPEN POPUP WHEN + CLICKED (bottom tab)
+    const plusTab = document.querySelector(".bottom-tabs .plus");
+    if (plusTab) {
+        plusTab.onclick = () => {
+            document.getElementById("addEntryPopup").style.display = "flex";
+        };
+    }
+
+    // CLOSE POPUP
+    document.getElementById("closeEntryPopup").onclick = () => {
+        document.getElementById("addEntryPopup").style.display = "none";
+    };
+
+    // SAVE ENTRY
+    document.getElementById("saveEntryBtn").onclick = () => {
+      let ledgerName = document.getElementById("new_ledger").value.trim();
+      let debit = Number(document.getElementById("new_debit").value || 0);
+      let credit = Number(document.getElementById("new_credit").value || 0);
+      let desc = document.getElementById("new_desc").value.trim();
+
+      if (!ledgerName) {
+        alert("Enter Ledger Name");
+        return;
+      }
+
+      if (debit === 0 && credit === 0) {
+        alert("Enter either Debit or Credit amount.");
+        return;
+      }
+
+      // 1. Save as Ledger with Opening Balance
+      const success = AccountingEngine.saveLedger({
+        name: ledgerName,
+        group: AccountingEngine.guessGroup(ledgerName),
+        openingBalance: debit - credit,
+        notes: desc
+      });
+
+      if (success) {
+          alert("Ledger Saved!");
+          // clear fields
+          document.getElementById("new_ledger").value = "";
+          document.getElementById("new_debit").value = "";
+          document.getElementById("new_credit").value = "";
+          document.getElementById("new_desc").value = "";
+          document.getElementById("addEntryPopup").style.display = "none";
+          refreshHomeCards();
+      }
+    };
+    </script>
+
+    <!-- TOOLBAR ICON BEHAVIOUR -->
+    <script>
+    // ─── Shared modal helpers ───────────────────────────────────────────────
+    function openModal(id) {
+        document.getElementById(id).style.display = 'flex';
+    }
+    function closeModal(id) {
+        document.getElementById(id).style.display = 'none';
+    }
+
+    // Close any modal when clicking the dark overlay
+    document.querySelectorAll('.bs-modal-overlay').forEach(overlay => {
+        overlay.addEventListener('click', function(e) {
+            if (e.target === this) this.style.display = 'none';
+        });
+    });
+
+    // ─── Toolbar wiring ─────────────────────────────────────────────────────
+    const tools = document.querySelectorAll(".tool");
+    if (tools.length >= 15) {
+
+        // 1: Login
+        tools[0].onclick = () => {
+            const user = localStorage.getItem('CURRENT_USER');
+            if (user) {
+                if (confirm(`Logged in as "${user}". Log out?`)) {
+                    localStorage.removeItem('CURRENT_USER');
+                    alert('Logged out successfully.');
+                }
+            } else {
+                document.getElementById('loginUser').value = '';
+                document.getElementById('loginPass').value = '';
+                document.getElementById('loginStatus').style.display = 'none';
+                openModal('loginModal');
+            }
+        };
+
+        // 2: Previous FY
+        tools[1].onclick = () => navigateFY(-1);
+
+        // 3: Next FY
+        tools[2].onclick = () => navigateFY(1);
+
+        // 4: Tally Import
+        tools[3].onclick = () => { document.getElementById("importTally").click(); };
+
+        // 5: Tally Settings
+        tools[4].onclick = () => {
+            const s = JSON.parse(localStorage.getItem('TALLY_SETTINGS') || '{}');
+            document.getElementById('tallyHost').value    = s.host    || 'localhost';
+            document.getElementById('tallyPort').value    = s.port    || '9000';
+            document.getElementById('tallyCompany').value = s.company || '';
+            document.getElementById('tallySyncMode').value = s.syncMode || 'pull';
+            openModal('tallySettingsModal');
+        };
+
+        // 6: PDF Financials
+        tools[5].onclick = () => { document.getElementById("exportPDF").click(); };
+
+        // 7: Reset Pages
+        tools[6].onclick = async () => {
+            if (confirm("Reset all stored data for all pages? This cannot be undone.")) {
+                localStorage.clear();
+                await AccountingEngine.persistToElectron();
+                alert("All pages reset.");
+                location.reload();
+            }
+        };
+
+        // 8: Change Font
+        tools[7].onclick = () => {
+            const s = JSON.parse(localStorage.getItem('FONT_SETTINGS') || '{}');
+            if (s.family) document.getElementById('fontFamily').value = s.family;
+            if (s.size)   { document.getElementById('fontSize').value = s.size; document.getElementById('fontSizeLabel').textContent = s.size; }
+            updateFontPreview();
+            openModal('changeFontModal');
+        };
+
+        // 9: Remove All Data (current page)
+        tools[8].onclick = () => {
+            if (confirm("Remove all data for this page only?")) {
+                localStorage.removeItem(getPageKey());
+                alert("Current page data removed.");
+                location.reload();
+            }
+        };
+
+        // 10: Screen AutoSize
+        tools[9].onclick = () => screenAutoSize();
+
+        // 11: Cell AutoFit
+        tools[10].onclick = () => cellAutoFit();
+
+        // 12: Save As
+        tools[11].onclick = () => { document.getElementById("saveAsFile").click(); };
+
+        // 13: Activate
+        tools[12].onclick = () => {
+            const status = localStorage.getItem('LICENSE_STATUS');
+            const el = document.getElementById('activateStatus');
+            if (status === 'active') {
+                const key = localStorage.getItem('LICENSE_KEY') || '';
+                el.style.display = 'block';
+                el.style.background = '#d4edda'; el.style.color = '#155724'; el.style.border = '1px solid #c3e6cb';
+                el.textContent = '✓ Already activated. Key: ' + key;
+            } else {
+                el.style.display = 'none';
+            }
+            document.getElementById('licenseKey').value = '';
+            openModal('activateModal');
+        };
+
+        // 14: About
+        tools[13].onclick = () => openModal('aboutModal');
+
+        // 15: Update
+        tools[14].onclick = () => {
+            const content = document.getElementById('updateContent');
+            content.innerHTML = '<div style="font-size:40px;margin-bottom:10px;">⏳</div><p style="font-weight:bold;font-size:15px;margin:0 0 4px;">Checking for updates…</p><p style="color:#888;font-size:13px;margin:0;">Please wait.</p>';
+            openModal('updateModal');
+            // Simulate network check
+            setTimeout(() => {
+                content.innerHTML = '<div style="font-size:40px;margin-bottom:10px;">✅</div><p style="font-weight:bold;font-size:15px;margin:0 0 4px;">You are up to date!</p><p style="color:#555;font-size:13px;margin:0 0 6px;">AccountingTool <strong>v1.4.1</strong> is the latest version.</p><hr style="margin:12px 0;border-color:#eee;"><p style="font-size:12px;color:#999;margin:0;">Build Date: 13-Apr-2026 &nbsp;|&nbsp; Platform: Web</p>';
+            }, 1200);
+        };
+    }
+
+    // ─── LOGIN ───────────────────────────────────────────────────────────────
+    document.getElementById('loginSubmitBtn').onclick = () => {
+        const user = document.getElementById('loginUser').value.trim();
+        const pass = document.getElementById('loginPass').value;
+        const el   = document.getElementById('loginStatus');
+
+        function showErr(msg) {
+            el.style.display = 'block';
+            el.style.background = '#f8d7da'; el.style.color = '#721c24'; el.style.border = '1px solid #f5c6cb';
+            el.textContent = msg;
+        }
+
+        if (!user) { showErr('Please enter a username.'); return; }
+        if (!pass) { showErr('Please enter a password.'); return; }
+
+        const users  = JSON.parse(localStorage.getItem('USERS') || '[]');
+        const match  = users.find(u => u.username === user && u.password === pass);
+
+        if (match || (user === 'admin' && pass === 'admin')) {
+            localStorage.setItem('CURRENT_USER', user);
+            el.style.display = 'none';
+            closeModal('loginModal');
+            alert('Welcome, ' + user + '!');
+        } else {
+            showErr('Invalid username or password.');
+        }
+    };
+    document.getElementById('loginCloseBtn').onclick  = () => closeModal('loginModal');
+
+    // ─── FY NAVIGATION ───────────────────────────────────────────────────────
+    function navigateFY(direction) {
+        const bd = AccountingEngine.getCompanyDetails();
+        const fy = (bd.financialYear || '1-Apr-2023 to 31-Mar-2024').trim();
+        const years = fy.match(/\d{4}/g);
+        if (!years || years.length < 2) {
+            alert('Cannot parse financial year: ' + fy + '\nExpected format: 1-Apr-YYYY to 31-Mar-YYYY');
+            return;
+        }
+        const sy = parseInt(years[0]) + direction;
+        const ey = parseInt(years[1]) + direction;
+        const newFY = '1-Apr-' + sy + ' to 31-Mar-' + ey;
+        if (!confirm('Change Financial Year to: ' + newFY + '?')) return;
+
+        bd.financialYear = newFY;
+        AccountingEngine.saveCompanyDetails(bd);
+        alert('Financial Year changed to: ' + newFY);
+        location.reload();
+    }
+
+    // ─── TALLY SETTINGS ──────────────────────────────────────────────────────
+    document.getElementById('tallySettingsSaveBtn').onclick = () => {
+        const s = {
+            host:     document.getElementById('tallyHost').value.trim()    || 'localhost',
+            port:     document.getElementById('tallyPort').value           || '9000',
+            company:  document.getElementById('tallyCompany').value.trim(),
+            syncMode: document.getElementById('tallySyncMode').value
+        };
+        localStorage.setItem('TALLY_SETTINGS', JSON.stringify(s));
+        alert('Tally Settings saved!\nHost: ' + s.host + ':' + s.port + (s.company ? '\nCompany: ' + s.company : ''));
+        closeModal('tallySettingsModal');
+    };
+
+    document.getElementById('tallyTestBtn').onclick = () => {
+        const host = document.getElementById('tallyHost').value.trim() || 'localhost';
+        const port = document.getElementById('tallyPort').value || '9000';
+        // Real Tally connection test is impossible from browser (CORS), simulate it
+        alert('Testing connection to http://' + host + ':' + port + '/…\n\n(Note: Tally must be running and have HTTP port enabled to connect.)');
+    };
+
+    document.getElementById('tallySettingsCloseBtn').onclick = () => closeModal('tallySettingsModal');
+
+    // ─── CHANGE FONT ─────────────────────────────────────────────────────────
+    function updateFontPreview() {
+        const ff = document.getElementById('fontFamily').value;
+        const fs = parseInt(document.getElementById('fontSize').value);
+        const preview = document.getElementById('fontPreview');
+        preview.style.fontFamily = ff;
+        preview.style.fontSize   = fs + 'px';
+        document.getElementById('fontSizeLabel').textContent = fs;
+    }
+    document.getElementById('fontFamily').oninput = updateFontPreview;
+    document.getElementById('fontSize').oninput   = updateFontPreview;
+
+    function applyFontToPage(family, size) {
+        const style = document.getElementById('_dynamicFont') || (() => {
+            const s = document.createElement('style');
+            s.id = '_dynamicFont';
+            document.head.appendChild(s);
+            return s;
+        })();
+        style.textContent = '* { font-family: ' + family + ' !important; font-size: ' + size + 'px !important; }';
+    }
+
+    document.getElementById('fontApplyBtn').onclick = () => {
+        const family = document.getElementById('fontFamily').value;
+        const size   = document.getElementById('fontSize').value;
+        localStorage.setItem('FONT_SETTINGS', JSON.stringify({ family, size }));
+        applyFontToPage(family, size);
+        closeModal('changeFontModal');
+        alert('Font applied: ' + family + ', ' + size + 'px');
+    };
+
+    document.getElementById('fontResetBtn').onclick = () => {
+        localStorage.removeItem('FONT_SETTINGS');
+        const s = document.getElementById('_dynamicFont');
+        if (s) s.textContent = '';
+        document.getElementById('fontFamily').value          = 'Arial, sans-serif';
+        document.getElementById('fontSize').value            = '13';
+        document.getElementById('fontSizeLabel').textContent = '13';
+        updateFontPreview();
+        alert('Font reset to default.');
+    };
+
+    document.getElementById('fontCloseBtn').onclick = () => closeModal('changeFontModal');
+
+    // Apply saved font immediately on page load
+    (function applySavedFont() {
+        const s = JSON.parse(localStorage.getItem('FONT_SETTINGS') || 'null');
+        if (s && s.family && s.size) applyFontToPage(s.family, s.size);
+    })();
+
+    // ─── SCREEN AUTOSIZE ─────────────────────────────────────────────────────
+    function screenAutoSize() {
+        // Reset first
+        document.body.style.transform      = '';
+        document.body.style.transformOrigin = '';
+        document.body.style.width           = '';
+
+        const contentW = document.body.scrollWidth;
+        const viewW    = window.innerWidth;
+
+        if (contentW > viewW + 5) {
+            const scale = viewW / contentW;
+            document.body.style.transformOrigin = 'top left';
+            document.body.style.transform       = 'scale(' + scale.toFixed(4) + ')';
+            document.body.style.width           = (100 / scale).toFixed(2) + '%';
+            alert('Screen scaled to ' + Math.round(scale * 100) + '% to fit window.');
+        } else {
+            alert('Content already fits the window. No scaling applied.');
+        }
+    }
+
+    // ─── CELL AUTOFIT ────────────────────────────────────────────────────────
+    function cellAutoFit() {
+        const tables = document.querySelectorAll('table');
+        if (!tables.length) { alert('No tables found on this page.'); return; }
+
+        tables.forEach(table => {
+            const rows = Array.from(table.querySelectorAll('tr'));
+            if (!rows.length) return;
+            const colCount = Math.max(...rows.map(r => r.cells.length));
+
+            for (let c = 0; c < colCount; c++) {
+                let maxW = 60;
+                rows.forEach(row => {
+                    const cell = row.cells[c];
+                    if (!cell) return;
+                    const tmp = document.createElement('span');
+                    tmp.style.cssText = 'visibility:hidden;position:absolute;white-space:nowrap;font:' +
+                        getComputedStyle(cell).font;
+                    tmp.textContent = cell.textContent.trim();
+                    document.body.appendChild(tmp);
+                    const w = tmp.offsetWidth + 16;
+                    document.body.removeChild(tmp);
+                    if (w > maxW) maxW = w;
+                });
+                rows.forEach(row => {
+                    if (row.cells[c]) row.cells[c].style.minWidth = maxW + 'px';
+                });
+            }
+            table.style.tableLayout = 'auto';
+        });
+        alert('Cell AutoFit applied to ' + tables.length + ' table(s).');
+    }
+
+    // ─── ACTIVATE ────────────────────────────────────────────────────────────
+    function showActivateMsg(type, msg) {
+        const el = document.getElementById('activateStatus');
+        el.style.display = 'block';
+        if (type === 'success') {
+            el.style.background = '#d4edda'; el.style.color = '#155724'; el.style.border = '1px solid #c3e6cb';
+        } else {
+            el.style.background = '#f8d7da'; el.style.color = '#721c24'; el.style.border = '1px solid #f5c6cb';
+        }
+        el.textContent = msg;
+    }
+
+    document.getElementById('activateBtn').onclick = () => {
+        const key = document.getElementById('licenseKey').value.trim().toUpperCase();
+        if (!key) { showActivateMsg('error', 'Please enter a license key.'); return; }
+
+        const valid = /^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(key);
+        if (!valid) { showActivateMsg('error', 'Invalid format. Use: XXXX-XXXX-XXXX-XXXX'); return; }
+
+        localStorage.setItem('LICENSE_STATUS', 'active');
+        localStorage.setItem('LICENSE_KEY', key);
+        showActivateMsg('success', '✓ License activated successfully!');
+    };
+
+    document.getElementById('activateCloseBtn').onclick = () => {
+        document.getElementById('activateStatus').style.display = 'none';
+        closeModal('activateModal');
+    };
+
+    // ─── ABOUT & UPDATE close ────────────────────────────────────────────────
+    document.getElementById('aboutCloseBtn').onclick  = () => closeModal('aboutModal');
+    document.getElementById('updateCloseBtn').onclick = () => closeModal('updateModal');
+
+    // ─── FY MANAGEMENT ──────────────────────────────────────────────────────
+    function refreshFYModal() {
+        const bd = AccountingEngine.getCompanyDetails();
+        document.getElementById('fyCurrentLabel').textContent = bd.financialYear || '—';
+
+        const snapshots = AccountingEngine.listFYSnapshots();
+        const container = document.getElementById('fyList');
+        if (snapshots.length === 0) {
+            container.innerHTML = '<div style="padding:12px;color:#888;text-align:center;font-size:12px;">No saved snapshots yet. Click "Save Current FY Snapshot" to save.</div>';
+            return;
+        }
+        let html = '<table style="width:100%;border-collapse:collapse;font-size:12px;">';
+        html += '<tr style="background:#f4f8ff;"><th style="padding:6px 10px;text-align:left;">FY</th><th style="padding:6px 10px;text-align:left;">Company</th><th style="padding:6px 10px;text-align:center;">Ledgers</th><th style="padding:6px 10px;text-align:center;">Action</th></tr>';
+        snapshots.forEach(s => {
+            html += '<tr style="border-top:1px solid #eee;">';
+            html += '<td style="padding:6px 10px;font-weight:600;">' + s.fy + '</td>';
+            html += '<td style="padding:6px 10px;">' + s.company + '</td>';
+            html += '<td style="padding:6px 10px;text-align:center;">' + s.ledgerCount + '</td>';
+            html += '<td style="padding:6px 10px;text-align:center;"><button onclick="loadFY(\'' + s.key + '\')" style="font-size:11px;padding:3px 10px;">Load</button></td>';
+            html += '</tr>';
+        });
+        html += '</table>';
+        container.innerHTML = html;
+    }
+
+    document.getElementById('fySaveBtn').onclick = () => {
+        const fyKey = AccountingEngine._currentFYKey();
+        AccountingEngine.saveFYSnapshot(fyKey);
+        alert('FY snapshot saved: ' + fyKey);
+        refreshFYModal();
+    };
+
+    document.getElementById('fyCarryBtn').onclick = async () => {
+        const bd = AccountingEngine.getCompanyDetails();
+        if (!confirm('Carry forward to next Financial Year?\n\nThis will:\n1. Save current FY (' + bd.financialYear + ') as a snapshot\n2. Set closing balances as new opening balances\n3. Clear vouchers & AE for the new year\n4. Advance FY dates by 1 year\n\nContinue?')) return;
+        const result = AccountingEngine.carryForwardToNextFY();
+        if (result.success) {
+            await AccountingEngine.persistToElectron();
+            alert('Carried forward ' + result.ledgerCount + ' ledgers.\nNew FY: ' + result.newFY);
+            location.reload();
+        } else {
+            alert('Carry forward failed.');
+        }
+    };
+
+    async function loadFY(fyKey) {
+        if (!confirm('Load FY snapshot "' + fyKey + '"?\n\nThis will replace all current data with the saved snapshot.')) return;
+        /* Save current data first */
+        AccountingEngine.saveFYSnapshot();
+        if (AccountingEngine.loadFYSnapshot(fyKey)) {
+            await AccountingEngine.persistToElectron();
+            alert('Loaded FY: ' + fyKey);
+            location.reload();
+        } else {
+            alert('Failed to load FY snapshot.');
+        }
+    }
+
+    document.getElementById('fyCloseBtn').onclick = () => closeModal('fyModal');
+
+    // ─── AUDIT LOG ──────────────────────────────────────────────────────────
+    function refreshAuditLog() {
+        const log = AccountingEngine.getAuditLog();
+        const container = document.getElementById('auditLogContent');
+        if (log.length === 0) {
+            container.innerHTML = '<div style="padding:12px;color:#888;text-align:center;">No audit entries yet. Actions will be logged automatically.</div>';
+            return;
+        }
+        let html = '<table style="width:100%;border-collapse:collapse;font-size:11.5px;">';
+        html += '<tr style="background:#f4f8ff;position:sticky;top:0;"><th style="padding:5px 8px;text-align:left;">Time</th><th style="padding:5px 8px;text-align:left;">User</th><th style="padding:5px 8px;text-align:left;">Action</th><th style="padding:5px 8px;text-align:left;">Detail</th></tr>';
+        /* Show newest first */
+        for (let i = log.length - 1; i >= 0; i--) {
+            const e = log[i];
+            const d = new Date(e.ts);
+            const time = d.toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'}) + ' ' + d.toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit'});
+            const actionColor = e.action === 'delete' ? '#c0392b' : e.action === 'create' ? '#15c39a' : e.action === 'import' ? '#2f76d2' : '#555';
+            html += '<tr style="border-top:1px solid #f0f0f0;">';
+            html += '<td style="padding:4px 8px;white-space:nowrap;color:#888;">' + time + '</td>';
+            html += '<td style="padding:4px 8px;">' + (e.user || '—') + '</td>';
+            html += '<td style="padding:4px 8px;font-weight:600;color:' + actionColor + ';">' + e.action + '</td>';
+            html += '<td style="padding:4px 8px;">' + (e.detail || '') + '</td>';
+            html += '</tr>';
+        }
+        html += '</table>';
+        container.innerHTML = html;
+    }
+
+    document.getElementById('auditClearBtn').onclick = () => {
+        if (!confirm('Clear the entire audit log? This cannot be undone.')) return;
+        AccountingEngine.clearAuditLog();
+        refreshAuditLog();
+    };
+
+    document.getElementById('auditCloseBtn').onclick = () => closeModal('auditModal');
+
+    </script>
+
+
+
+</body>
+</html>

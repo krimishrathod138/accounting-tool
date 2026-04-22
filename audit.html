@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Audit Manager — AccountingTool</title>
+<link rel="stylesheet" href="tools.css"/>
+<style>
+body{font-family:'Inter',Arial,sans-serif;background:#f4f6f9;margin:0}
+.at-header{background:#fff;padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #15c39a;box-shadow:0 2px 8px rgba(0,0,0,.07);position:sticky;top:0;z-index:200}
+.at-logo{font-size:21px;font-weight:800;color:#15c39a;display:flex;align-items:center;gap:8px}
+.at-logo span{color:#1a1a1a}
+.at-logo-box{width:34px;height:34px;background:#15c39a;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px}
+.back-link{font-size:13px;color:#555;padding:6px 14px;border:1px solid #ddd;border-radius:6px;text-decoration:none;transition:.18s}
+.back-link:hover{background:#e8faf5;color:#15c39a;border-color:#15c39a}
+.tool-banner{background:linear-gradient(120deg,#15c39a,#0a8068);color:#fff;padding:16px 28px;display:flex;align-items:center;gap:16px}
+.tool-banner-icon{width:46px;height:46px;background:rgba(255,255,255,.18);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px}
+.tool-banner h1{font-size:19px;font-weight:700;margin:0}
+.tool-banner p{font-size:12px;opacity:.85;margin:3px 0 0}
+/* LAYOUT */
+.audit-layout{display:grid;grid-template-columns:260px 1fr;min-height:calc(100vh - 130px)}
+/* SIDEBAR */
+.sidebar{background:#fff;border-right:1px solid #e2e8f0;padding:0;overflow-y:auto}
+.sidebar-header{padding:14px 16px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between}
+.sidebar-header h3{font-size:14px;font-weight:700;color:#333;margin:0}
+.client-list{padding:8px}
+.client-item{padding:10px 12px;border-radius:8px;cursor:pointer;margin-bottom:4px;transition:.18s;border:1.5px solid transparent}
+.client-item:hover{background:#f5f5f5}
+.client-item.active{background:#e8faf5;border-color:#15c39a}
+.client-name{font-size:13px;font-weight:700;color:#222}
+.client-type{font-size:11px;color:#888;margin-top:2px}
+.client-fy{font-size:11px;color:#aaa}
+/* MAIN CONTENT */
+.main-content{padding:0;overflow-y:auto}
+.no-client{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:400px;color:#aaa}
+.no-client .icon{font-size:56px;margin-bottom:14px}
+.no-client h3{font-size:16px;color:#666;margin-bottom:6px}
+/* TABS */
+.client-tabs{display:flex;gap:0;border-bottom:2px solid #e5e5e5;background:#fff;padding:0 24px}
+.c-tab{padding:11px 18px;cursor:pointer;font-size:13px;font-weight:500;color:#666;border:none;background:none;font-family:inherit;transition:.18s}
+.c-tab:hover{color:#15c39a;background:#e8faf5}
+.c-tab.active{color:#15c39a;border-bottom:3px solid #15c39a;font-weight:700;background:#fff;margin-bottom:-2px}
+.tab-content{display:none;padding:20px 24px}
+.tab-content.active{display:block}
+/* CARDS */
+.at-card{background:#fff;border-radius:10px;padding:18px 20px;box-shadow:0 1px 4px rgba(0,0,0,.07);border:1px solid #e2e8f0;margin-bottom:16px}
+.at-card-title{font-size:14px;font-weight:700;color:#333;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid #e8faf5;display:flex;align-items:center;gap:8px}
+.at-card-title::before{content:'';width:3px;height:16px;background:#15c39a;border-radius:2px;flex-shrink:0}
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;border:none;transition:.18s}
+.btn-primary{background:#15c39a;color:#fff}.btn-primary:hover{background:#11a683}
+.btn-secondary{background:#fff;color:#444;border:1px solid #d0d0d0}.btn-secondary:hover{background:#f5f5f5}
+.btn-danger{background:#e53e3e;color:#fff}.btn-danger:hover{background:#c53030}
+.btn-sm{padding:5px 10px;font-size:12px}
+/* FORMS */
+.form-grid{display:grid;gap:12px 16px}
+.form-cols-2{grid-template-columns:1fr 1fr}
+.form-cols-3{grid-template-columns:1fr 1fr 1fr}
+.form-group{display:flex;flex-direction:column;gap:4px}
+.form-group label{font-size:11px;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:.4px}
+.form-group input,.form-group select,.form-group textarea{padding:8px 11px;border:1px solid #d0d0d0;border-radius:6px;font-size:13px;font-family:inherit;transition:.18s}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:#15c39a;box-shadow:0 0 0 3px rgba(21,195,154,.1)}
+.form-group textarea{resize:vertical;min-height:60px}
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.s-card{background:#fff;border-radius:10px;padding:14px 16px;border-left:4px solid #15c39a;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.s-card.blue{border-color:#3b82f6}.s-card.orange{border-color:#f59e0b}.s-card.red{border-color:#e53e3e}
+.s-card .lbl{font-size:10px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.s-card .val{font-size:20px;font-weight:700;color:#1a1a1a;margin-top:3px}
+/* PROGRESS */
+.progress-bar{background:#e5e5e5;border-radius:20px;height:10px;overflow:hidden}
+.progress-fill{background:#15c39a;height:100%;border-radius:20px;transition:.4s}
+/* TABLE */
+.table-wrap{overflow-x:auto;border-radius:8px;border:1px solid #e2e8f0}
+.at-table{width:100%;border-collapse:collapse;font-size:13px}
+.at-table th{background:#f0faf7;color:#2d4a3e;font-weight:600;padding:9px 12px;text-align:left;border-bottom:2px solid #15c39a;white-space:nowrap;font-size:12px}
+.at-table td{padding:8px 12px;border-bottom:1px solid #f2f2f2;color:#333;vertical-align:middle}
+.at-table tr:last-child td{border-bottom:none}
+.at-table tr:hover td{background:#fafffe}
+/* CHECKLIST */
+.checklist-section{margin-bottom:20px}
+.checklist-section h4{font-size:12px;font-weight:700;color:#15c39a;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;padding:8px 12px;background:#e8faf5;border-radius:6px}
+.check-item{display:flex;align-items:flex-start;gap:12px;padding:9px 12px;border-bottom:1px solid #f5f5f5;border-radius:4px}
+.check-item:hover{background:#fafffe}
+.check-item input[type=checkbox]{margin-top:2px;width:16px;height:16px;cursor:pointer;accent-color:#15c39a}
+.check-label{flex:1;font-size:13px;color:#333}
+.check-item.done .check-label{text-decoration:line-through;color:#aaa}
+.check-resp{width:80px;padding:4px 8px;border:1px solid #d0d0d0;border-radius:4px;font-size:11px;font-family:inherit}
+.check-remarks{width:150px;padding:4px 8px;border:1px solid #d0d0d0;border-radius:4px;font-size:11px;font-family:inherit}
+/* BADGES */
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-green{background:#dcfff6;color:#0a7c5c}
+.badge-red{background:#ffeaea;color:#b91c1c}
+.badge-yellow{background:#fff8dc;color:#a16207}
+.badge-blue{background:#dbeafe;color:#1d4ed8}
+.badge-gray{background:#f3f4f6;color:#4b5563}
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:9999}
+.modal{background:#fff;border-radius:14px;padding:24px;width:560px;max-width:96vw;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.2)}
+.modal-header{font-size:16px;font-weight:700;color:#222;margin-bottom:18px;padding-bottom:12px;border-bottom:2px solid #e8faf5}
+.modal-footer{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;padding-top:14px;border-top:1px solid #f0f0f0}
+.actions-bar{display:flex;gap:8px;align-items:center;margin-bottom:14px}
+.actions-bar .spacer{flex:1}
+.at-footer{text-align:center;padding:16px;color:#c0c0c0;font-size:12px;border-top:1px solid #eee}
+@media(max-width:900px){.audit-layout{grid-template-columns:1fr}.sidebar{border-right:none;border-bottom:1px solid #e2e8f0;max-height:200px}}
+</style>
+</head>
+<body>
+<script src="engine.js"></script>
+
+<!-- HEADER -->
+<header class="at-header">
+  <div class="at-logo"><div class="at-logo-box">📊</div>Accounting<span>Tool</span></div>
+  <a href="index.html" class="back-link">← Dashboard</a>
+</header>
+
+<!-- BANNER -->
+<div class="tool-banner">
+  <div class="tool-banner-icon">🔍</div>
+  <div>
+    <h1>Audit Manager</h1>
+    <p>Manage audit engagements, checklists, findings &amp; working papers for multiple clients</p>
+  </div>
+</div>
+
+<div class="audit-layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h3>Clients</h3>
+      <button class="btn btn-primary btn-sm" onclick="openClientModal()">＋ New</button>
+    </div>
+    <div class="client-list" id="clientList">
+      <div style="text-align:center;padding:30px 10px;color:#aaa;font-size:12px">No clients yet.<br>Click + New to add one.</div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main-content" id="mainContent">
+    <div class="no-client" id="noClientMsg">
+      <div class="icon">🔍</div>
+      <h3>No Client Selected</h3>
+      <p>Select a client from the left or create a new one.</p>
+      <button class="btn btn-primary" style="margin-top:14px" onclick="openClientModal()">＋ Add New Client</button>
+    </div>
+    <div id="clientWork" style="display:none">
+      <!-- CLIENT HEADER -->
+      <div style="padding:16px 24px 0;display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div id="clientTitle" style="font-size:17px;font-weight:800;color:#222"></div>
+          <div id="clientSubtitle" style="font-size:12px;color:#888;margin-top:2px"></div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-secondary btn-sm" onclick="editCurrentClient()">✏ Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteCurrentClient()">🗑 Delete</button>
+        </div>
+      </div>
+      <!-- TABS -->
+      <div class="client-tabs">
+        <button class="c-tab active" onclick="showClientTab('dashboard')">📊 Dashboard</button>
+        <button class="c-tab" onclick="showClientTab('checklist')">☑ Checklist</button>
+        <button class="c-tab" onclick="showClientTab('findings')">⚠ Findings</button>
+        <button class="c-tab" onclick="showClientTab('wp')">📁 Working Papers</button>
+      </div>
+
+      <!-- DASHBOARD TAB -->
+      <div id="tab-dashboard" class="tab-content active">
+        <div class="stats-grid">
+          <div class="s-card"><div class="lbl">Checklist Items</div><div class="val" id="dash-total">0</div></div>
+          <div class="s-card blue"><div class="lbl">Completed</div><div class="val" id="dash-done">0</div></div>
+          <div class="s-card orange"><div class="lbl">Findings Open</div><div class="val" id="dash-findings">0</div></div>
+          <div class="s-card red"><div class="lbl">Working Papers</div><div class="val" id="dash-wp">0</div></div>
+        </div>
+        <div class="at-card">
+          <div class="at-card-title">Audit Completion</div>
+          <div style="display:flex;align-items:center;gap:14px">
+            <div class="progress-bar" style="flex:1"><div class="progress-fill" id="dash-progress" style="width:0%"></div></div>
+            <strong id="dash-pct" style="color:#15c39a;font-size:16px;white-space:nowrap">0%</strong>
+          </div>
+        </div>
+        <div class="at-card">
+          <div class="at-card-title">Client Information</div>
+          <div class="form-grid form-cols-3" id="clientInfoDisplay" style="pointer-events:none;opacity:.7"></div>
+        </div>
+      </div>
+
+      <!-- CHECKLIST TAB -->
+      <div id="tab-checklist" class="tab-content">
+        <div class="at-card">
+          <div class="at-card-title" style="display:flex;align-items:center;justify-content:space-between;">
+            <span>Audit Checklist</span>
+            <div style="display:flex;gap:6px;">
+              <input id="customCheckInput" placeholder="Add custom checklist item…" style="padding:5px 10px;border:1px solid #ccc;border-radius:4px;font-size:12px;width:280px;">
+              <select id="customCheckSection" style="padding:5px;border:1px solid #ccc;border-radius:4px;font-size:11px;">
+                <option>A. Planning & Risk Assessment</option><option>B. Verification of Assets</option><option>C. Verification of Liabilities</option><option>D. Income Verification</option><option>E. Expense Verification</option><option>F. Statutory Compliance</option><option>G. Custom Items</option>
+              </select>
+              <button class="btn btn-sm btn-primary" onclick="addCustomCheck()" style="white-space:nowrap;">+ Add</button>
+            </div>
+          </div>
+          <div id="checklistContainer"></div>
+        </div>
+      </div>
+
+      <!-- FINDINGS TAB -->
+      <div id="tab-findings" class="tab-content">
+        <div class="actions-bar">
+          <button class="btn btn-primary" onclick="openFindingModal()">＋ Add Finding</button>
+          <span class="spacer"></span>
+          <span id="findingsCount" style="font-size:12px;color:#888"></span>
+        </div>
+        <div class="table-wrap">
+          <table class="at-table">
+            <thead><tr><th>Sr</th><th>Type</th><th>Area</th><th>Description</th><th>Risk</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="findingsBody"></tbody>
+          </table>
+        </div>
+        <div id="findingsEmpty" class="no-client" style="min-height:200px;display:none">
+          <div class="icon" style="font-size:36px">⚠</div><h3>No Findings Yet</h3>
+        </div>
+      </div>
+
+      <!-- WORKING PAPERS TAB -->
+      <div id="tab-wp" class="tab-content">
+        <div class="actions-bar">
+          <button class="btn btn-primary" onclick="openWPModal()">＋ Add Working Paper</button>
+          <span class="spacer"></span>
+          <span id="wpCount" style="font-size:12px;color:#888"></span>
+        </div>
+        <div class="table-wrap">
+          <table class="at-table">
+            <thead><tr><th>WP Ref</th><th>Description</th><th>Prepared By</th><th>Date</th><th>Reviewed By</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="wpBody"></tbody>
+          </table>
+        </div>
+        <div id="wpEmpty" class="no-client" style="min-height:200px;display:none">
+          <div class="icon" style="font-size:36px">📁</div><h3>No Working Papers Yet</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="at-footer">© 2026 AccountingTool | Audit Manager</div>
+
+<!-- CLIENT MODAL -->
+<div id="clientModal" class="overlay" style="display:none">
+  <div class="modal">
+    <div class="modal-header" id="clientModalTitle">Add New Client</div>
+    <div class="form-grid form-cols-2">
+      <div class="form-group" style="grid-column:1/-1"><label>Client / Company Name *</label><input id="cm-name" placeholder="ABC Private Limited"></div>
+      <div class="form-group"><label>Entity Type</label>
+        <select id="cm-type">
+          <option>Private Limited</option><option>LLP</option><option>Partnership Firm</option>
+          <option>Proprietorship</option><option>Trust / NGO</option><option>Other</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Industry</label><input id="cm-industry" placeholder="e.g. Manufacturing, IT"></div>
+      <div class="form-group"><label>Financial Year</label>
+        <select id="cm-fy"></select>
+      </div>
+      <div class="form-group"><label>Turnover (₹)</label><input id="cm-turnover" type="number" placeholder="0"></div>
+      <div class="form-group"><label>Auditor Name</label><input id="cm-auditor" placeholder="CA Name"></div>
+      <div class="form-group"><label>Audit Start Date</label><input id="cm-start" type="date"></div>
+      <div class="form-group"><label>Audit End Date</label><input id="cm-end" type="date"></div>
+      <div class="form-group"><label>Status</label>
+        <select id="cm-status"><option value="not_started">Not Started</option><option value="in_progress" selected>In Progress</option><option value="completed">Completed</option></select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeClientModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveClient()">Save Client</button>
+    </div>
+  </div>
+</div>
+
+<!-- FINDING MODAL -->
+<div id="findingModal" class="overlay" style="display:none">
+  <div class="modal">
+    <div class="modal-header" id="findingModalTitle">Add Finding</div>
+    <div class="form-grid form-cols-2">
+      <div class="form-group"><label>Finding Type</label>
+        <select id="fm-type"><option>Major</option><option>Minor</option><option>Advisory</option></select>
+      </div>
+      <div class="form-group"><label>Audit Area</label><input id="fm-area" placeholder="e.g. Fixed Assets, Debtors"></div>
+      <div class="form-group" style="grid-column:1/-1"><label>Description *</label><textarea id="fm-desc" placeholder="Describe the finding or observation..."></textarea></div>
+      <div class="form-group"><label>Risk Level</label>
+        <select id="fm-risk"><option>High</option><option>Medium</option><option>Low</option></select>
+      </div>
+      <div class="form-group"><label>Status</label>
+        <select id="fm-status"><option value="open">Open</option><option value="closed">Closed</option></select>
+      </div>
+      <div class="form-group" style="grid-column:1/-1"><label>Management Response</label><textarea id="fm-mgmt" placeholder="Management's response / action plan..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeFindingModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveFinding()">Save Finding</button>
+    </div>
+  </div>
+</div>
+
+<!-- WP MODAL -->
+<div id="wpModal" class="overlay" style="display:none">
+  <div class="modal">
+    <div class="modal-header" id="wpModalTitle">Add Working Paper</div>
+    <div class="form-grid form-cols-2">
+      <div class="form-group"><label>WP Reference *</label><input id="wm-ref" placeholder="e.g. WP-FA-01"></div>
+      <div class="form-group"><label>Description *</label><input id="wm-desc" placeholder="Brief description"></div>
+      <div class="form-group"><label>Prepared By</label><input id="wm-prep" placeholder="Initials / Name"></div>
+      <div class="form-group"><label>Date</label><input id="wm-date" type="date"></div>
+      <div class="form-group"><label>Reviewed By</label><input id="wm-rev" placeholder="Partner / Manager"></div>
+      <div class="form-group"><label>Status</label>
+        <select id="wm-status"><option value="draft">Draft</option><option value="final">Final</option></select>
+      </div>
+      <div class="form-group" style="grid-column:1/-1"><label>Content / Notes</label><textarea id="wm-notes" style="min-height:80px" placeholder="Working paper content, notes, observations..."></textarea></div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label>Attachments</label>
+        <input type="file" id="wm-files" multiple style="font-size:12px;">
+        <div id="wm-attachList" style="margin-top:6px;font-size:11px;color:#555;"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeWPModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveWP()">Save Working Paper</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const DEFAULT_CHECKLIST = [
+  { sec: "A. Planning & Risk Assessment", items: [
+    "Engagement letter obtained from client",
+    "Management representation letter issued",
+    "Prior year audit file reviewed",
+    "Independence confirmation obtained",
+    "Risk assessment documented",
+    "Materiality determined and documented",
+    "Audit program prepared",
+    "Internal control assessment done"
+  ]},
+  { sec: "B. Verification of Assets", items: [
+    "Physical verification of fixed assets done",
+    "FAR reconciled with books of accounts",
+    "Capital additions verified with invoices",
+    "Disposal of assets checked and approved",
+    "Depreciation calculation verified",
+    "Inventory count observed / verified",
+    "Cash balance physically verified",
+    "Bank reconciliation statements obtained",
+    "Debtors confirmation letters sent",
+    "Loans & advances agreements reviewed"
+  ]},
+  { sec: "C. Verification of Liabilities", items: [
+    "Creditors balance confirmation obtained",
+    "Statutory liabilities checked (GST, TDS, PF, ESI)",
+    "Secured / unsecured loans verified",
+    "Provisions adequacy assessed",
+    "Contingent liabilities noted",
+    "Lease obligations checked (Ind AS 116)",
+    "Related party balances reconciled",
+    "Director's current account verified"
+  ]},
+  { sec: "D. Income Verification", items: [
+    "Revenue recognition policy reviewed",
+    "Sales reconciled with GST returns (GSTR-1/3B)",
+    "Export / import documentation checked",
+    "Sundry income verified",
+    "Interest income calculation verified",
+    "Other income confirmed with documentation"
+  ]},
+  { sec: "E. Expense Verification", items: [
+    "Purchase invoices verified (sample basis)",
+    "Expense cut-off procedures applied",
+    "Salary & wages reconciled with PF/ESI/TDS",
+    "TDS deductions and deposits verified",
+    "Director's remuneration within limits (Sec 197)",
+    "Repairs vs Capex classification checked",
+    "Deferred revenue expenditure reviewed",
+    "Donations / CSR expenditure checked"
+  ]},
+  { sec: "F. Statutory Compliance", items: [
+    "ROC filings verified (Annual Return, FS)",
+    "Income Tax return filed on time",
+    "GST returns filed (GSTR-1, GSTR-3B)",
+    "TDS / TCS returns filed (24Q, 26Q, 27Q)",
+    "MSME payment compliance verified",
+    "Related party transaction approvals obtained"
+  ]}
+];
+
+let data = { clients: [], checklists: {}, findings: {}, wps: {} };
+let currentClientId = null;
+let editClientId = null;
+let editFindingIdx = -1;
+let editWPIdx = -1;
+
+function loadData() {
+  try { data = JSON.parse(localStorage.getItem("AUDIT_MANAGER") || '{"clients":[],"checklists":{},"findings":{},"wps":{}}'); } catch(e){}
+  if (!data.clients)   data.clients   = [];
+  if (!data.checklists) data.checklists = {};
+  if (!data.findings)  data.findings  = {};
+  if (!data.wps)       data.wps       = {};
+  renderClientList();
+}
+
+function saveData() { localStorage.setItem("AUDIT_MANAGER", JSON.stringify(data)); if (typeof AccountingEngine !== 'undefined') AccountingEngine.persistToElectron(); }
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
+function renderClientList() {
+  const list = document.getElementById("clientList");
+  if (!data.clients.length) {
+    list.innerHTML = `<div style="text-align:center;padding:30px 10px;color:#aaa;font-size:12px">No clients yet.<br>Click + New to add one.</div>`;
+    return;
+  }
+  const statusBadge = s => ({
+    in_progress: '<span class="badge badge-blue">In Progress</span>',
+    completed:   '<span class="badge badge-green">Completed</span>',
+    not_started: '<span class="badge badge-gray">Not Started</span>'
+  })[s] || "";
+  list.innerHTML = data.clients.map(c => `
+    <div class="client-item ${c.id === currentClientId ? 'active' : ''}" onclick="selectClient('${c.id}')">
+      <div class="client-name">${c.name}</div>
+      <div class="client-type">${c.type} &nbsp;|&nbsp; ${c.fy}</div>
+      <div style="margin-top:4px">${statusBadge(c.status)}</div>
+    </div>`).join("");
+}
+
+function selectClient(id) {
+  currentClientId = id;
+  const c = data.clients.find(x => x.id === id);
+  if (!c) return;
+  if (!data.checklists[id]) initChecklist(id);
+  document.getElementById("noClientMsg").style.display  = "none";
+  document.getElementById("clientWork").style.display   = "block";
+  document.getElementById("clientTitle").textContent    = c.name;
+  document.getElementById("clientSubtitle").textContent = `${c.type} | FY ${c.fy} | ${c.industry || ""} | Auditor: ${c.auditor || "—"}`;
+  renderClientList();
+  renderDashboard();
+  renderChecklist();
+  renderFindings();
+  renderWP();
+  showClientTab("dashboard");
+}
+
+function initChecklist(id) {
+  data.checklists[id] = [];
+  DEFAULT_CHECKLIST.forEach(sec => {
+    sec.items.forEach(item => {
+      data.checklists[id].push({ sec: sec.sec, text: item, done: false, resp: "", remark: "" });
+    });
+  });
+  saveData();
+}
+
+function renderDashboard() {
+  const c = data.clients.find(x => x.id === currentClientId);
+  if (!c) return;
+  const cl = data.checklists[currentClientId] || [];
+  const done = cl.filter(x => x.done).length;
+  const pct  = cl.length ? Math.round(done / cl.length * 100) : 0;
+  const findings = (data.findings[currentClientId] || []).filter(f => f.status === "open").length;
+  const wps      = (data.wps[currentClientId] || []).length;
+  document.getElementById("dash-total").textContent    = cl.length;
+  document.getElementById("dash-done").textContent     = done;
+  document.getElementById("dash-findings").textContent = findings;
+  document.getElementById("dash-wp").textContent       = wps;
+  document.getElementById("dash-progress").style.width = pct + "%";
+  document.getElementById("dash-pct").textContent      = pct + "%";
+  document.getElementById("clientInfoDisplay").innerHTML = `
+    <div><label style="font-size:11px;color:#888;font-weight:600">Entity Type</label><div style="font-size:13px">${c.type}</div></div>
+    <div><label style="font-size:11px;color:#888;font-weight:600">FY</label><div style="font-size:13px">${c.fy}</div></div>
+    <div><label style="font-size:11px;color:#888;font-weight:600">Industry</label><div style="font-size:13px">${c.industry||"—"}</div></div>
+    <div><label style="font-size:11px;color:#888;font-weight:600">Turnover</label><div style="font-size:13px">${c.turnover ? "₹"+Number(c.turnover).toLocaleString('en-IN') : "—"}</div></div>
+    <div><label style="font-size:11px;color:#888;font-weight:600">Auditor</label><div style="font-size:13px">${c.auditor||"—"}</div></div>
+    <div><label style="font-size:11px;color:#888;font-weight:600">Audit Period</label><div style="font-size:13px">${c.startDate||"—"} to ${c.endDate||"—"}</div></div>
+  `;
+}
+
+function renderChecklist() {
+  const cl = data.checklists[currentClientId] || [];
+  const sections = {};
+  cl.forEach((item, i) => {
+    if (!sections[item.sec]) sections[item.sec] = [];
+    sections[item.sec].push({ ...item, idx: i });
+  });
+  let html = "";
+  for (const sec in sections) {
+    html += `<div class="checklist-section"><h4>${sec}</h4>`;
+    sections[sec].forEach(item => {
+      html += `<div class="check-item ${item.done ? 'done' : ''}">
+        <input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleCheck(${item.idx}, this.checked)">
+        <span class="check-label">${item.text}</span>
+        <select class="check-resp" onchange="updateCheckResp(${item.idx}, this.value)">
+          <option value="" ${!item.resp?"selected":""}>—</option>
+          <option value="done" ${item.resp==="done"?"selected":""}>Done</option>
+          <option value="na"   ${item.resp==="na"?"selected":""}>N/A</option>
+          <option value="pending" ${item.resp==="pending"?"selected":""}>Pending</option>
+        </select>
+        <input class="check-remarks" placeholder="Remarks…" value="${item.remark||""}" onchange="updateCheckRemark(${item.idx}, this.value)">
+        <button class="btn btn-sm btn-danger" onclick="deleteCheckItem(${item.idx})" title="Remove item" style="padding:1px 6px;font-size:10px;margin-left:4px;">✕</button>
+      </div>`;
+    });
+    html += "</div>";
+  }
+  document.getElementById("checklistContainer").innerHTML = html;
+}
+
+function toggleCheck(idx, val) {
+  data.checklists[currentClientId][idx].done = val;
+  saveData(); renderDashboard();
+}
+function updateCheckResp(idx, val) { data.checklists[currentClientId][idx].resp = val; saveData(); }
+function updateCheckRemark(idx, val) { data.checklists[currentClientId][idx].remark = val; saveData(); }
+
+function renderFindings() {
+  const findings = data.findings[currentClientId] || [];
+  const tbody = document.getElementById("findingsBody");
+  const empty = document.getElementById("findingsEmpty");
+  document.getElementById("findingsCount").textContent = findings.length + " findings | " + findings.filter(f=>f.status==="open").length + " open";
+  if (!findings.length) { tbody.innerHTML = ""; empty.style.display = "flex"; return; }
+  empty.style.display = "none";
+  const riskBadge = r => ({ High:"badge-red", Medium:"badge-yellow", Low:"badge-green" })[r] || "badge-gray";
+  tbody.innerHTML = findings.map((f, i) => `<tr>
+    <td>${i+1}</td>
+    <td><span class="badge badge-blue">${f.type}</span></td>
+    <td>${f.area}</td>
+    <td style="max-width:250px">${f.desc}</td>
+    <td><span class="badge ${riskBadge(f.risk)}">${f.risk}</span></td>
+    <td><span class="badge ${f.status==="open"?"badge-red":"badge-green"}">${f.status==="open"?"Open":"Closed"}</span></td>
+    <td>
+      <button class="btn btn-sm btn-secondary" onclick="editFinding(${i})">✏</button>
+      <button class="btn btn-sm btn-danger" style="margin-left:4px" onclick="deleteFinding(${i})">✕</button>
+    </td>
+  </tr>`).join("");
+}
+
+function renderWP() {
+  const wps = data.wps[currentClientId] || [];
+  const tbody = document.getElementById("wpBody");
+  const empty = document.getElementById("wpEmpty");
+  document.getElementById("wpCount").textContent = wps.length + " working papers";
+  if (!wps.length) { tbody.innerHTML = ""; empty.style.display = "flex"; return; }
+  empty.style.display = "none";
+  tbody.innerHTML = wps.map((w, i) => `<tr>
+    <td><strong>${w.ref}</strong></td>
+    <td>${w.desc}</td>
+    <td>${w.prepBy}</td>
+    <td>${w.date}</td>
+    <td>${w.revBy}</td>
+    <td><span class="badge ${w.status==="final"?"badge-green":"badge-yellow"}">${w.status==="final"?"Final":"Draft"}</span></td>
+    <td>
+      <button class="btn btn-sm btn-secondary" onclick="editWP(${i})">✏</button>
+      <button class="btn btn-sm btn-danger" style="margin-left:4px" onclick="deleteWP(${i})">✕</button>
+    </td>
+  </tr>`).join("");
+}
+
+function showClientTab(name) {
+  document.querySelectorAll(".c-tab").forEach((t,i) => {
+    const names = ["dashboard","checklist","findings","wp"];
+    t.classList.toggle("active", names[i] === name);
+  });
+  document.querySelectorAll(".tab-content").forEach(p => p.classList.remove("active"));
+  document.getElementById("tab-" + name).classList.add("active");
+}
+
+// CLIENT MODAL
+function openClientModal(editId) {
+  editClientId = editId || null;
+  document.getElementById("clientModalTitle").textContent = editId ? "Edit Client" : "Add New Client";
+  if (editId) {
+    const c = data.clients.find(x => x.id === editId);
+    if (c) {
+      document.getElementById("cm-name").value    = c.name;
+      document.getElementById("cm-type").value    = c.type;
+      document.getElementById("cm-industry").value= c.industry||"";
+      document.getElementById("cm-fy").value      = c.fy;
+      document.getElementById("cm-turnover").value= c.turnover||"";
+      document.getElementById("cm-auditor").value = c.auditor||"";
+      document.getElementById("cm-start").value   = c.startDate||"";
+      document.getElementById("cm-end").value     = c.endDate||"";
+      document.getElementById("cm-status").value  = c.status||"in_progress";
+    }
+  } else {
+    ["cm-name","cm-industry","cm-turnover","cm-auditor","cm-start","cm-end"].forEach(id => document.getElementById(id).value = "");
+    document.getElementById("cm-type").value   = "Private Limited";
+    /* Set FY to current */
+    const _now = new Date(), _cs = _now.getMonth() >= 3 ? _now.getFullYear() : _now.getFullYear() - 1;
+    document.getElementById("cm-fy").value = _cs + '-' + String(_cs + 1).slice(2);
+    document.getElementById("cm-status").value = "in_progress";
+  }
+  document.getElementById("clientModal").style.display = "flex";
+}
+function closeClientModal() { document.getElementById("clientModal").style.display = "none"; }
+function saveClient() {
+  const name = document.getElementById("cm-name").value.trim();
+  if (!name) { alert("Client name is required."); return; }
+  const client = {
+    id:        editClientId || uid(),
+    name,
+    type:      document.getElementById("cm-type").value,
+    industry:  document.getElementById("cm-industry").value,
+    fy:        document.getElementById("cm-fy").value,
+    turnover:  document.getElementById("cm-turnover").value,
+    auditor:   document.getElementById("cm-auditor").value,
+    startDate: document.getElementById("cm-start").value,
+    endDate:   document.getElementById("cm-end").value,
+    status:    document.getElementById("cm-status").value,
+  };
+  if (editClientId) {
+    const idx = data.clients.findIndex(x => x.id === editClientId);
+    if (idx !== -1) data.clients[idx] = client;
+  } else {
+    data.clients.push(client);
+  }
+  saveData(); closeClientModal(); renderClientList();
+  if (!editClientId || editClientId === currentClientId) selectClient(client.id);
+}
+
+function editCurrentClient() { if (currentClientId) openClientModal(currentClientId); }
+function deleteCurrentClient() {
+  if (!currentClientId) return;
+  const c = data.clients.find(x => x.id === currentClientId);
+  if (!confirm("Delete client: " + (c?.name || "") + "? All data will be lost.")) return;
+  data.clients = data.clients.filter(x => x.id !== currentClientId);
+  delete data.checklists[currentClientId];
+  delete data.findings[currentClientId];
+  delete data.wps[currentClientId];
+  saveData();
+  currentClientId = null;
+  document.getElementById("noClientMsg").style.display = "flex";
+  document.getElementById("clientWork").style.display  = "none";
+  renderClientList();
+}
+
+// FINDING MODAL
+function openFindingModal(idx) {
+  editFindingIdx = (idx !== undefined) ? idx : -1;
+  document.getElementById("findingModalTitle").textContent = editFindingIdx === -1 ? "Add Finding" : "Edit Finding";
+  if (editFindingIdx !== -1) {
+    const f = (data.findings[currentClientId] || [])[editFindingIdx];
+    if (f) {
+      document.getElementById("fm-type").value   = f.type;
+      document.getElementById("fm-area").value   = f.area;
+      document.getElementById("fm-desc").value   = f.desc;
+      document.getElementById("fm-risk").value   = f.risk;
+      document.getElementById("fm-status").value = f.status;
+      document.getElementById("fm-mgmt").value   = f.mgmt||"";
+    }
+  } else {
+    ["fm-area","fm-desc","fm-mgmt"].forEach(id => document.getElementById(id).value="");
+    document.getElementById("fm-type").value = "Minor";
+    document.getElementById("fm-risk").value = "Medium";
+    document.getElementById("fm-status").value = "open";
+  }
+  document.getElementById("findingModal").style.display = "flex";
+}
+function closeFindingModal() { document.getElementById("findingModal").style.display = "none"; }
+function saveFinding() {
+  const desc = document.getElementById("fm-desc").value.trim();
+  if (!desc) { alert("Description is required."); return; }
+  if (!data.findings[currentClientId]) data.findings[currentClientId] = [];
+  const finding = {
+    type:   document.getElementById("fm-type").value,
+    area:   document.getElementById("fm-area").value.trim(),
+    desc,
+    risk:   document.getElementById("fm-risk").value,
+    status: document.getElementById("fm-status").value,
+    mgmt:   document.getElementById("fm-mgmt").value.trim(),
+  };
+  if (editFindingIdx === -1) data.findings[currentClientId].push(finding);
+  else data.findings[currentClientId][editFindingIdx] = finding;
+  saveData(); closeFindingModal(); renderFindings(); renderDashboard();
+}
+function editFinding(idx) { openFindingModal(idx); }
+function deleteFinding(idx) {
+  if (!confirm("Delete this finding?")) return;
+  data.findings[currentClientId].splice(idx, 1);
+  saveData(); renderFindings(); renderDashboard();
+}
+
+// WP MODAL
+function openWPModal(idx) {
+  editWPIdx = (idx !== undefined) ? idx : -1;
+  document.getElementById("wpModalTitle").textContent = editWPIdx === -1 ? "Add Working Paper" : "Edit Working Paper";
+  if (editWPIdx !== -1) {
+    const w = (data.wps[currentClientId] || [])[editWPIdx];
+    if (w) {
+      document.getElementById("wm-ref").value    = w.ref;
+      document.getElementById("wm-desc").value   = w.desc;
+      document.getElementById("wm-prep").value   = w.prepBy;
+      document.getElementById("wm-date").value   = w.date;
+      document.getElementById("wm-rev").value    = w.revBy;
+      document.getElementById("wm-status").value = w.status;
+      document.getElementById("wm-notes").value  = w.notes||"";
+    }
+  } else {
+    ["wm-ref","wm-desc","wm-prep","wm-rev","wm-notes"].forEach(id => document.getElementById(id).value="");
+    document.getElementById("wm-date").value = new Date().toISOString().split("T")[0];
+    document.getElementById("wm-status").value = "draft";
+  }
+  document.getElementById("wpModal").style.display = "flex";
+}
+function closeWPModal() { document.getElementById("wpModal").style.display = "none"; }
+function saveWP() {
+  const ref  = document.getElementById("wm-ref").value.trim();
+  const desc = document.getElementById("wm-desc").value.trim();
+  if (!ref || !desc) { alert("WP Reference and Description are required."); return; }
+  if (!data.wps[currentClientId]) data.wps[currentClientId] = [];
+  const wp = {
+    ref, desc,
+    prepBy: document.getElementById("wm-prep").value.trim(),
+    date:   document.getElementById("wm-date").value,
+    revBy:  document.getElementById("wm-rev").value.trim(),
+    status: document.getElementById("wm-status").value,
+    notes:  document.getElementById("wm-notes").value.trim(),
+  };
+  if (editWPIdx === -1) data.wps[currentClientId].push(wp);
+  else data.wps[currentClientId][editWPIdx] = wp;
+  saveData(); closeWPModal(); renderWP(); renderDashboard();
+}
+function editWP(idx) { openWPModal(idx); }
+function deleteWP(idx) {
+  if (!confirm("Delete this working paper?")) return;
+  data.wps[currentClientId].splice(idx, 1);
+  saveData(); renderWP(); renderDashboard();
+}
+
+// CUSTOM CHECKLIST
+function addCustomCheck() {
+  if (!currentClientId) { alert("Select a client first."); return; }
+  const text = document.getElementById("customCheckInput").value.trim();
+  if (!text) { alert("Enter checklist item text."); return; }
+  const sec = document.getElementById("customCheckSection").value;
+  if (!data.checklists[currentClientId]) initChecklist(currentClientId);
+  data.checklists[currentClientId].push({ sec: sec, text: text, done: false, resp: "", remark: "", custom: true });
+  saveData(); renderChecklist(); renderDashboard();
+  document.getElementById("customCheckInput").value = "";
+}
+
+function deleteCheckItem(idx) {
+  if (!confirm("Remove this checklist item?")) return;
+  data.checklists[currentClientId].splice(idx, 1);
+  saveData(); renderChecklist(); renderDashboard();
+}
+
+// FILE ATTACHMENTS FOR WORKING PAPERS
+function readFilesAsBase64(files) {
+  return Promise.all(Array.from(files).map(file => {
+    return new Promise((resolve) => {
+      /* Store only name + size for reference (not full content — too large for localStorage) */
+      resolve({ name: file.name, size: file.size, type: file.type, addedAt: new Date().toISOString() });
+    });
+  }));
+}
+
+const _origSaveWP = saveWP;
+saveWP = async function() {
+  const ref  = document.getElementById("wm-ref").value.trim();
+  const desc = document.getElementById("wm-desc").value.trim();
+  if (!ref || !desc) { alert("WP Reference and Description are required."); return; }
+  if (!data.wps[currentClientId]) data.wps[currentClientId] = [];
+
+  /* Collect file references */
+  const fileInput = document.getElementById("wm-files");
+  let attachments = [];
+  if (editWPIdx !== -1 && data.wps[currentClientId][editWPIdx]) {
+    attachments = data.wps[currentClientId][editWPIdx].attachments || [];
+  }
+  if (fileInput.files.length > 0) {
+    const newFiles = await readFilesAsBase64(fileInput.files);
+    attachments = attachments.concat(newFiles);
+  }
+
+  const wp = {
+    ref, desc,
+    prepBy: document.getElementById("wm-prep").value.trim(),
+    date:   document.getElementById("wm-date").value,
+    revBy:  document.getElementById("wm-rev").value.trim(),
+    status: document.getElementById("wm-status").value,
+    notes:  document.getElementById("wm-notes").value.trim(),
+    attachments: attachments
+  };
+  if (editWPIdx === -1) data.wps[currentClientId].push(wp);
+  else data.wps[currentClientId][editWPIdx] = wp;
+  saveData(); closeWPModal(); renderWP(); renderDashboard();
+};
+
+/* Override renderWP to show attachment count */
+const _origRenderWP = renderWP;
+renderWP = function() {
+  const wps = data.wps[currentClientId] || [];
+  const tbody = document.getElementById("wpBody");
+  const empty = document.getElementById("wpEmpty");
+  document.getElementById("wpCount").textContent = wps.length + " working papers";
+  if (!wps.length) { tbody.innerHTML = ""; empty.style.display = "flex"; return; }
+  empty.style.display = "none";
+  tbody.innerHTML = wps.map((w, i) => {
+    const attCount = (w.attachments || []).length;
+    const attBadge = attCount > 0 ? ' <span class="badge badge-blue" title="' + attCount + ' file(s) attached">' + attCount + ' 📎</span>' : '';
+    return `<tr>
+    <td><strong>${w.ref}</strong></td>
+    <td>${w.desc}${attBadge}</td>
+    <td>${w.prepBy}</td>
+    <td>${w.date}</td>
+    <td>${w.revBy}</td>
+    <td><span class="badge ${w.status==="final"?"badge-green":"badge-yellow"}">${w.status==="final"?"Final":"Draft"}</span></td>
+    <td>
+      <button class="btn btn-sm btn-secondary" onclick="editWP(${i})">✏</button>
+      <button class="btn btn-sm btn-danger" style="margin-left:4px" onclick="deleteWP(${i})">✕</button>
+    </td>
+  </tr>`;
+  }).join("");
+};
+
+/* Show existing attachments when editing a WP */
+const _origOpenWP = openWPModal;
+openWPModal = function(idx) {
+  _origOpenWP(idx);
+  const listEl = document.getElementById("wm-attachList");
+  document.getElementById("wm-files").value = "";
+  if (idx !== undefined && idx !== -1) {
+    const w = (data.wps[currentClientId] || [])[idx];
+    if (w && w.attachments && w.attachments.length) {
+      listEl.innerHTML = '<strong>Existing files:</strong> ' + w.attachments.map((a,ai) =>
+        a.name + ' (' + (a.size/1024).toFixed(1) + 'KB) <button onclick="removeAttachment(' + idx + ',' + ai + ')" style="border:none;background:none;color:#c0392b;cursor:pointer;font-size:10px;">✕</button>'
+      ).join(', ');
+    } else { listEl.innerHTML = ''; }
+  } else { listEl.innerHTML = ''; }
+};
+
+function removeAttachment(wpIdx, attIdx) {
+  if (!confirm("Remove this attachment reference?")) return;
+  data.wps[currentClientId][wpIdx].attachments.splice(attIdx, 1);
+  saveData(); renderWP();
+  /* Refresh the modal attachment list */
+  openWPModal(wpIdx);
+}
+
+// Close modals on overlay click
+["clientModal","findingModal","wpModal"].forEach(id => {
+  document.getElementById(id).addEventListener("click", e => {
+    if (e.target === document.getElementById(id)) document.getElementById(id).style.display = "none";
+  });
+});
+
+loadData();
+
+/* ── Dynamic FY dropdown ── */
+(function() {
+  try {
+    const sel = document.getElementById('cm-fy');
+    const now = new Date();
+    const curStart = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1;
+    sel.innerHTML = '';
+    for (let y = curStart - 3; y <= curStart + 1; y++) {
+      const opt = document.createElement('option');
+      opt.value = y + '-' + String(y + 1).slice(2);
+      opt.textContent = y + '-' + String(y + 1).slice(2);
+      if (y === curStart) opt.selected = true;
+      sel.appendChild(opt);
+    }
+  } catch(e) {}
+})();
+</script>
+</body>
+</html>

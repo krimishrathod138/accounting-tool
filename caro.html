@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CARO Report Builder — AccountingTool</title>
+<link rel="stylesheet" href="tools.css"/>
+<style>
+body{font-family:'Inter',Arial,sans-serif;background:#f4f6f9;margin:0}
+.at-header{background:#fff;padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #15c39a;box-shadow:0 2px 8px rgba(0,0,0,.07);position:sticky;top:0;z-index:200}
+.at-logo{font-size:21px;font-weight:800;color:#15c39a;display:flex;align-items:center;gap:8px}
+.at-logo span{color:#1a1a1a}
+.at-logo-box{width:34px;height:34px;background:#15c39a;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px}
+.back-link{font-size:13px;color:#555;padding:6px 14px;border:1px solid #ddd;border-radius:6px;text-decoration:none;transition:.18s}
+.back-link:hover{background:#e8faf5;color:#15c39a;border-color:#15c39a}
+.tool-banner{background:linear-gradient(120deg,#15c39a,#0a8068);color:#fff;padding:16px 28px;display:flex;align-items:center;gap:16px}
+.tool-banner-icon{width:46px;height:46px;background:rgba(255,255,255,.18);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px}
+.tool-banner h1{font-size:19px;font-weight:700;margin:0}
+.tool-banner p{font-size:12px;opacity:.85;margin:3px 0 0}
+.at-toolbar{background:#fff;padding:10px 24px;border-bottom:1px solid #e2e8f0;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;border:none;transition:.18s}
+.btn-primary{background:#15c39a;color:#fff}.btn-primary:hover{background:#11a683}
+.btn-secondary{background:#fff;color:#444;border:1px solid #d0d0d0}.btn-secondary:hover{background:#f5f5f5}
+.btn-danger{background:#e53e3e;color:#fff}.btn-danger:hover{background:#c53030}
+/* LAYOUT */
+.at-container{max-width:1100px;margin:20px auto;padding:0 24px}
+.at-card{background:#fff;border-radius:10px;padding:18px 20px;box-shadow:0 1px 4px rgba(0,0,0,.07);border:1px solid #e2e8f0;margin-bottom:16px}
+.at-card-title{font-size:14px;font-weight:700;color:#333;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid #e8faf5;display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none}
+.at-card-title::before{content:'';width:3px;height:16px;background:#15c39a;border-radius:2px;flex-shrink:0}
+.form-grid{display:grid;gap:12px 16px}
+.form-cols-2{grid-template-columns:1fr 1fr}
+.form-cols-3{grid-template-columns:1fr 1fr 1fr}
+.form-group{display:flex;flex-direction:column;gap:4px}
+.form-group label{font-size:11px;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:.4px}
+.form-group input,.form-group select,.form-group textarea{padding:8px 11px;border:1px solid #d0d0d0;border-radius:6px;font-size:13px;font-family:inherit;transition:.18s}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:#15c39a;box-shadow:0 0 0 3px rgba(21,195,154,.1)}
+.form-group textarea{resize:vertical;min-height:60px}
+/* CLAUSE */
+.clause-item{border:1px solid #e5e5e5;border-radius:8px;padding:14px 16px;margin-bottom:12px;transition:.18s}
+.clause-item:hover{border-color:#15c39a;box-shadow:0 2px 8px rgba(21,195,154,.1)}
+.clause-item.yes{border-left:4px solid #15c39a}
+.clause-item.no{border-left:4px solid #e53e3e}
+.clause-item.na{border-left:4px solid #aaa}
+.clause-item.partial{border-left:4px solid #f59e0b}
+.clause-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:8px}
+.clause-num{background:#15c39a;color:#fff;font-size:11px;font-weight:700;padding:3px 8px;border-radius:4px;flex-shrink:0;margin-top:2px}
+.clause-title{font-size:13px;font-weight:700;color:#222;flex:1}
+.clause-text{font-size:12px;color:#555;line-height:1.6;margin-bottom:10px}
+.clause-controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.clause-controls label{font-size:11px;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
+.clause-select{padding:6px 10px;border:1px solid #d0d0d0;border-radius:6px;font-size:12px;font-family:inherit;cursor:pointer}
+.clause-select:focus{outline:none;border-color:#15c39a}
+.remarks-area{width:100%;padding:7px 10px;border:1px solid #d0d0d0;border-radius:6px;font-size:12px;font-family:inherit;resize:vertical;min-height:52px;margin-top:8px;transition:.18s}
+.remarks-area:focus{outline:none;border-color:#15c39a}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-green{background:#dcfff6;color:#0a7c5c}
+.badge-red{background:#ffeaea;color:#b91c1c}
+.badge-yellow{background:#fff8dc;color:#a16207}
+.badge-gray{background:#f3f4f6;color:#4b5563}
+/* PROGRESS BAR */
+.progress-bar{background:#e5e5e5;border-radius:20px;height:8px;overflow:hidden;margin-bottom:6px}
+.progress-fill{background:#15c39a;height:100%;border-radius:20px;transition:.4s}
+/* REPORT MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:9999}
+.modal{background:#fff;border-radius:14px;padding:28px;width:800px;max-width:96vw;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.2)}
+.modal-header{font-size:16px;font-weight:700;color:#222;margin-bottom:18px;padding-bottom:12px;border-bottom:2px solid #e8faf5;display:flex;align-items:center;justify-content:space-between}
+.report-body{font-size:13px;line-height:1.8;color:#222}
+.report-body h2{font-size:15px;text-align:center;margin-bottom:6px}
+.report-body h3{font-size:13px;font-weight:700;margin:16px 0 6px}
+.report-body .clause-para{margin-bottom:12px;padding-left:16px;border-left:3px solid #e5e5e5}
+.report-body .clause-para.positive{border-color:#15c39a}
+.report-body .clause-para.negative{border-color:#e53e3e}
+.at-footer{text-align:center;padding:18px;color:#c0c0c0;font-size:12px;border-top:1px solid #eee;margin-top:10px}
+@media print{.at-header,.at-toolbar,.overlay,.no-print{display:none!important}.at-container{padding:0}}
+</style>
+</head>
+<body>
+<script src="engine.js"></script>
+
+<!-- HEADER -->
+<header class="at-header">
+  <div class="at-logo"><div class="at-logo-box">📊</div>Accounting<span>Tool</span></div>
+  <a href="index.html" class="back-link">← Dashboard</a>
+</header>
+
+<!-- BANNER -->
+<div class="tool-banner">
+  <div class="tool-banner-icon">📋</div>
+  <div>
+    <h1>CARO Report Builder</h1>
+    <p>Generate CARO 2020 Report for Statutory Audit — Companies (Auditor's Report) Order 2020</p>
+  </div>
+</div>
+
+<!-- TOOLBAR -->
+<div class="at-toolbar no-print">
+  <button class="btn btn-primary" onclick="generateReport()">📄 Generate Report</button>
+  <button class="btn btn-secondary" onclick="toggleDetails()">🏢 Company Details</button>
+  <button class="btn btn-secondary" onclick="window.print()">🖨 Print</button>
+  <button class="btn btn-secondary" onclick="saveData()">💾 Save</button>
+  <button class="btn btn-danger" onclick="clearAll()">🗑 Clear All</button>
+  <div style="flex:1"></div>
+  <div style="font-size:13px;color:#555">
+    Progress: <strong id="progressLabel">0 / 21</strong> answered
+    <div class="progress-bar" style="width:140px;display:inline-block;vertical-align:middle;margin-left:8px">
+      <div class="progress-fill" id="progressFill" style="width:0%"></div>
+    </div>
+  </div>
+</div>
+
+<div class="at-container">
+
+  <!-- COMPANY DETAILS -->
+  <div class="at-card" id="companyCard">
+    <div class="at-card-title" onclick="toggleDetails()">🏢 Company Details <span style="margin-left:auto;font-size:12px;color:#888">(click to collapse)</span></div>
+    <div id="companyForm">
+      <div class="form-grid form-cols-3">
+        <div class="form-group" style="grid-column:1/-1"><label>Company Name *</label><input id="compName" placeholder="ABC Private Limited" oninput="saveData()"></div>
+        <div class="form-group"><label>CIN</label><input id="cin" placeholder="U12345MH2010PTC123456" oninput="saveData()"></div>
+        <div class="form-group"><label>Financial Year</label><select id="fy" onchange="saveData()"></select></div>
+        <div class="form-group"><label>Date of Balance Sheet</label><input id="bsDate" type="date" oninput="saveData()"></div>
+        <div class="form-group"><label>Auditor Name</label><input id="auditorName" placeholder="CA John Doe" oninput="saveData()"></div>
+        <div class="form-group"><label>Firm Name</label><input id="firmName" placeholder="John Doe & Associates" oninput="saveData()"></div>
+        <div class="form-group"><label>ICAI Firm Registration No</label><input id="firmReg" placeholder="123456W" oninput="saveData()"></div>
+        <div class="form-group"><label>Membership No</label><input id="memNo" placeholder="123456" oninput="saveData()"></div>
+        <div class="form-group"><label>Place</label><input id="place" placeholder="Mumbai" oninput="saveData()"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLAUSES -->
+  <div id="clausesContainer"></div>
+
+</div>
+
+<div class="at-footer">© 2026 AccountingTool | CARO Report Builder | Companies (Auditor's Report) Order, 2020</div>
+
+<!-- REPORT MODAL -->
+<div id="reportModal" class="overlay" style="display:none">
+  <div class="modal">
+    <div class="modal-header">
+      <span>CARO 2020 — Audit Report Preview</span>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary" onclick="exportCaroPDF()">📄 Export PDF</button>
+        <button class="btn btn-secondary" onclick="window.print()">🖨 Print</button>
+        <button class="btn btn-secondary" onclick="closeReport()">✕ Close</button>
+      </div>
+    </div>
+    <div id="reportContent" class="report-body"></div>
+  </div>
+</div>
+
+<script>
+const CLAUSES = [
+  { num:"i(a)", title:"Fixed Assets — Proper Records", text:"Whether the company is maintaining proper records showing full particulars, including quantitative details and situation of Property, Plant and Equipment and right-of-use assets." },
+  { num:"i(b)", title:"Fixed Assets — Physical Verification", text:"Whether these Property, Plant and Equipment and right-of-use assets have been physically verified by the management at reasonable intervals; whether any material discrepancies were noticed on such verification and if so, whether the same have been properly dealt with in the books of account." },
+  { num:"i(c)", title:"Fixed Assets — Title Deeds", text:"Whether the title deeds of immovable properties (other than immovable properties where the company is the lessee and the lease agreements are duly executed in favour of the lessee) are held in the name of the company; if not, provide details." },
+  { num:"i(d)", title:"Fixed Assets — Revaluation", text:"Whether the company has revalued its Property, Plant and Equipment (including Right of Use assets) during the year and if so, whether the revaluation is based on the valuation by a Registered Valuer." },
+  { num:"i(e)", title:"Fixed Assets — Benami Transactions", text:"Whether any proceedings have been initiated or are pending against the company for holding any benami property under the Benami Transactions (Prohibition) Act, 1988 and rules made thereunder." },
+  { num:"ii(a)", title:"Inventory — Physical Verification", text:"Whether physical verification of inventory has been conducted at reasonable intervals by the management and whether, in the opinion of the auditor, the coverage and procedure of such verification by the management is appropriate; whether any discrepancies of 10% or more in the aggregate for each class of inventory were noticed and if so, whether they have been properly dealt with in the books of account." },
+  { num:"ii(b)", title:"Inventory — Working Capital Declarations", text:"Whether the company has been sanctioned working capital limits in excess of five crore rupees, in aggregate, from banks or financial institutions during any point of time of the year, on the basis of security of current assets; whether the quarterly returns or statements filed by the company with such banks or financial institutions are in agreement with the books of account of the company." },
+  { num:"iii(a)", title:"Investments/Guarantees — Section 186", text:"Whether during the year the company has made investments in, provided any guarantee or security or granted any loans or advances in the nature of loans, secured or unsecured, to companies, firms, Limited Liability Partnerships or any other parties. If so, whether the provisions of sections 185 and 186 of the Companies Act, 2013 have been complied with?" },
+  { num:"iii(b)", title:"Investments/Guarantees — Terms & Conditions", text:"Whether the investments made, guarantees provided, security given and the terms and conditions of the grant of all loans and advances in the nature of loans and guarantees provided are, prima facie, prejudicial to the company's interest." },
+  { num:"iii(c)", title:"Investments/Guarantees — Repayment Schedule", text:"In respect of loans and advances in the nature of loans, whether the schedule of repayment of principal and payment of interest has been stipulated and whether the repayments or receipts are regular." },
+  { num:"iv", title:"Compliance — Sections 185 & 186", text:"In respect of loans, investments, guarantees, and security, whether provisions of sections 185 and 186 of the Companies Act, 2013 have been complied with. If not, provide the details thereof." },
+  { num:"v", title:"Deposits — RBI & Section 73-76", text:"In case, the company has accepted deposits, whether the directives issued by the Reserve Bank of India and the provisions of sections 73 to 76 or any other relevant provisions of the Companies Act, 2013 and the rules framed thereunder, where applicable, have been complied with? If not, the nature of such contraventions be stated; If an order has been passed by Company Law Board or National Company Law Tribunal or Reserve Bank of India or any court or any other tribunal, whether the same has been complied with or not?" },
+  { num:"vi", title:"Cost Records — Maintenance", text:"Whether the Central Government has prescribed the maintenance of cost records under section 148(1) of the Companies Act, 2013 for any of the products or services of the company and whether such accounts and records have been made and maintained." },
+  { num:"vii(a)", title:"Statutory Dues — Regular Deposit", text:"Whether the company is regular in depositing undisputed statutory dues including Goods and Services tax, Provident Fund, Employees' State Insurance, Income-Tax, Sales-Tax, Service Tax, Customs Duty, Excise Duty, Value Added Tax, cess and any other statutory dues with the appropriate authorities and if not, the extent of the arrears of outstanding statutory dues as on the last day of the financial year concerned for a period of more than six months from the date they became payable, shall be indicated." },
+  { num:"vii(b)", title:"Statutory Dues — Dues in Dispute", text:"Where statutory dues referred to above have not been deposited on account of matters pending before appropriate authorities, the amount involved and the forum where dispute is pending shall be mentioned." },
+  { num:"viii", title:"Unrecorded Transactions", text:"Whether any transactions not recorded in the books of account have been surrendered or disclosed as income during the year in the tax assessments under the Income Tax Act, 1961, if so, whether the previously unrecorded income has been properly recorded in the books of account during the year." },
+  { num:"ix(a)", title:"Default in Repayment of Loans", text:"Whether the company has defaulted in repayment of loans or other borrowings or in the payment of interest thereon to any lender. If yes, the period and the amount of default to be reported and further, whether the lender has classified the company as a non-performing asset (NPA)." },
+  { num:"x(a)", title:"Fraud — Detected During Audit", text:"Whether any fraud by the company or any fraud on the company has been noticed or reported during the year; If yes, the nature and the amount involved is to be indicated." },
+  { num:"xi(a)", title:"Nidhi Company — Compliance", text:"Whether, in case of a Nidhi company, the Net Owned Funds to Deposits in the ratio of 1:20 to meet out the liability and whether the Nidhi company is maintaining ten percent unencumbered term deposits as specified in the Nidhi Rules, 2014 to meet out the liability." },
+  { num:"xii(a)", title:"Related Party Transactions — Sections 177 & 188", text:"Whether all transactions with the related parties are in compliance with sections 177 and 188 of Companies Act, 2013 where applicable and the details have been disclosed in the Financial Statements etc., as required by the applicable accounting standards." },
+  { num:"xiii", title:"Internal Audit System", text:"Whether the company has an internal audit system commensurate with the size and nature of its business and whether the internal audit reports for the period under audit were considered by us." },
+];
+
+let responses = {};
+let companyData = {};
+
+function loadData() {
+  try { responses = JSON.parse(localStorage.getItem("CARO_RESP") || "{}"); } catch(e){}
+  try { companyData = JSON.parse(localStorage.getItem("CARO_COMP") || "{}"); } catch(e){}
+  if (companyData.compName) { document.getElementById("compName").value = companyData.compName || ""; }
+  if (companyData.cin)      { document.getElementById("cin").value = companyData.cin || ""; }
+  if (companyData.fy)       { document.getElementById("fy").value = companyData.fy || "2024-25"; }
+  if (companyData.bsDate)   { document.getElementById("bsDate").value = companyData.bsDate || ""; }
+  if (companyData.auditorName){ document.getElementById("auditorName").value = companyData.auditorName || ""; }
+  if (companyData.firmName) { document.getElementById("firmName").value = companyData.firmName || ""; }
+  if (companyData.firmReg)  { document.getElementById("firmReg").value = companyData.firmReg || ""; }
+  if (companyData.memNo)    { document.getElementById("memNo").value = companyData.memNo || ""; }
+  if (companyData.place)    { document.getElementById("place").value = companyData.place || ""; }
+  renderClauses();
+}
+
+function saveData() {
+  companyData = {
+    compName: document.getElementById("compName").value,
+    cin:      document.getElementById("cin").value,
+    fy:       document.getElementById("fy").value,
+    bsDate:   document.getElementById("bsDate").value,
+    auditorName: document.getElementById("auditorName").value,
+    firmName: document.getElementById("firmName").value,
+    firmReg:  document.getElementById("firmReg").value,
+    memNo:    document.getElementById("memNo").value,
+    place:    document.getElementById("place").value,
+  };
+  localStorage.setItem("CARO_COMP", JSON.stringify(companyData));
+  localStorage.setItem("CARO_RESP", JSON.stringify(responses));
+  if (typeof AccountingEngine !== 'undefined') AccountingEngine.persistToElectron();
+}
+
+function onResponseChange(num, val) {
+  if (!responses[num]) responses[num] = {};
+  responses[num].response = val;
+  saveData();
+  updateClauseStyle(num, val);
+  updateProgress();
+}
+
+function onRemarkChange(num, val) {
+  if (!responses[num]) responses[num] = {};
+  responses[num].remark = val;
+  saveData();
+}
+
+function updateClauseStyle(num, val) {
+  const el = document.getElementById("clause-" + num.replace(/[()]/g,""));
+  if (!el) return;
+  el.className = "clause-item " + (val || "");
+}
+
+function updateProgress() {
+  const answered = CLAUSES.filter(c => responses[c.num] && responses[c.num].response && responses[c.num].response !== "").length;
+  document.getElementById("progressLabel").textContent = answered + " / " + CLAUSES.length;
+  document.getElementById("progressFill").style.width = (answered / CLAUSES.length * 100) + "%";
+}
+
+function renderClauses() {
+  const container = document.getElementById("clausesContainer");
+  container.innerHTML = CLAUSES.map(c => {
+    const r = responses[c.num] || {};
+    const resp = r.response || "";
+    const remark = r.remark || "";
+    const safeNum = c.num.replace(/[()]/g,"");
+    const badgeMap = { yes: "badge-green", no: "badge-red", partial: "badge-yellow", na: "badge-gray" };
+    const labelMap = { yes: "Yes", no: "No", partial: "Partial", na: "N/A" };
+    return `<div class="clause-item ${resp}" id="clause-${safeNum}">
+      <div class="clause-head">
+        <span class="clause-num">${c.num.toUpperCase()}</span>
+        <div class="clause-title">${c.title}</div>
+        ${resp ? `<span class="badge ${badgeMap[resp]||''}">${labelMap[resp]||''}</span>` : ""}
+      </div>
+      <div class="clause-text">${c.text}</div>
+      <div class="clause-controls">
+        <label>Response:</label>
+        <select class="clause-select" onchange="onResponseChange('${c.num}',this.value);this.closest('.clause-item').className='clause-item '+this.value;this.closest('.clause-item').querySelector('.clause-head .badge')&&this.closest('.clause-item').querySelector('.clause-head .badge').remove()">
+          <option value="" ${!resp?"selected":""}>— Select —</option>
+          <option value="yes" ${resp==="yes"?"selected":""}>Yes</option>
+          <option value="no" ${resp==="no"?"selected":""}>No</option>
+          <option value="partial" ${resp==="partial"?"selected":""}>Partial</option>
+          <option value="na" ${resp==="na"?"selected":""}>Not Applicable</option>
+        </select>
+      </div>
+      ${resp && resp !== "na" ? `<textarea class="remarks-area" placeholder="Add remarks / details / qualifications here..." onchange="onRemarkChange('${c.num}',this.value)">${remark}</textarea>` : ""}
+    </div>`;
+  }).join("");
+  updateProgress();
+}
+
+function generateReport() {
+  const comp = companyData;
+  const compName = comp.compName || "[Company Name]";
+  const fy = comp.fy || "2024-25";
+  let html = `<h2>INDEPENDENT AUDITOR'S REPORT</h2>
+<h2>(On matters specified in CARO 2020)</h2>
+<p style="text-align:center;margin:4px 0;font-size:12px;color:#555">Companies (Auditor's Report) Order, 2020</p>
+<hr style="margin:14px 0">
+<p><strong>To the Members of ${compName}</strong></p>
+<p style="margin:8px 0">In terms of the information and explanations given to us, and the books of account and records examined by us in the normal course of audit, and to the best of our knowledge and belief, we state as follows in terms of the requirements under the Companies (Auditor's Report) Order, 2020:</p>
+<h3 style="background:#e8faf5;padding:8px 12px;border-radius:6px;color:#0a7c5c">CARO 2020 — Clause-wise Report for FY ${fy}</h3>`;
+
+  CLAUSES.forEach(c => {
+    const r = responses[c.num] || {};
+    const resp = r.response || "Not answered";
+    const remark = r.remark || "";
+    const colorMap = { yes: "#0a7c5c", no: "#b91c1c", partial: "#a16207", na: "#555" };
+    const bgMap = { yes: "#f0fdf7", no: "#fef2f2", partial: "#fffbeb", na: "#f9f9f9" };
+    const labelFull = { yes:"Yes — Complied", no:"No — Non-Compliance Observed", partial:"Partial — Partially Complied", na:"Not Applicable" };
+    html += `<div style="margin-bottom:12px;padding:12px 14px;background:${bgMap[resp]||'#f9f9f9'};border-radius:8px;border-left:4px solid ${colorMap[resp]||'#ddd'}">
+      <strong style="color:#333">${c.num.toUpperCase()}. ${c.title}</strong>
+      <div style="font-size:12px;color:#666;margin:4px 0 8px">${c.text}</div>
+      <strong style="color:${colorMap[resp]||'#555'}">${labelFull[resp]||resp}</strong>
+      ${remark ? `<p style="font-size:12px;color:#444;margin:6px 0 0"><em>Remarks: ${remark}</em></p>` : ""}
+    </div>`;
+  });
+
+  html += `<hr style="margin:16px 0">
+<p><strong>For ${comp.firmName || "[Firm Name]"}</strong></p>
+<p>Chartered Accountants<br>Firm Reg. No.: ${comp.firmReg || "______"}</p>
+<br>
+<p><strong>${comp.auditorName || "[Auditor Name]"}</strong></p>
+<p>Partner<br>Membership No.: ${comp.memNo || "______"}<br>Place: ${comp.place || "______"}</p>`;
+
+  document.getElementById("reportContent").innerHTML = html;
+  document.getElementById("reportModal").style.display = "flex";
+}
+
+function closeReport() { document.getElementById("reportModal").style.display = "none"; }
+
+function exportCaroPDF() {
+  const content = document.getElementById("reportContent").innerHTML;
+  const win = window.open('', '_blank');
+  win.document.write('<html><head><title>CARO 2020 Report</title><style>body{font-family:Georgia,serif;padding:40px 60px;font-size:13px;line-height:1.8;color:#222;}h2{text-align:center;color:#1a3a62;}h3{color:#234a7b;margin-top:24px;}p{margin:6px 0;}@media print{@page{margin:2cm;}}</style></head><body>' + content + '</body></html>');
+  win.document.close();
+  setTimeout(() => { win.print(); }, 400);
+}
+
+function toggleDetails() {
+  const form = document.getElementById("companyForm");
+  form.style.display = form.style.display === "none" ? "block" : "none";
+}
+
+function clearAll() {
+  if (!confirm("Clear all CARO responses? This cannot be undone.")) return;
+  responses = {};
+  localStorage.removeItem("CARO_RESP");
+  renderClauses();
+}
+
+document.getElementById("reportModal").addEventListener("click", e => {
+  if (e.target === document.getElementById("reportModal")) closeReport();
+});
+
+loadData();
+
+/* ── Auto-load company details & dynamic FY ── */
+(function() {
+  try {
+    const bd = AccountingEngine.getCompanyDetails();
+    /* Pre-fill company name if empty */
+    const compInput = document.getElementById('compName');
+    if (compInput && !compInput.value && bd.name && bd.name !== 'MY BUSINESS PVT LTD') {
+      compInput.value = bd.name;
+    }
+    /* Populate FY dropdown */
+    const sel = document.getElementById('fy');
+    const now = new Date();
+    const curStart = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1;
+    const savedFY = sel.value;
+    sel.innerHTML = '';
+    for (let y = curStart - 3; y <= curStart + 1; y++) {
+      const opt = document.createElement('option');
+      const label = y + '-' + String(y + 1).slice(2);
+      opt.value = label; opt.textContent = label;
+      if (label === savedFY || y === curStart) opt.selected = true;
+      sel.appendChild(opt);
+    }
+  } catch(e) {}
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Adjustment Entries (AE)</title>
+
+  <link rel="stylesheet" href="style.css">
+<style>
+
+    .outer-wrapper {
+    max-width: 950px !important;
+    width: 90% !important;
+}
+
+
+    body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+    }
+
+    h2 {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    #statusBar {
+      max-width: 900px;
+      margin: 15px auto;
+      padding: 8px 12px;
+      font-size: 14px;
+      font-weight: bold;
+      border-radius: 3px;
+    }
+    .status-normal {
+      background: #e2e3e5;
+      color: #41464b;
+      border: 1px solid #d6d8db;
+    }
+    .status-success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .status-error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    .outer-wrapper {
+      max-width: 900px;
+      background: #ffffff;
+      margin: 15px auto 30px auto;
+      padding: 15px 20px 25px 20px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .outer-header {
+      background: #2e3192;
+      color: #ffffff;
+      padding: 8px 15px;
+      border-radius: 5px;
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+
+    .toolbar {
+      margin-top: 8px;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+    }
+
+    .toolbar button {
+      padding: 6px 16px;
+      background: #006400;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .toolbar button:hover {
+      background: #008000;
+    }
+
+    .hint {
+      font-style: italic;
+      color: #555;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin-top: 8px;
+    }
+
+    th, td {
+      padding: 5px 6px;
+      border-bottom: 1px dashed #ccc;
+    }
+
+    th {
+      background: #f0f0ff;
+      text-align: left;
+    }
+
+    td.amount {
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .total-row td {
+      font-weight: bold;
+      border-top: 1px solid #aaa;
+      border-bottom: none;
+    }
+
+    .side-panel {
+      position: fixed;
+      right: 20px;
+      top: 80px;
+      width: 170px;
+      background: #fffbe6;
+      border: 1px solid #e0c36e;
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.15);
+      padding-bottom: 8px;
+      z-index: 100;
+    }
+    .side-panel-header {
+      background: #f2df95;
+      font-weight: bold;
+      padding: 6px 10px;
+      border-bottom: 1px solid #e0c36e;
+      font-size: 13px;
+    }
+    .side-panel ul {
+      list-style: none;
+      margin: 0;
+      padding: 6px 10px;
+      font-size: 13px;
+    }
+    .side-panel li {
+      display: flex;
+      justify-content: space-between;
+      margin: 4px 0;
+    }
+    .key {
+      font-weight: bold;
+      margin-right: 6px;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 200;
+    }
+    .modal {
+      background: #ffffff;
+      width: 380px;
+      padding: 18px 20px 16px 20px;
+      border-radius: 4px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+      font-size: 14px;
+    }
+    .modal h3 {
+      margin-top: 0;
+      margin-bottom: 10px;
+    }
+    .config-row {
+      display: flex;
+      justify-content: space-between;
+      margin: 8px 0;
+    }
+    .close-btn {
+      margin-top: 12px;
+      padding: 7px 16px;
+      border: none;
+      background: #444;
+      color: #fff;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    @media (max-width: 900px) {
+      .side-panel {
+        display: none;
+      }
+    }
+
+    /* -------------------------------------------------- */
+    /* -------------------------------------------------- */
+    
+
+    
+
+    
+  </style>
+</head>
+<body>
+
+<h2>Adjustment Entries</h2>
+
+<div id="statusBar" class="status-normal">
+  Loaded AE entries from browser storage
+</div>
+
+<div class="outer-wrapper">
+  <div class="outer-header">
+    Adjustment Entries (AE)
+  </div>
+
+  <div class="toolbar">
+    <div>
+        <button id="addAEBtn">Add Adjustment (+)</button>
+        <button id="refreshBtn">Refresh (Ctrl+S)</button>
+    </div>
+    <div class="hint">Source: AE array stored in localStorage["AE"]</div>
+  </div>
+
+  <!-- Add AE Modal -->
+  <div class="modal-backdrop" id="addAEModal">
+    <div class="modal">
+      <h3>Add Adjustment Entry</h3>
+      <div class="config-row">
+        <span>Ledger Name</span>
+        <input type="text" id="ae_ledger" style="width: 200px;" />
+      </div>
+      <div class="config-row">
+        <span>Debit</span>
+        <input type="number" id="ae_debit" style="width: 200px;" />
+      </div>
+      <div class="config-row">
+        <span>Credit</span>
+        <input type="number" id="ae_credit" style="width: 200px;" />
+      </div>
+      <div style="display:flex; gap:10px; justify-content: flex-end;">
+          <button class="close-btn" id="saveAEBtn" style="background: #006400;">Save</button>
+          <button class="close-btn" id="closeAEModal">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width:50px;">S.No</th>
+        <th>Particulars</th>
+        <th class="amount" style="width:120px;">Debit</th>
+        <th class="amount" style="width:120px;">Credit</th>
+      </tr>
+    </thead>
+    <tbody id="aeBody"></tbody>
+    <tfoot>
+      <tr class="total-row">
+        <td colspan="2">Total</td>
+        <td class="amount" id="totalDebit">0</td>
+        <td class="amount" id="totalCredit">0</td>
+      </tr>
+    </tfoot>
+  </table>
+</div>
+
+<div class="side-panel">
+  <div class="side-panel-header">Adjustments</div>
+  <ul>
+    <li><span class="key">Ctrl+S</span><span>Refresh</span></li>
+    <li><span class="key">F12</span><span>Config</span></li>
+    <li><span class="key">ESC</span><span>Back</span></li>
+  </ul>
+</div>
+
+<div class="modal-backdrop" id="modalBack">
+  <div class="modal">
+    <h3>Configuration (F12)</h3>
+    <div class="config-row">
+      <span>Show success message</span>
+      <input type="checkbox" id="showMsg" checked />
+    </div>
+    <button class="close-btn" id="closeConfig">Close</button>
+  </div>
+</div>
+
+
+<!-- BOTTOM TABS -->
+<div class="bottom-tabs">
+    <a href="dashboard.html" class="tab">HOME</a>
+    <a href="bd.html" class="tab">BD</a>
+    <a href="tb.html" class="tab">TB</a>
+    <a href="ae.html" class="tab">AE</a>
+    <a href="balance.html" class="tab">BS</a>
+    <a href="pl.html" class="tab">PL</a>
+    <a href="cf.html" class="tab">CF</a>
+    <a href="n1.html" class="tab">N1</a>
+    <a href="n2.html" class="tab">N2</a>
+    <a href="n3.html" class="tab">N3</a>
+    <a href="n4.html" class="tab">N4</a>
+    <a href="n5.html" class="tab">N5</a>
+    <a href="n6.html" class="tab">N6</a>
+    <a href="n7.html" class="tab">N7</a>
+    <a href="tx.html" class="tab">TX</a>
+    <a href="audit-report.html" class="tab">AR</a>
+    <a href="fs-package.html" class="tab">FS</a>
+    <button class="tab plus">+</button>
+</div>
+
+
+<script src="engine.js"></script>
+<script>
+  const statusBarAE = document.getElementById("statusBar");
+  const aeBody = document.getElementById("aeBody");
+  const totalDebitAEEl = document.getElementById("totalDebit");
+  const totalCreditAEEl = document.getElementById("totalCredit");
+  const modalBackAE = document.getElementById("modalBack");
+  const showMsgAE = document.getElementById("showMsg");
+
+  function formatAmount(num) {
+    return num.toLocaleString("en-IN", { maximumFractionDigits: 2 });
+  }
+
+  function refreshAE() {
+    aeBody.innerHTML = "";
+    totalDebitAEEl.textContent = "0";
+    totalCreditAEEl.textContent = "0";
+
+    let ae = [];
+    try {
+      ae = JSON.parse(localStorage.getItem("AE") || "[]");
+    } catch (e) {
+      statusBarAE.textContent = "Error reading AE from localStorage";
+      statusBarAE.className = "status-error";
+      return;
+    }
+
+    let totalD = 0;
+    let totalC = 0;
+
+    ae.forEach((x, idx) => {
+      const name = x.name || x.ledger || x.account || ("Adjustment " + (idx + 1));
+      const d = Number(x.debit) || 0;
+      const c = Number(x.credit) || 0;
+      totalD += d;
+      totalC += c;
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${idx + 1}</td>
+        <td>${name}</td>
+        <td class="amount">${d ? formatAmount(d) : ""}</td>
+        <td class="amount">${c ? formatAmount(c) : ""}</td>
+      `;
+      aeBody.appendChild(tr);
+    });
+
+    totalDebitAEEl.textContent = formatAmount(totalD);
+    totalCreditAEEl.textContent = formatAmount(totalC);
+
+    if (showMsgAE.checked) {
+      statusBarAE.textContent = "Adjustment Entries refreshed successfully";
+      statusBarAE.className = "status-success";
+    }
+  }
+
+  document.getElementById("refreshBtn").addEventListener("click", refreshAE);
+
+  // Add AE Modal Logic
+  const addAEModal = document.getElementById("addAEModal");
+  document.getElementById("addAEBtn").onclick = () => {
+    addAEModal.style.display = "flex";
+  };
+  document.getElementById("closeAEModal").onclick = () => {
+    addAEModal.style.display = "none";
+  };
+  document.getElementById("saveAEBtn").onclick = () => {
+    const ledger = document.getElementById("ae_ledger").value.trim();
+    const debit = Number(document.getElementById("ae_debit").value || 0);
+    const credit = Number(document.getElementById("ae_credit").value || 0);
+
+    if (!ledger) return alert("Enter Ledger Name");
+    if (debit === 0 && credit === 0) return alert("Enter Amount");
+
+    const entry = {
+      id: Date.now(),
+      ledger: ledger,
+      debit: debit,
+      credit: credit
+    };
+
+    if (AccountingEngine.saveAdjustmentEntry(entry)) {
+      alert("Adjustment Entry Saved!");
+      addAEModal.style.display = "none";
+      // clear
+      document.getElementById("ae_ledger").value = "";
+      document.getElementById("ae_debit").value = "";
+      document.getElementById("ae_credit").value = "";
+      refreshAE();
+    }
+  };
+
+  function openConfigAE() {
+    modalBackAE.style.display = "flex";
+  }
+  function closeConfigAE() {
+    modalBackAE.style.display = "none";
+  }
+  document.getElementById("closeConfig").addEventListener("click", closeConfigAE);
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      if (modalBackAE.style.display === "flex") closeConfigAE();
+      else window.history.back();
+    }
+    if (e.key === "F12") {
+      e.preventDefault();
+      openConfigAE();
+    }
+    if ((e.key.toLowerCase() === "s") && (e.ctrlKey || e.altKey)) {
+      e.preventDefault();
+      refreshAE();
+    }
+  });
+
+  // Initial
+  refreshAE();
+</script>
+</body>
+</html>

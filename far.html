@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Fixed Asset Register — AccountingTool</title>
+<link rel="stylesheet" href="tools.css"/>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+body{font-family:'Inter',Arial,sans-serif;background:#f4f6f9;margin:0}
+.at-header{background:#fff;padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #15c39a;box-shadow:0 2px 8px rgba(0,0,0,.07);position:sticky;top:0;z-index:200}
+.at-logo{font-size:21px;font-weight:800;color:#15c39a;display:flex;align-items:center;gap:8px}
+.at-logo span{color:#1a1a1a}
+.at-logo-box{width:34px;height:34px;background:#15c39a;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px}
+.back-link{font-size:13px;color:#555;padding:6px 14px;border:1px solid #ddd;border-radius:6px;text-decoration:none;transition:.18s}
+.back-link:hover{background:#e8faf5;color:#15c39a;border-color:#15c39a}
+.tool-banner{background:linear-gradient(120deg,#15c39a,#0a8068);color:#fff;padding:16px 28px;display:flex;align-items:center;gap:16px}
+.tool-banner-icon{width:46px;height:46px;background:rgba(255,255,255,.18);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px}
+.tool-banner h1{font-size:19px;font-weight:700;margin:0}
+.tool-banner p{font-size:12px;opacity:.85;margin:3px 0 0}
+.at-toolbar{background:#fff;padding:10px 24px;border-bottom:1px solid #e2e8f0;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.at-toolbar select{padding:7px 12px;border:1px solid #d0d0d0;border-radius:6px;font-size:13px;font-family:inherit}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;border:none;transition:.18s}
+.btn-primary{background:#15c39a;color:#fff}.btn-primary:hover{background:#11a683}
+.btn-secondary{background:#fff;color:#444;border:1px solid #d0d0d0}.btn-secondary:hover{background:#f5f5f5}
+.btn-danger{background:#e53e3e;color:#fff}.btn-danger:hover{background:#c53030}
+.btn-sm{padding:5px 10px;font-size:12px}
+.summary-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:18px 24px 0}
+.s-card{background:#fff;border-radius:10px;padding:15px 18px;border-left:4px solid #15c39a;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.s-card.blue{border-color:#3b82f6}.s-card.orange{border-color:#f59e0b}.s-card.purple{border-color:#8b5cf6}
+.s-card .lbl{font-size:11px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.s-card .val{font-size:20px;font-weight:700;color:#1a1a1a;margin-top:4px}
+.s-card .sub{font-size:11px;color:#aaa;margin-top:2px}
+.at-container{max-width:1500px;margin:18px auto;padding:0 24px}
+.at-card{background:#fff;border-radius:10px;padding:18px 20px;box-shadow:0 1px 4px rgba(0,0,0,.07);border:1px solid #e2e8f0;margin-bottom:18px}
+.at-card-title{font-size:14px;font-weight:700;color:#333;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid #e8faf5;display:flex;align-items:center;gap:8px}
+.at-card-title::before{content:'';width:3px;height:16px;background:#15c39a;border-radius:2px;flex-shrink:0}
+.actions-bar{display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.actions-bar .spacer{flex:1}
+.table-wrap{overflow-x:auto;border-radius:8px;border:1px solid #e2e8f0}
+.at-table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:1100px}
+.at-table th{background:#f0faf7;color:#2d4a3e;font-weight:600;padding:9px 11px;text-align:left;border-bottom:2px solid #15c39a;white-space:nowrap;font-size:11.5px}
+.at-table td{padding:8px 11px;border-bottom:1px solid #f2f2f2;color:#333;vertical-align:middle}
+.at-table tr:last-child td{border-bottom:none}
+.at-table tr:hover td{background:#fafffe}
+.at-table .num{text-align:right;font-variant-numeric:tabular-nums}
+.at-table tfoot td{background:#edfaf5;font-weight:700;border-top:2px solid #15c39a;color:#1a4a38}
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:9999}
+.modal{background:#fff;border-radius:14px;padding:24px 26px;width:580px;max-width:96vw;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.2)}
+.modal-header{font-size:16px;font-weight:700;color:#222;margin-bottom:18px;padding-bottom:12px;border-bottom:2px solid #e8faf5}
+.modal-footer{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;padding-top:14px;border-top:1px solid #f0f0f0}
+.form-grid{display:grid;gap:13px 18px}
+.form-cols-2{grid-template-columns:1fr 1fr}
+.form-cols-3{grid-template-columns:1fr 1fr 1fr}
+.form-group{display:flex;flex-direction:column;gap:4px}
+.form-group label{font-size:11px;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:.4px}
+.form-group input,.form-group select{padding:8px 11px;border:1px solid #d0d0d0;border-radius:6px;font-size:13px;font-family:inherit;transition:.18s}
+.form-group input:focus,.form-group select:focus{outline:none;border-color:#15c39a;box-shadow:0 0 0 3px rgba(21,195,154,.12)}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-green{background:#dcfff6;color:#0a7c5c}
+.badge-red{background:#ffeaea;color:#b91c1c}
+.at-footer{text-align:center;padding:18px;color:#c0c0c0;font-size:12px;border-top:1px solid #eee;margin-top:20px}
+.empty-state{text-align:center;padding:50px 20px;color:#aaa}
+.empty-state .icon{font-size:44px;margin-bottom:10px}
+.empty-state h3{font-size:16px;color:#666;margin-bottom:6px}
+@media(max-width:768px){.summary-row{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<script src="engine.js"></script>
+
+<!-- HEADER -->
+<header class="at-header">
+  <div class="at-logo"><div class="at-logo-box">📊</div>Accounting<span>Tool</span></div>
+  <a href="index.html" class="back-link">← Dashboard</a>
+</header>
+
+<!-- BANNER -->
+<div class="tool-banner">
+  <div class="tool-banner-icon">🏭</div>
+  <div>
+    <h1>Fixed Asset Register</h1>
+    <p>Calculate SLM / WDV depreciation automatically as per Companies Act 2013 Schedule II</p>
+  </div>
+  <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+    <label style="color:rgba(255,255,255,.8);font-size:13px">Financial Year:</label>
+    <select id="fySelect" style="padding:6px 12px;border-radius:6px;border:none;font-size:13px;font-weight:600">
+    </select>
+  </div>
+</div>
+
+<!-- TOOLBAR -->
+<div class="at-toolbar">
+  <button class="btn btn-primary" onclick="openAddModal()">＋ Add Asset</button>
+  <label class="btn btn-secondary" style="cursor:pointer" title="Import assets from Excel file">
+    📂 Import Excel
+    <input type="file" id="importExcelInput" accept=".xlsx,.xls" style="display:none" onchange="importFromExcel(this)">
+  </label>
+  <button class="btn btn-secondary" onclick="exportExcel()">⬇ Export Excel</button>
+  <button class="btn btn-secondary" onclick="window.print()">🖨 Print / PDF</button>
+  <button class="btn btn-danger" onclick="clearAll()">🗑 Clear All</button>
+</div>
+
+<!-- SUMMARY CARDS -->
+<div class="summary-row">
+  <div class="s-card green">
+    <div class="lbl">Total Assets</div>
+    <div class="val" id="s-count">0</div>
+    <div class="sub">in register</div>
+  </div>
+  <div class="s-card blue">
+    <div class="lbl">Gross Block</div>
+    <div class="val" id="s-gross">₹0</div>
+    <div class="sub">total cost</div>
+  </div>
+  <div class="s-card orange">
+    <div class="lbl">Depreciation (Year)</div>
+    <div class="val" id="s-dep">₹0</div>
+    <div class="sub">current FY</div>
+  </div>
+  <div class="s-card purple">
+    <div class="lbl">Net Block / WDV</div>
+    <div class="val" id="s-wdv">₹0</div>
+    <div class="sub">closing balance</div>
+  </div>
+</div>
+
+<!-- MAIN TABLE -->
+<div class="at-container">
+  <div class="at-card">
+    <div class="at-card-title">Fixed Asset Register</div>
+    <div class="actions-bar">
+      <span style="font-size:12px;color:#888" id="assetCountLabel">0 assets</span>
+      <span class="spacer"></span>
+    </div>
+    <div class="table-wrap">
+      <table class="at-table">
+        <thead>
+          <tr>
+            <th>Sr</th>
+            <th>Asset Name</th>
+            <th>Category</th>
+            <th>Purchase Date</th>
+            <th class="num">Gross Block (₹)</th>
+            <th>Method</th>
+            <th class="num">Rate %</th>
+            <th class="num">Opening WDV (₹)</th>
+            <th class="num">Additions (₹)</th>
+            <th class="num">Disposals (₹)</th>
+            <th class="num">Depreciation (₹)</th>
+            <th class="num">Closing WDV (₹)</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="assetTableBody"></tbody>
+        <tfoot>
+          <tr>
+            <td colspan="4"><strong>TOTAL</strong></td>
+            <td class="num" id="f-gross">—</td>
+            <td colspan="3"></td>
+            <td class="num" id="f-add">—</td>
+            <td class="num" id="f-disp">—</td>
+            <td class="num" id="f-dep">—</td>
+            <td class="num" id="f-wdv">—</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    <div id="emptyState" class="empty-state" style="display:none">
+      <div class="icon">🏭</div>
+      <h3>No Assets Added</h3>
+      <p>Click "+ Add Asset" to start building your Fixed Asset Register.</p>
+    </div>
+  </div>
+</div>
+
+<div class="at-footer">© 2026 AccountingTool | Fixed Asset Register | Companies Act 2013 Schedule II Rates</div>
+
+<!-- ADD / EDIT MODAL -->
+<div id="assetModal" class="overlay" style="display:none">
+  <div class="modal">
+    <div class="modal-header" id="modalTitle">Add Asset</div>
+    <div class="form-grid form-cols-2">
+      <div class="form-group" style="grid-column:1/-1">
+        <label>Asset Name *</label>
+        <input id="f-name" type="text" placeholder="e.g. Office Building, Laptop HP ProBook">
+      </div>
+      <div class="form-group">
+        <label>Category *</label>
+        <select id="f-cat" onchange="autoFillRate()">
+          <option value="">— Select —</option>
+          <option value="Land & Building">Land &amp; Building</option>
+          <option value="Plant & Machinery">Plant &amp; Machinery</option>
+          <option value="Furniture & Fixtures">Furniture &amp; Fixtures</option>
+          <option value="Computer & Peripherals">Computer &amp; Peripherals</option>
+          <option value="Vehicles">Vehicles</option>
+          <option value="Office Equipment">Office Equipment</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Purchase Date</label>
+        <input id="f-date" type="date">
+      </div>
+      <div class="form-group">
+        <label>Gross Block / Cost (₹) *</label>
+        <input id="f-gb" type="number" min="0" placeholder="0.00" oninput="calcModal()">
+      </div>
+      <div class="form-group">
+        <label>Depreciation Method *</label>
+        <select id="f-method" onchange="autoFillRate()">
+          <option value="SLM">SLM (Straight Line)</option>
+          <option value="WDV">WDV (Written Down Value)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Depreciation Rate % *</label>
+        <input id="f-rate" type="number" min="0" max="100" step="0.01" placeholder="e.g. 10" oninput="calcModal()">
+      </div>
+      <div class="form-group">
+        <label>Opening WDV (₹)</label>
+        <input id="f-owdv" type="number" min="0" placeholder="0.00" oninput="calcModal()">
+      </div>
+      <div class="form-group">
+        <label>Additions During Year (₹)</label>
+        <input id="f-add" type="number" min="0" placeholder="0.00" oninput="calcModal()">
+      </div>
+      <div class="form-group">
+        <label>Disposals During Year (₹)</label>
+        <input id="f-disp2" type="number" min="0" placeholder="0.00" oninput="calcModal()">
+      </div>
+    </div>
+    <!-- PREVIEW -->
+    <div style="background:#f0faf7;border-radius:8px;padding:14px;margin-top:14px;font-size:13px">
+      <strong style="color:#15c39a">Calculated Values:</strong>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+        <div>Depreciation: <strong id="prev-dep">₹0</strong></div>
+        <div>Closing WDV: <strong id="prev-wdv">₹0</strong></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveAsset()">Save Asset</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const RATES = {
+  "Land & Building":    { SLM: 5,     WDV: 18.10 },
+  "Plant & Machinery":  { SLM: 7.07,  WDV: 13.91 },
+  "Furniture & Fixtures":{ SLM: 10,   WDV: 25.89 },
+  "Computer & Peripherals":{ SLM: 33.33, WDV: 63.16 },
+  "Vehicles":           { SLM: 9.5,   WDV: 25.89 },
+  "Office Equipment":   { SLM: 19,    WDV: 45.07 },
+  "Other":              { SLM: 10,    WDV: 25.89 }
+};
+
+let assets = [];
+let editIndex = -1;
+
+function load() {
+  const raw = localStorage.getItem("FAR");
+  if (raw) {
+    try { assets = JSON.parse(raw); } catch(e) { assets = []; }
+  }
+  render();
+}
+
+function save() {
+  localStorage.setItem("FAR", JSON.stringify(assets));
+  if (typeof AccountingEngine !== 'undefined') AccountingEngine.persistToElectron();
+}
+
+function fmt(n) {
+  if (isNaN(n) || n === undefined || n === null) return "₹0";
+  n = parseFloat(n);
+  const abs = Math.abs(n);
+  let s;
+  if (abs >= 1e7) s = (abs/1e7).toFixed(2) + " Cr";
+  else {
+    const str = abs.toFixed(2);
+    const [int, dec] = str.split(".");
+    let r = "";
+    let cnt = 0;
+    for (let i = int.length - 1; i >= 0; i--) {
+      if (cnt === 3) { r = "," + r; cnt = 0; }
+      else if (cnt > 0 && cnt % 2 === 0 && cnt > 2) { r = "," + r; cnt = 0; }
+      r = int[i] + r;
+      cnt++;
+    }
+    // Simpler Indian format
+    s = Number(int).toLocaleString('en-IN') + "." + dec;
+  }
+  return (n < 0 ? "-₹" : "₹") + s;
+}
+
+function calcDep(a) {
+  const gb   = parseFloat(a.grossBlock) || 0;
+  const owdv = parseFloat(a.openingWDV) || 0;
+  const add  = parseFloat(a.additions)  || 0;
+  const disp = parseFloat(a.disposals)  || 0;
+  const rate = parseFloat(a.rate)       || 0;
+
+  /* Depreciable base after disposals */
+  const base = Math.max(0, owdv + add - disp);
+  let dep = 0;
+  if (a.method === "SLM") {
+    /* SLM: depreciation on (opening WDV + additions - disposals), NOT gross block.
+       Ensures depreciation stops when asset is fully depreciated or disposed. */
+    dep = base * rate / 100;
+  } else {
+    /* WDV: depreciation on (opening WDV + additions - disposals) */
+    dep = base * rate / 100;
+  }
+  /* Cap depreciation — can't depreciate more than the depreciable base */
+  dep = Math.min(Math.max(0, dep), base);
+  const closingWDV = Math.max(0, base - dep);
+  return { dep, closingWDV };
+}
+
+function render() {
+  const tbody = document.getElementById("assetTableBody");
+  const empty = document.getElementById("emptyState");
+
+  if (assets.length === 0) {
+    tbody.innerHTML = "";
+    empty.style.display = "block";
+    document.getElementById("assetCountLabel").textContent = "0 assets";
+    updateSummary();
+    return;
+  }
+  empty.style.display = "none";
+  document.getElementById("assetCountLabel").textContent = assets.length + " asset(s)";
+
+  tbody.innerHTML = assets.map((a, i) => {
+    const { dep, closingWDV } = calcDep(a);
+    return `<tr>
+      <td>${i+1}</td>
+      <td><strong>${a.name}</strong></td>
+      <td>${a.category}</td>
+      <td>${a.date || "—"}</td>
+      <td class="num">${fmt(a.grossBlock)}</td>
+      <td><span class="badge badge-green">${a.method}</span></td>
+      <td class="num">${parseFloat(a.rate).toFixed(2)}%</td>
+      <td class="num">${fmt(a.openingWDV)}</td>
+      <td class="num">${fmt(a.additions)}</td>
+      <td class="num">${fmt(a.disposals)}</td>
+      <td class="num" style="color:#e07000;font-weight:600">${fmt(dep)}</td>
+      <td class="num" style="color:#0a7c5c;font-weight:600">${fmt(closingWDV)}</td>
+      <td>
+        <button class="btn btn-sm btn-secondary" onclick="editAsset(${i})">✏</button>
+        <button class="btn btn-sm btn-danger" style="margin-left:4px" onclick="deleteAsset(${i})">✕</button>
+      </td>
+    </tr>`;
+  }).join("");
+
+  updateSummary();
+  updateFooter();
+}
+
+function updateSummary() {
+  let totalGross=0, totalDep=0, totalWDV=0;
+  assets.forEach(a => {
+    totalGross += parseFloat(a.grossBlock)||0;
+    const {dep, closingWDV} = calcDep(a);
+    totalDep += dep;
+    totalWDV += closingWDV;
+  });
+  document.getElementById("s-count").textContent = assets.length;
+  document.getElementById("s-gross").textContent = fmt(totalGross);
+  document.getElementById("s-dep").textContent   = fmt(totalDep);
+  document.getElementById("s-wdv").textContent   = fmt(totalWDV);
+}
+
+function updateFooter() {
+  let tGross=0, tAdd=0, tDisp=0, tDep=0, tWDV=0;
+  assets.forEach(a => {
+    tGross += parseFloat(a.grossBlock)||0;
+    tAdd   += parseFloat(a.additions)||0;
+    tDisp  += parseFloat(a.disposals)||0;
+    const {dep, closingWDV} = calcDep(a);
+    tDep += dep;
+    tWDV += closingWDV;
+  });
+  document.getElementById("f-gross").textContent = fmt(tGross);
+  document.getElementById("f-add").textContent   = fmt(tAdd);
+  document.getElementById("f-disp").textContent  = fmt(tDisp);
+  document.getElementById("f-dep").textContent   = fmt(tDep);
+  document.getElementById("f-wdv").textContent   = fmt(tWDV);
+}
+
+function autoFillRate() {
+  const cat    = document.getElementById("f-cat").value;
+  const method = document.getElementById("f-method").value;
+  if (cat && RATES[cat]) {
+    document.getElementById("f-rate").value = RATES[cat][method];
+  }
+  calcModal();
+}
+
+function calcModal() {
+  const gb   = parseFloat(document.getElementById("f-gb").value)||0;
+  const owdv = parseFloat(document.getElementById("f-owdv").value)||0;
+  const add  = parseFloat(document.getElementById("f-add").value)||0;
+  const disp = parseFloat(document.getElementById("f-disp2").value)||0;
+  const rate = parseFloat(document.getElementById("f-rate").value)||0;
+  const meth = document.getElementById("f-method").value;
+
+  const base = Math.max(0, owdv + add - disp);
+  let dep = base * rate / 100;
+  dep = Math.min(Math.max(0, dep), base);
+  const wdv = Math.max(0, owdv + add - disp - dep);
+
+  document.getElementById("prev-dep").textContent = fmt(dep);
+  document.getElementById("prev-wdv").textContent = fmt(wdv);
+}
+
+function openAddModal() {
+  editIndex = -1;
+  document.getElementById("modalTitle").textContent = "Add Asset";
+  ["f-name","f-date","f-gb","f-rate","f-owdv","f-add","f-disp2"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("f-cat").value = "";
+  document.getElementById("f-method").value = "SLM";
+  document.getElementById("prev-dep").textContent = "₹0";
+  document.getElementById("prev-wdv").textContent = "₹0";
+  document.getElementById("assetModal").style.display = "flex";
+}
+
+function editAsset(i) {
+  editIndex = i;
+  const a = assets[i];
+  document.getElementById("modalTitle").textContent = "Edit Asset";
+  document.getElementById("f-name").value   = a.name;
+  document.getElementById("f-cat").value    = a.category;
+  document.getElementById("f-date").value   = a.date;
+  document.getElementById("f-gb").value     = a.grossBlock;
+  document.getElementById("f-method").value = a.method;
+  document.getElementById("f-rate").value   = a.rate;
+  document.getElementById("f-owdv").value   = a.openingWDV;
+  document.getElementById("f-add").value    = a.additions;
+  document.getElementById("f-disp2").value  = a.disposals;
+  calcModal();
+  document.getElementById("assetModal").style.display = "flex";
+}
+
+function saveAsset() {
+  const name = document.getElementById("f-name").value.trim();
+  if (!name) { alert("Asset Name is required."); return; }
+  const cat  = document.getElementById("f-cat").value;
+  if (!cat) { alert("Please select a category."); return; }
+  const gb   = parseFloat(document.getElementById("f-gb").value)||0;
+  const rate = parseFloat(document.getElementById("f-rate").value)||0;
+
+  const asset = {
+    name,
+    category: cat,
+    date:        document.getElementById("f-date").value,
+    grossBlock:  gb,
+    method:      document.getElementById("f-method").value,
+    rate:        rate,
+    openingWDV:  parseFloat(document.getElementById("f-owdv").value)||0,
+    additions:   parseFloat(document.getElementById("f-add").value)||0,
+    disposals:   parseFloat(document.getElementById("f-disp2").value)||0,
+  };
+
+  if (editIndex === -1) assets.push(asset);
+  else assets[editIndex] = asset;
+
+  save();
+  render();
+  closeModal();
+}
+
+function deleteAsset(i) {
+  if (!confirm("Delete asset: " + assets[i].name + "?")) return;
+  assets.splice(i, 1);
+  save();
+  render();
+}
+
+function closeModal() {
+  document.getElementById("assetModal").style.display = "none";
+}
+
+function clearAll() {
+  if (!confirm("Clear all assets? This cannot be undone.")) return;
+  assets = [];
+  save();
+  render();
+}
+
+function exportExcel() {
+  if (assets.length === 0) { alert("No assets to export."); return; }
+  const rows = [["Sr","Asset Name","Category","Purchase Date","Gross Block","Method","Rate %","Opening WDV","Additions","Disposals","Depreciation","Closing WDV"]];
+  assets.forEach((a, i) => {
+    const {dep, closingWDV} = calcDep(a);
+    rows.push([i+1, a.name, a.category, a.date, a.grossBlock, a.method, a.rate, a.openingWDV, a.additions, a.disposals, dep.toFixed(2), closingWDV.toFixed(2)]);
+  });
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Fixed Asset Register");
+  XLSX.writeFile(wb, "Fixed_Asset_Register.xlsx");
+}
+
+// Import assets from Excel file
+function importFromExcel(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const data = new Uint8Array(ev.target.result);
+      const wb = XLSX.read(data, {type:'array'});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:""});
+      if (rows.length < 2) { alert("No data rows found in Excel."); return; }
+
+      const headers = rows[0].map(h => String(h||"").trim().toLowerCase().replace(/[\s\-\/\.\(\)%₹]+/g,""));
+      const getCol = (row, ...keys) => {
+        for (const k of keys) {
+          const idx = headers.indexOf(k);
+          if (idx !== -1 && row[idx] !== undefined && row[idx] !== "") return row[idx];
+        }
+        return "";
+      };
+
+      const validCats = ["Land & Building","Plant & Machinery","Furniture & Fixtures","Computer & Peripherals","Vehicles","Office Equipment","Other"];
+
+      const imported = [];
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        const name = String(getCol(row,"assetname","name","asset","description","assetdescription")||"").trim();
+        if (!name) continue;
+
+        const catRaw = String(getCol(row,"category","assetcategory","type","assettype","assetgroup")||"").trim().toLowerCase();
+        const category = validCats.find(c => c.toLowerCase().includes(catRaw) || catRaw.includes(c.toLowerCase().split(" ")[0])) || "Other";
+
+        const dateVal = getCol(row,"purchasedate","date","acquisitiondate","dateofpurchase","purchaseddate");
+        let date = "";
+        if (dateVal) {
+          // Excel serial date numbers
+          if (typeof dateVal === "number") {
+            const d = new Date(Math.round((dateVal - 25569) * 86400 * 1000));
+            date = d.toISOString().split("T")[0];
+          } else {
+            date = String(dateVal).trim();
+          }
+        }
+
+        const gb   = parseFloat(getCol(row,"grossblock","cost","originalcost","purchasevalue","acquisitioncost","grossblockrs","grosscost"))||0;
+        const methodRaw = String(getCol(row,"method","depmethod","depreciationmethod","deprecmethod")||"SLM").toUpperCase();
+        const method = methodRaw.includes("WDV") ? "WDV" : "SLM";
+        const rate   = parseFloat(getCol(row,"rate","deprate","depreciationrate","rate","depreciation","depnrate","deprate"))||0;
+        const owdv   = parseFloat(getCol(row,"openingwdv","openingwdvrs","openingbalance","wdv","openingwdv"))||0;
+        const additions = parseFloat(getCol(row,"additions","additionsrs","additionsduringyear","additionsduringtheyear"))||0;
+        const disposals = parseFloat(getCol(row,"disposals","disposalsrs","disposalsduringyear","disposalsduringtheyear"))||0;
+
+        imported.push({ name, category, date, grossBlock: gb, method, rate, openingWDV: owdv, additions, disposals });
+      }
+
+      if (!imported.length) {
+        alert("No valid asset rows found.\n\nExpected columns (case-insensitive):\nAsset Name, Category, Purchase Date, Gross Block, Method (SLM/WDV), Rate %, Opening WDV, Additions, Disposals");
+        return;
+      }
+      if (!confirm(imported.length + " assets found in Excel. Add to register?\n\n(Existing assets will be kept.)")) return;
+      assets = assets.concat(imported);
+      save();
+      render();
+      alert(imported.length + " assets imported successfully from Excel.");
+    } catch(err) {
+      alert("Error reading Excel file: " + err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+  input.value = "";
+}
+
+// Close modal on overlay click
+document.getElementById("assetModal").addEventListener("click", function(e) {
+  if (e.target === this) closeModal();
+});
+
+load();
+
+/* ── Auto-load company details & FY ── */
+(function() {
+  try {
+    const bd = AccountingEngine.getCompanyDetails();
+    const header = document.querySelector('.at-sub-header');
+    if (header && bd.name) {
+      const nameEl = header.querySelector('div');
+      if (nameEl) nameEl.innerHTML = '<strong>' + bd.name.toUpperCase() + '</strong> — Fixed Asset Register (Schedule II)';
+    }
+    /* Populate FY dropdown dynamically */
+    const sel = document.getElementById('fySelect');
+    const now = new Date();
+    const curStartYear = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1;
+    sel.innerHTML = '';
+    for (let y = curStartYear - 3; y <= curStartYear + 1; y++) {
+      const opt = document.createElement('option');
+      opt.value = y + '-' + String(y + 1).slice(2);
+      opt.textContent = 'FY ' + y + '-' + String(y + 1).slice(2);
+      if (y === curStartYear) opt.selected = true;
+      sel.appendChild(opt);
+    }
+  } catch(e) {}
+})();
+</script>
+</body>
+</html>

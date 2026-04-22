@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Trial Balance - Grouping Enabled</title>
+
+<link rel="stylesheet" href="style.css">
+<style>
+ /* Prevent page content from hiding behind tabs */
+body {
+    font-family: Arial, sans-serif;
+    background:#f4f4f4;
+    margin:0;
+    padding:0;
+    padding-bottom: 90px !important;
+}
+
+
+/* ------------------------------------------------------
+   ORIGINAL N6 PAGE STYLES — UNCHANGED
+------------------------------------------------------ */
+
+.outer-wrapper {
+    background:#fff;
+    max-width:750px;
+    margin:30px auto;
+    padding:20px 25px;
+    border:1px solid #ccc;
+    box-shadow:0 0 6px rgba(0,0,0,0.1);
+}
+
+textarea {
+    width:100%;
+    height:320px;
+    padding:12px;
+    font-size:16px;
+    border:1px solid #999;
+    border-radius:3px;
+    transition:.2s;
+}
+textarea:focus {
+    outline:none;
+    border-color:#ffcc00;
+    box-shadow:0 0 0 2px rgba(255,204,0,0.4);
+    background:#fffef3;
+}
+
+button:not(.tab) {
+    margin-top:15px;
+    padding:10px 20px;
+    background:#006400;
+    color:#fff;
+    border:none;
+    border-radius:3px;
+    cursor:pointer;
+}
+button:not(.tab):hover { background:#008000; }
+
+#statusBar {
+    max-width:750px;
+    margin:20px auto;
+    padding:8px 12px;
+    font-size:14px;
+    font-weight:bold;
+    border-radius:3px;
+}
+.status-success { background:#d4edda; color:#155724; border:1px solid #c3e6cb; }
+.status-normal  { background:#e2e3e5; color:#41464b; border:1px solid #d6d8db; }
+
+.side-panel {
+    position:fixed;
+    right:20px;
+    top:90px;
+    width:160px;
+    background:#fffbe6;
+    border:1px solid #e0c36e;
+    box-shadow:0 0 5px rgba(0,0,0,0.15);
+    padding-bottom:10px;
+    z-index:800;
+}
+.side-panel-header {
+    background:#f2df95;
+    padding:6px 10px;
+    font-weight:bold;
+    border-bottom:1px solid #e0c36e;
+}
+.side-panel ul { list-style:none; padding:5px 10px; margin:0; }
+.side-panel li { display:flex; justify-content:space-between; margin:6px 0; }
+.key { font-weight:bold; }
+
+.modal-backdrop {
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.4);
+    display:none;
+    justify-content:center;
+    align-items:center;
+}
+.modal {
+    background:#fff;
+    width:380px;
+    padding:20px;
+    border-radius:4px;
+    box-shadow:0 0 10px rgba(0,0,0,0.3);
+}
+.config-row {
+    display:flex;
+    justify-content:space-between;
+    margin:10px 0;
+}
+.close-btn {
+    background:#444;
+    color:#fff;
+    padding:8px 18px;
+    margin-top:15px;
+    border:none;
+    border-radius:3px;
+    cursor:pointer;
+}
+
+  body { margin:0; padding:0; background:#eaeef4; font-family:'Segoe UI',Arial,sans-serif; }
+
+  /* ── Tally chrome ─────────────────────────────────────── */
+  .tb-header {
+    background: #00474f;
+    color: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 14px;
+    font-size: 13px;
+    height: 32px;
+  }
+  .tb-header-left, .tb-header-right { display: flex; gap: 14px; }
+  .tb-header-item { cursor: pointer; padding: 2px 6px; border-radius: 2px; }
+  .tb-header-item:hover { background: rgba(255,255,255,0.12); }
+  .tb-header-item span { text-decoration: underline; }
+
+  .tb-sub-header {
+    background: #fff;
+    border-bottom: 1px solid #ccd6d7;
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 16px;
+    font-size: 13px;
+  }
+  .tb-sub-header .company { font-weight: bold; color: #00474f; }
+
+  /* ── Page content ─────────────────────────────────────── */
+  .tb-content { padding: 12px 16px 100px; }
+
+  .tb-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1a3a62;
+    margin: 0 0 10px;
+    text-align: center;
+    padding: 10px;
+    background: #fff;
+    border-bottom: 2px solid #1a3a62;
+  }
+
+  .toolbar { display:flex; gap:8px; justify-content:center; margin:10px 0; flex-wrap:wrap; }
+  .toolbar button {
+    background:#00474f; color:white; border:none; padding:8px 14px;
+    border-radius:5px; cursor:pointer; font-size:13px; font-weight:600;
+  }
+  .toolbar button:hover { background:#005f6b; }
+  .toolbar button.secondary { background:#1a3a62; }
+  .toolbar button.secondary:hover { background:#234a7b; }
+  .toolbar input[type="file"] {
+    padding: 5px 10px; border-radius: 5px; background: white;
+    border: 1px solid #ccc; font-size: 13px;
+  }
+
+  .status { width:95%; margin:8px auto; padding:8px 12px; text-align:center;
+    border-radius:4px; font-size:14px; font-weight:bold; }
+  .ok  { background:#d4edda; color:#155724; border:1px solid #c3e6cb; }
+  .bad { background:#f8d7da; color:#721c24; border:1px solid #f5c6cb; }
+
+  table { width:95%; margin:10px auto; border-collapse:collapse; font-size:13px;
+    background:#fff; box-shadow:0 1px 4px rgba(0,0,0,0.08); }
+  th,td { border:1px solid #ddd; padding:6px 8px; text-align:left; }
+  th { background:#1a3a62; color:#fff; font-weight:600; font-size:12px; }
+  .amount { text-align:right; font-family:'Courier New',monospace; background:#fff; }
+  input, select { width:100%; border:none; background:transparent; font-size:12px; }
+  select { cursor:pointer; }
+  tr:nth-child(even) td { background:#f9f9f9; }
+  tfoot td { font-weight:bold; background:#f0f4fc; border-top:2px solid #1a3a62; }
+</style>
+</head>
+<body>
+
+<!-- Tally-style top bar -->
+<div class="tb-header">
+    <div class="tb-header-left">
+        <div class="tb-header-item" onclick="window.location.href='bd.html'"><span>K</span>: Company</div>
+        <div class="tb-header-item" onclick="document.getElementById('importFile').click()"><span>O</span>: Import</div>
+    </div>
+    <div class="tb-header-right">
+        <div class="tb-header-item" onclick="window.location.href='balance.html'"><span>B</span>: Balance Sheet</div>
+        <div class="tb-header-item" onclick="window.location.href='pl.html'"><span>P</span>: P&amp;L</div>
+        <div class="tb-header-item" onclick="window.location.href='index.html'"><span>Esc</span>: Quit</div>
+    </div>
+</div>
+
+<!-- Sub header -->
+<div class="tb-sub-header">
+    <div class="company" id="tbCompanyName">MY BUSINESS PVT LTD</div>
+    <div id="tbFinancialYear">1-Apr-23 to 31-Mar-24</div>
+</div>
+
+<div class="tb-content">
+<div class="tb-title">Trial Balance — Ledger Groupings</div>
+
+<div class="toolbar">
+  <button type="button" onclick="recalculateTB()">Recalculate</button>
+  <button type="button" class="secondary" onclick="applyDefaultGrouping()">Auto Group</button>
+  <button type="button" class="secondary" onclick="applyGroupCode()">Apply Codes</button>
+  <span style="margin-left:12px;border-left:1px solid #aac;padding-left:12px;display:inline-flex;align-items:center;gap:6px;">
+    <label style="font-size:12px;font-weight:600;">View:</label>
+    <select id="yearSelect" onchange="switchYear()" style="padding:4px 8px;font-size:12px;border:1px solid #999;border-radius:3px;">
+      <option value="CY">Current Year</option>
+      <option value="PY">Previous Year</option>
+    </select>
+  </span>
+  <span style="margin-left:12px;border-left:1px solid #aac;padding-left:12px;display:inline-flex;align-items:center;gap:6px;">
+    <label style="font-size:12px;font-weight:600;">Import to:</label>
+    <select id="importYear" style="padding:4px 8px;font-size:12px;border:1px solid #999;border-radius:3px;">
+      <option value="CY">Current Year</option>
+      <option value="PY">Previous Year</option>
+    </select>
+    <input type="file" id="importFile" accept=".xml,.xlsx,.csv">
+    <button type="button" onclick="uploadFile()">Import File</button>
+  </span>
+  <button type="button" class="secondary" onclick="clearPY()" style="margin-left:8px;">Clear PY</button>
+  <button type="button" class="secondary" onclick="openRulesManager()" title="View/edit saved classification rules">Rules</button>
+</div>
+
+<div id="status" class="status"></div>
+
+<table id="tbTable">
+  <thead>
+    <tr>
+      <th>S.No</th>
+      <th>Name of Ledger</th>
+      <th>System Primary Grouping</th>
+      <th>System Parent Grouping</th>
+      <th>Group Code</th>
+      <th id="thDate">As at Date</th>
+      <th>Face Grouping</th>
+      <th>Note Grouping</th>
+      <th>Sub-Note Grouping</th>
+      <th>Debit</th>
+      <th>Credit</th>
+    </tr>
+  </thead>
+  <tbody id="tbBody"></tbody>
+  <tfoot>
+    <tr>
+      <td colspan="9">TOTAL</td>
+      <td id="tdTot" class="amount"></td>
+      <td id="tcTot" class="amount"></td>
+    </tr>
+  </tfoot>
+</table>
+</div><!-- end tb-content -->
+
+<!-- BOTTOM TABS -->
+<div class="bottom-tabs">
+    <a href="dashboard.html" class="tab">HOME</a>
+    <a href="bd.html" class="tab">BD</a>
+    <a href="tb.html" class="tab">TB</a>
+    <a href="ae.html" class="tab">AE</a>
+    <a href="balance.html" class="tab">BS</a>
+    <a href="pl.html" class="tab">PL</a>
+    <a href="cf.html" class="tab">CF</a>
+    <a href="n1.html" class="tab">N1</a>
+    <a href="n2.html" class="tab">N2</a>
+    <a href="n3.html" class="tab">N3</a>
+    <a href="n4.html" class="tab">N4</a>
+    <a href="n5.html" class="tab">N5</a>
+    <a href="n6.html" class="tab">N6</a>
+    <a href="n7.html" class="tab">N7</a>
+    <a href="tx.html" class="tab">TX</a>
+    <a href="audit-report.html" class="tab">AR</a>
+    <a href="fs-package.html" class="tab">FS</a>
+    <button class="tab plus">+</button>
+</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="engine.js"></script>
+    <script>
+        // Initialize Standard Tally UI
+        AccountingEngine.initStandardUI();
+
+        function uploadFile(){
+            const file = document.getElementById("importFile").files[0];
+            if(!file){ alert("Please select a file first"); return; }
+            const targetYear = document.getElementById('importYear').value || 'CY';
+            const yrLabel = targetYear === 'PY' ? 'Previous Year' : 'Current Year';
+            const reader = new FileReader();
+            if(file.name.endsWith(".xml")){
+                reader.onload = () => {
+                    // XML import currently only supports CY — warn user if PY selected
+                    if (targetYear === 'PY') { alert('Tally XML import for Previous Year not yet supported. Please use Excel/CSV.'); return; }
+                    if (AccountingEngine.importTallyXML(reader.result)) {
+                        alert("✔ Tally XML Imported Successfully (" + yrLabel + ")");
+                        document.getElementById('yearSelect').value = targetYear;
+                        location.reload();
+                    } else alert("❌ Failed to parse Tally XML.");
+                };
+                reader.readAsText(file);
+            } else if(file.name.endsWith(".csv")){
+                reader.onload = () => {
+                    const rows = reader.result.trim().split('\n').map(r => r.split(','));
+                    if (AccountingEngine.importExcelTB(rows, targetYear)) {
+                        alert("✔ CSV Imported Successfully (" + yrLabel + ")");
+                        document.getElementById('yearSelect').value = targetYear;
+                        location.reload();
+                    } else {
+                        alert("❌ Failed to parse CSV. Ensure columns: Ledger Name, Debit, Credit.");
+                    }
+                };
+                reader.readAsText(file);
+            } else {
+                reader.onload = e => {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const wb = XLSX.read(data,{type:"array"});
+                        let success = false;
+                        for (let sheetName of wb.SheetNames) {
+                            if (AccountingEngine.importExcelTB(XLSX.utils.sheet_to_json(wb.Sheets[sheetName],{header:1}), targetYear)) {
+                                success = true;
+                                break;
+                            }
+                        }
+                        if (success) {
+                            alert("✔ Excel imported successfully (" + yrLabel + ")");
+                            document.getElementById('yearSelect').value = targetYear;
+                            location.reload();
+                        }
+                        else alert("❌ Failed to parse Excel.");
+                    } catch (err) { alert("❌ Error: " + err.message); }
+                };
+                reader.readAsArrayBuffer(file);
+            }
+        }
+
+        function switchYear() {
+            const y = document.getElementById('yearSelect').value;
+            localStorage.setItem('TB_VIEW_YEAR', y);
+            recalculateTB();
+        }
+
+        function clearPY() {
+            if (!AccountingEngine.hasPYData()) { alert('No Previous Year data to clear.'); return; }
+            if (!confirm('Clear all Previous Year data? This cannot be undone.')) return;
+            AccountingEngine.clearPYData();
+            alert('✔ Previous Year data cleared.');
+            document.getElementById('yearSelect').value = 'CY';
+            location.reload();
+        }
+
+        function recalculateTB(){
+            const st = document.getElementById("status");
+            const tbBody = document.getElementById("tbBody");
+            tbBody.innerHTML = "";
+            const viewYear = document.getElementById('yearSelect')?.value || 'CY';
+            const tbData = AccountingEngine.getTrialBalance(viewYear);
+            const items = tbData.items;
+            
+            if(items.length === 0){
+                st.textContent="No Data Found";
+                st.className="status bad";
+                return;
+            }
+            let i=1;
+            items.forEach(item => {
+                const row = document.createElement("tr");
+                const bd = AccountingEngine.getCompanyDetails();
+                const fyEnd = (bd.financialYear || '2023-24').split(' to ')[1] || '31-Mar-2024';
+                const safeName = item.name.replace(/'/g, "\\'");
+                row.innerHTML = `
+                    <td>${i++}</td>
+                    <td>${item.name}</td>
+                    <td>${buildGroupSelect(item.group, item.name)}</td>
+                    <td><input type="text" placeholder="Parent" value="${item.group || ''}" onchange="saveGrouping('${safeName}', this.value)"></td>
+                    <td><input type="text" placeholder="Code"></td>
+                    <td><input type="text" value="${fyEnd}"></td>
+                    <td><input type="text" placeholder="Face"></td>
+                    <td><input type="text" placeholder="Note"></td>
+                    <td><input type="text" placeholder="Sub-note"></td>
+                    <td class="amount">${item.debit.toFixed(2)}</td>
+                    <td class="amount">${item.credit.toFixed(2)}</td>
+                `;
+                tbBody.appendChild(row);
+            });
+            document.getElementById("tdTot").textContent = tbData.totalDr.toFixed(2);
+            document.getElementById("tcTot").textContent = tbData.totalCr.toFixed(2);
+            if(Math.abs(tbData.totalDr - tbData.totalCr) < 1){ st.textContent="✔ TB BALANCED"; st.className="status ok"; }
+            else { st.textContent="❌ TB NOT BALANCED"; st.className="status bad"; }
+        }
+
+        // All supported groups for the dropdown
+        const ALL_GROUPS = [
+            'Capital Account','Reserves and surplus','Sources Of Fund',
+            'Secured Loans','Unsecured Loans','Bank OD','Loans (Liability)',
+            'Long Term Borrowings','Sundry Creditors','Duties & Taxes',
+            'Provisions','Current Liabilities','Current Libilities',
+            'Trade Payables','Other Current Liabilities','Short term borrowings',
+            'Fixed Assets','Non Current Assets','Investments',
+            'Stock-in-hand','Inventories','Sundry Debtors','Trade Receivables',
+            'Bank Accounts','Cash-in-hand','Cash And Cash Equivalents',
+            'Deposits (Asset)','Loans & Advances (Asset)','Current Assets',
+            'Short term loans and advances','Other current assets',
+            'Sales Accounts','Direct Incomes','Revenue','Indirect Incomes',
+            'Purchase Accounts','Direct Expenses','Indirect Expenses','Primary'
+        ];
+
+        function buildGroupSelect(currentGroup, ledgerName) {
+            const escaped = ledgerName.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            let options = ALL_GROUPS.map(g =>
+                `<option value="${g}" ${g === currentGroup ? 'selected' : ''}>${g}</option>`
+            ).join('');
+            // If current group is not in list, add it
+            if (!ALL_GROUPS.includes(currentGroup) && currentGroup) {
+                options += `<option value="${currentGroup}" selected>${currentGroup}</option>`;
+            }
+            return `<select onchange="saveGrouping('${escaped}', this.value)">${options}</select>`;
+        }
+
+        function saveGrouping(ledgerName, newGroup){
+            let ledgers = AccountingEngine.getLedgers();
+            let ledger = ledgers.find(l => l.name === ledgerName);
+            if (ledger) {
+                ledger.group = newGroup;
+                AccountingEngine.saveLedger(ledger);
+            } else {
+                // Ledger might come from AE entries
+                AccountingEngine.saveLedger({ name: ledgerName, group: newGroup, openingBalance: 0 });
+            }
+            // Persist as a classification rule so future TB imports auto-apply this mapping
+            AccountingEngine.setGroupRule(ledgerName, newGroup);
+        }
+
+        function openRulesManager() {
+            const rules = AccountingEngine.getGroupRules();
+            const keys = Object.keys(rules).sort();
+            if (keys.length === 0) {
+                alert('No classification rules saved yet.\n\nChange a ledger\'s group in the TB page to create one.');
+                return;
+            }
+            let msg = 'Saved Classification Rules (' + keys.length + '):\n\n';
+            keys.forEach((k, i) => { msg += `${i+1}. ${k} → ${rules[k]}\n`; });
+            msg += '\nType a number to DELETE that rule, "all" to clear all, or Cancel:';
+            const inp = prompt(msg);
+            if (!inp) return;
+            const t = inp.trim().toLowerCase();
+            if (t === 'all') {
+                if (!confirm('Delete ALL ' + keys.length + ' classification rules? Future TB imports will use auto-grouping only.')) return;
+                AccountingEngine.clearAllGroupRules();
+                alert('✓ All rules cleared.');
+            } else {
+                const idx = parseInt(t, 10) - 1;
+                if (idx >= 0 && idx < keys.length) {
+                    AccountingEngine.deleteGroupRule(keys[idx]);
+                    alert('✓ Rule deleted: ' + keys[idx]);
+                } else { alert('Invalid selection.'); }
+            }
+        }
+
+        function applyDefaultGrouping() {
+            const ledgers = AccountingEngine.getLedgers();
+            if (ledgers.length === 0) { alert('No ledgers loaded. Import data first.'); return; }
+            ledgers.forEach(l => { l.group = AccountingEngine.guessGroup(l.name); });
+            localStorage.setItem('LEDGERS', JSON.stringify(ledgers));
+            alert('Default grouping applied to ' + ledgers.length + ' ledger(s).');
+            recalculateTB();
+        }
+
+        function applyGroupCode() {
+            const codeMap = {
+                'Capital Account':'CAP','Reserves and surplus':'RES','Sources Of Fund':'SOF',
+                'Secured Loans':'SL','Unsecured Loans':'UL','Bank OD':'BOD','Loans (Liability)':'LON',
+                'Long Term Borrowings':'LTB','Sundry Creditors':'SC','Duties & Taxes':'DT',
+                'Provisions':'PRV','Current Liabilities':'CL','Current Libilities':'CL',
+                'Trade Payables':'TP','Other Current Liabilities':'OCL','Short term borrowings':'STB',
+                'Fixed Assets':'FA','Non Current Assets':'NCA','Investments':'INV',
+                'Stock-in-hand':'STK','Inventories':'STK','Sundry Debtors':'SD','Trade Receivables':'TR',
+                'Bank Accounts':'BA','Cash-in-hand':'CI','Cash And Cash Equivalents':'CAE',
+                'Deposits (Asset)':'DEP','Loans & Advances (Asset)':'LA','Current Assets':'CA',
+                'Short term loans and advances':'SLA','Other current assets':'OCA',
+                'Sales Accounts':'SAL','Direct Incomes':'DI','Revenue':'REV','Indirect Incomes':'II',
+                'Purchase Accounts':'PUR','Direct Expenses':'DE','Indirect Expenses':'IE','Primary':'PRI'
+            };
+            const tbody = document.getElementById('tbBody');
+            tbody.querySelectorAll('tr').forEach(row => {
+                const sel = row.querySelector('select');
+                const codeInput = row.querySelectorAll('input[type="text"]')[1]; // Group Code is 2nd input
+                if (sel && codeInput) {
+                    const code = codeMap[sel.value] || sel.value.substring(0, 3).toUpperCase();
+                    codeInput.value = code;
+                }
+            });
+            alert('Group codes applied to all rows.');
+        }
+
+        document.addEventListener("keydown",e=>{
+            if(e.ctrlKey&&e.key.toLowerCase()==="s"){e.preventDefault();recalculateTB();}
+        });
+
+        // Sync company name / FY from BD_DATA
+        (function syncHeader() {
+            try {
+                const bd = AccountingEngine.getCompanyDetails();
+                if (bd.name) document.getElementById('tbCompanyName').textContent = bd.name.toUpperCase();
+                if (bd.financialYear) document.getElementById('tbFinancialYear').textContent = bd.financialYear;
+                const endDate = (bd.financialYear || '').split(' to ')[1] || '';
+                if (endDate) document.getElementById('thDate').textContent = 'As at ' + endDate;
+            } catch(e) {}
+        })();
+
+        // Restore previously selected view year
+        (function restoreYear(){
+            const saved = localStorage.getItem('TB_VIEW_YEAR');
+            if (saved && document.getElementById('yearSelect')) {
+                document.getElementById('yearSelect').value = saved;
+            }
+            // Disable PY view if no PY data imported yet
+            if (!AccountingEngine.hasPYData() && document.getElementById('yearSelect')) {
+                const sel = document.getElementById('yearSelect');
+                sel.querySelector('option[value="PY"]').textContent = 'Previous Year (not imported)';
+            }
+        })();
+
+        recalculateTB();
+    </script>
+</body>
+</html>

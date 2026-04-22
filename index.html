@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AccountingTool — Dashboard</title>
+<link rel="stylesheet" href="tools.css"/>
+<style>
+
+/* ── HERO ─────────────────────────────────────────── */
+.hero {
+  background: linear-gradient(135deg, #0d9e7e 0%, #15c39a 55%, #1dd4a8 100%);
+  color: white;
+  padding: 52px 40px 44px;
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  left: 50%; top: -80px;
+  transform: translateX(-50%);
+  width: 700px; height: 700px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.hero-inner {
+  position: relative;
+  max-width: 720px;
+  margin: 0 auto;
+}
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,255,255,0.18);
+  border: 1px solid rgba(255,255,255,0.28);
+  padding: 5px 16px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  margin-bottom: 18px;
+}
+.hero h1 {
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 1.15;
+  margin: 0 0 12px;
+  letter-spacing: -0.5px;
+}
+.hero p {
+  font-size: 15px;
+  opacity: 0.88;
+  margin: 0 0 28px;
+  line-height: 1.65;
+}
+.hero-pills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.hero-pill {
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.28);
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* ── STATS STRIP ──────────────────────────────────── */
+.stats-strip {
+  background: #1a1a1a;
+  color: white;
+  padding: 0 40px;
+}
+.stats-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+}
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 36px;
+  border-right: 1px solid #2e2e2e;
+  flex: 1;
+  justify-content: center;
+}
+.stat-item:last-child { border-right: none; }
+.stat-icon {
+  width: 34px; height: 34px;
+  background: rgba(21,195,154,0.15);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.stat-text .stat-num {
+  font-size: 18px;
+  font-weight: 700;
+  color: #15c39a;
+  line-height: 1;
+}
+.stat-text .stat-lbl {
+  font-size: 11px;
+  color: #888;
+  margin-top: 2px;
+  white-space: nowrap;
+}
+
+/* ── CONTENT WRAPPER ──────────────────────────────── */
+.dash-content {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 36px 32px 52px;
+}
+
+/* ── SECTION HEADING ──────────────────────────────── */
+.section-wrap { margin-bottom: 40px; }
+
+.section-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.sec-badge {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--primary-light);
+  border: 1px solid #b8eedd;
+  padding: 5px 14px 5px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #0a7c5c;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+.section-head::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, #d0f0e6, transparent);
+}
+
+/* ── TOOL CARDS GRID ──────────────────────────────── */
+.tools-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.tool-card {
+  background: white;
+  border-radius: 16px;
+  padding: 26px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 4px 18px rgba(0,0,0,0.05);
+  border: 1.5px solid #eef0f4;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.22s cubic-bezier(0.4,0,0.2,1);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+.tool-card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #15c39a, #1dd4a8);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.25s ease;
+}
+.tool-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 32px rgba(21,195,154,0.18), 0 2px 8px rgba(0,0,0,0.07);
+  border-color: #c5f0e4;
+}
+.tool-card:hover::after { transform: scaleX(1); }
+
+.tool-card-top {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+.tool-icon {
+  width: 54px; height: 54px;
+  background: var(--primary-light);
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px;
+  flex-shrink: 0;
+  transition: background 0.18s;
+}
+.tool-card:hover .tool-icon { background: #ccf0e4; }
+.tool-meta { flex: 1; }
+.tool-cat {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  margin-bottom: 4px;
+}
+.tool-name {
+  font-size: 17px;
+  font-weight: 700;
+  color: #1a1a1a;
+  line-height: 1.2;
+}
+.tool-desc {
+  font-size: 13px;
+  color: #667;
+  line-height: 1.65;
+  margin-bottom: 16px;
+  flex: 1;
+}
+.tool-divider {
+  height: 1px;
+  background: #f2f4f7;
+  margin-bottom: 16px;
+}
+.tool-features {
+  list-style: none;
+  padding: 0; margin: 0 0 20px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 12px;
+}
+.tool-features li {
+  font-size: 12px;
+  color: #555;
+  padding-left: 18px;
+  position: relative;
+  line-height: 1.45;
+}
+.tool-features li::before {
+  content: '✓';
+  position: absolute; left: 0;
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 11px;
+}
+.tool-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--primary);
+  color: white;
+  padding: 10px 22px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 600;
+  align-self: flex-start;
+  margin-top: auto;
+  transition: all 0.18s;
+}
+.tool-btn:hover {
+  background: var(--primary-dark);
+  box-shadow: 0 4px 14px rgba(21,195,154,0.4);
+}
+.tool-btn-arr { transition: transform 0.18s; }
+.tool-card:hover .tool-btn-arr { transform: translateX(4px); }
+
+/* ── IMPORT SECTION ───────────────────────────────── */
+.import-section {
+  background: linear-gradient(135deg, #f0fdf9 0%, #e8f8f3 100%);
+  border-bottom: 1px solid #c2edd9;
+  padding: 28px 40px 32px;
+}
+.import-section .dash-inner { max-width:1280px; margin:0 auto; }
+.import-title {
+  font-size: 13px; font-weight: 700; color: #0a7c5c;
+  text-transform: uppercase; letter-spacing: 1px;
+  margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+}
+
+/* drop zone */
+.drop-zone {
+  border: 2.5px dashed #15c39a;
+  border-radius: 14px;
+  background: white;
+  padding: 32px 28px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+.drop-zone.drag-over { background: #e6fff7; border-color: #0a7c5c; }
+.drop-zone:hover { background: #f5fffb; border-color: #11a683; }
+.drop-zone input[type=file] { display:none; }
+.dz-icon { font-size: 40px; margin-bottom: 12px; display: block; }
+.dz-title { font-size: 17px; font-weight: 700; color: #1a1a1a; margin-bottom: 6px; }
+.dz-sub { font-size: 13px; color: #777; margin-bottom: 16px; }
+.dz-formats {
+  display: inline-flex; gap: 8px; flex-wrap: wrap; justify-content: center;
+}
+.dz-fmt {
+  background: #e8f8f3; border: 1px solid #b8eedd;
+  padding: 4px 12px; border-radius: 20px;
+  font-size: 11px; font-weight: 700; color: #0a7c5c;
+}
+.dz-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--primary); color: white;
+  padding: 11px 26px; border-radius: 10px;
+  font-size: 14px; font-weight: 600;
+  border: none; cursor: pointer; transition: all 0.18s;
+  margin-top: 16px;
+}
+.dz-btn:hover { background: var(--primary-dark); box-shadow: 0 4px 14px rgba(21,195,154,0.4); }
+.dz-sample {
+  margin-top: 12px; font-size: 12px; color: #999;
+}
+.dz-sample a {
+  color: var(--primary); text-decoration: underline; cursor: pointer;
+}
+
+/* columns hint */
+.col-hint {
+  margin-top: 12px;
+  background: #fffbe6; border: 1px solid #ffe58f;
+  border-radius: 8px; padding: 10px 16px;
+  font-size: 12px; color: #7d6000;
+  display: flex; align-items: flex-start; gap: 8px;
+}
+
+/* result card */
+.result-card {
+  background: white;
+  border-radius: 16px;
+  border: 1.5px solid #b8eedd;
+  box-shadow: 0 2px 16px rgba(21,195,154,0.12);
+  overflow: hidden;
+  margin-top: 16px;
+  display: none;
+}
+.result-card.show { display: block; }
+.result-header {
+  background: linear-gradient(135deg, #15c39a, #0d9e7e);
+  color: white; padding: 16px 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 12px;
+}
+.result-company { font-size: 17px; font-weight: 800; letter-spacing: .5px; }
+.result-fy { font-size: 12px; opacity: .85; margin-top: 2px; }
+.result-badges { display: flex; gap: 8px; flex-wrap: wrap; }
+.rbadge {
+  background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.35);
+  padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;
+}
+.rbadge.ok { background: rgba(255,255,255,0.3); }
+.rbadge.err { background: rgba(255,60,60,0.35); border-color: rgba(255,100,100,0.4); }
+
+.result-stats {
+  display: grid; grid-template-columns: repeat(4,1fr);
+  border-bottom: 1px solid #eef0f4;
+}
+.rstat {
+  padding: 16px 20px; text-align: center;
+  border-right: 1px solid #eef0f4;
+}
+.rstat:last-child { border-right: none; }
+.rstat-val { font-size: 20px; font-weight: 800; color: #15c39a; line-height: 1; }
+.rstat-val.neg { color: #e74c3c; }
+.rstat-lbl { font-size: 11px; color: #888; margin-top: 4px; }
+
+.result-actions {
+  padding: 16px 20px;
+  display: flex; gap: 10px; flex-wrap: wrap;
+}
+.ra-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 18px; border-radius: 9px;
+  font-size: 13px; font-weight: 600;
+  text-decoration: none; color: inherit;
+  border: none; cursor: pointer; transition: all 0.18s;
+}
+.ra-btn.primary { background: var(--primary); color: white; }
+.ra-btn.primary:hover { background: var(--primary-dark); box-shadow: 0 4px 14px rgba(21,195,154,0.4); }
+.ra-btn.sec { background: #f2f4f7; color: #333; }
+.ra-btn.sec:hover { background: #e5e8ef; }
+.ra-btn.danger { background: #fff0f0; color: #c0392b; border: 1px solid #fad2d2; }
+.ra-btn.danger:hover { background: #ffe0e0; }
+.result-diff {
+  padding: 10px 20px;
+  background: #fff3cd; border-top: 1px solid #ffe58f;
+  font-size: 12px; color: #7d6000; display: none;
+}
+.result-diff.show { display: block; }
+
+/* progress bar */
+.import-progress {
+  display: none; text-align: center; padding: 20px;
+}
+.import-progress.show { display: block; }
+.prog-bar { width: 100%; height: 4px; background: #e8f8f3; border-radius: 2px; margin: 8px 0; overflow: hidden; }
+.prog-fill { height: 100%; width: 100%; background: var(--primary); border-radius: 2px; transform-origin: left; animation: progAnim 1.2s ease-in-out infinite; }
+@keyframes progAnim { 0%{transform:scaleX(0)} 50%{transform:scaleX(0.7)} 100%{transform:scaleX(1)} }
+
+/* ── FOOTER ───────────────────────────────────────── */
+.dash-footer {
+  text-align: center;
+  padding: 22px 20px;
+  color: #bbb;
+  font-size: 12px;
+  border-top: 1px solid #eef0f4;
+  background: white;
+}
+.dash-footer strong { color: #999; font-weight: 600; }
+
+/* ── RESPONSIVE ───────────────────────────────────── */
+@media (max-width: 900px) {
+  .tools-grid { grid-template-columns: 1fr; }
+  .stat-item  { padding: 12px 18px; }
+}
+@media (max-width: 768px) {
+  .hero { padding: 36px 20px 32px; }
+  .hero h1 { font-size: 26px; }
+  .dash-content { padding: 24px 16px 36px; }
+  .stats-inner  { flex-wrap: wrap; }
+  .stat-item    { flex: 1 1 50%; border-right: none; border-bottom: 1px solid #2e2e2e; }
+}
+@media (max-width: 480px) {
+  .tool-features { grid-template-columns: 1fr; }
+  .stat-item     { flex: 1 1 100%; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="at-header">
+  <div class="at-logo">
+    <div class="at-logo-icon">📊</div>
+    <span>IRA CONSULTING </span>Accounting<span>Tools
+
+      
+    </span>
+  </div>
+  <div style="font-size:12px; color:#999; display:flex; gap:10px; align-items:center;">
+    <span>v1.0</span>
+    <span style="color:#ddd;">|</span>
+    <span>Licensed to Dev</span>
+    <span style="color:#ddd;">|</span>
+    <span>GrowthIQ Technologies LLP</span>
+    <span style="color:#ddd;">|</span>
+    <span style="color:var(--primary); font-weight:600;">FY 2024-25</span>
+  </div>
+</header>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-eyebrow">⭐ Professional CA Suite</div>
+    <h1>Automated Financial Tools</h1>
+    <p>Designed by experienced Chartered Accountants · All-in-one accounting<br>software suite · 100% offline &amp; secure</p>
+    <div class="hero-pills">
+      <span class="hero-pill">📊 Balance Sheet Builder</span>
+      <span class="hero-pill">🏭 Fixed Asset Register</span>
+      <span class="hero-pill">🧾 GST Reco Tool</span>
+      <span class="hero-pill">💰 Salary Tax Calculator</span>
+      <span class="hero-pill">📋 CARO Report Builder</span>
+      <span class="hero-pill">🔍 Audit Manager</span>
+    </div>
+  </div>
+</div>
+
+<!-- STATS STRIP -->
+<div class="stats-strip">
+  <div class="stats-inner">
+    <div class="stat-item">
+      <div class="stat-icon">🧰</div>
+      <div class="stat-text">
+        <div class="stat-num">6</div>
+        <div class="stat-lbl">Tools Available</div>
+      </div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-icon">🔒</div>
+      <div class="stat-text">
+        <div class="stat-num">100%</div>
+        <div class="stat-lbl">Offline &amp; Secure</div>
+      </div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-icon">🎓</div>
+      <div class="stat-text">
+        <div class="stat-num">CA</div>
+        <div class="stat-lbl">Designed by Experts</div>
+      </div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-icon">📅</div>
+      <div class="stat-text">
+        <div class="stat-num">FY 25</div>
+        <div class="stat-lbl">Ready for Use</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Import panel removed as per user request -->
+
+
+<!-- MAIN CONTENT -->
+<div class="dash-content">
+
+  <!-- REPORTING TOOLS -->
+  <div class="section-wrap">
+    <div class="section-head">
+      <div class="sec-badge">📁 Reporting Tools</div>
+    </div>
+    <div class="tools-grid">
+
+      <a href="dashboard.html" class="tool-card">
+        <div class="tool-card-top">
+          <div class="tool-icon">📊</div>
+          <div class="tool-meta">
+            <div class="tool-cat">Reporting</div>
+            <div class="tool-name">Balance Sheet Builder</div>
+          </div>
+        </div>
+        <p class="tool-desc">Build complete financial statements — Balance Sheet, P&amp;L, Cash Flow and Notes as per Indian Accounting Standards.</p>
+        <div class="tool-divider"></div>
+        <ul class="tool-features">
+          <li>Import from Tally / Excel / CSV</li>
+          <li>Balance Sheet &amp; P&amp;L</li>
+          <li>Cash Flow Statement</li>
+          <li>Notes to Accounts (N1–N6)</li>
+        </ul>
+        <span class="tool-btn">Open Tool <span class="tool-btn-arr">→</span></span>
+      </a>
+
+      <a href="far.html" class="tool-card">
+        <div class="tool-card-top">
+          <div class="tool-icon">🏭</div>
+          <div class="tool-meta">
+            <div class="tool-cat">Reporting</div>
+            <div class="tool-name">Fixed Asset Register</div>
+          </div>
+        </div>
+        <p class="tool-desc">Maintain a complete register of fixed assets and automatically calculate depreciation using SLM or WDV methods.</p>
+        <div class="tool-divider"></div>
+        <ul class="tool-features">
+          <li>SLM &amp; WDV Methods</li>
+          <li>Schedule II Rates</li>
+          <li>Asset Additions &amp; Disposals</li>
+          <li>Export to Excel / PDF</li>
+        </ul>
+        <span class="tool-btn">Open Tool <span class="tool-btn-arr">→</span></span>
+      </a>
+
+    </div>
+  </div>
+
+  <!-- TAXATION TOOLS -->
+  <div class="section-wrap">
+    <div class="section-head">
+      <div class="sec-badge">🧮 Taxation Tools</div>
+    </div>
+    <div class="tools-grid">
+
+      <a href="gst.html" class="tool-card">
+        <div class="tool-card-top">
+          <div class="tool-icon">🧾</div>
+          <div class="tool-meta">
+            <div class="tool-cat">Taxation</div>
+            <div class="tool-name">GST Reco Tool</div>
+          </div>
+        </div>
+        <p class="tool-desc">Reconcile your GSTR-2A/2B data with your purchase register to identify mismatches and maximize ITC claims.</p>
+        <div class="tool-divider"></div>
+        <ul class="tool-features">
+          <li>GSTR-2A / 2B Data Import</li>
+          <li>Purchase Register Matching</li>
+          <li>ITC Eligible Analysis</li>
+          <li>Mismatch &amp; Variance Reports</li>
+        </ul>
+        <span class="tool-btn">Open Tool <span class="tool-btn-arr">→</span></span>
+      </a>
+
+      <a href="stc.html" class="tool-card">
+        <div class="tool-card-top">
+          <div class="tool-icon">💰</div>
+          <div class="tool-meta">
+            <div class="tool-cat">Taxation</div>
+            <div class="tool-name">Salary Tax Calculator</div>
+          </div>
+        </div>
+        <p class="tool-desc">Calculate income tax and TDS on salary for employees under Old Regime and New Regime for FY 2024-25.</p>
+        <div class="tool-divider"></div>
+        <ul class="tool-features">
+          <li>Old &amp; New Regime</li>
+          <li>HRA, LTA, DA Components</li>
+          <li>80C, 80D Deductions</li>
+          <li>Monthly TDS Computation</li>
+        </ul>
+        <span class="tool-btn">Open Tool <span class="tool-btn-arr">→</span></span>
+      </a>
+
+    </div>
+  </div>
+
+  <!-- AUDITING TOOLS -->
+  <div class="section-wrap">
+    <div class="section-head">
+      <div class="sec-badge">🔎 Auditing Tools</div>
+    </div>
+    <div class="tools-grid">
+
+      <a href="caro.html" class="tool-card">
+        <div class="tool-card-top">
+          <div class="tool-icon">📋</div>
+          <div class="tool-meta">
+            <div class="tool-cat">Auditing</div>
+            <div class="tool-name">CARO Report Builder</div>
+          </div>
+        </div>
+        <p class="tool-desc">Generate CARO 2020 report for statutory audit engagements with all 21 clauses and sub-clauses pre-loaded.</p>
+        <div class="tool-divider"></div>
+        <ul class="tool-features">
+          <li>All 21 CARO 2020 Clauses</li>
+          <li>Yes / No / NA / Partial</li>
+          <li>Remarks per Clause</li>
+          <li>Print-ready Audit Report</li>
+        </ul>
+        <span class="tool-btn">Open Tool <span class="tool-btn-arr">→</span></span>
+      </a>
+
+      <a href="audit.html" class="tool-card">
+        <div class="tool-card-top">
+          <div class="tool-icon">🔍</div>
+          <div class="tool-meta">
+            <div class="tool-cat">Auditing</div>
+            <div class="tool-name">Audit Manager</div>
+          </div>
+        </div>
+        <p class="tool-desc">Manage all your audit engagements, track checklists, document findings and generate working papers efficiently.</p>
+        <div class="tool-divider"></div>
+        <ul class="tool-features">
+          <li>Multi-client Management</li>
+          <li>Checklists &amp; Progress</li>
+          <li>Findings &amp; Observations</li>
+          <li>Working Papers</li>
+        </ul>
+        <span class="tool-btn">Open Tool <span class="tool-btn-arr">→</span></span>
+      </a>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- LOGIN OVERLAY (shown if not logged in) -->
+<div id="loginOverlay" style="display:none;position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,0.6);justify-content:center;align-items:center;">
+  <div style="background:#fff;padding:28px;width:360px;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.3);">
+    <div style="text-align:center;margin-bottom:18px;"><span style="font-size:36px;">📊</span><div style="font-size:18px;font-weight:700;color:#234a7b;margin-top:6px;">AccountingTool</div><div style="font-size:12px;color:#888;">Login to continue</div></div>
+    <div id="loginErr" style="display:none;padding:8px;border-radius:4px;font-size:12px;margin-bottom:10px;background:#f8d7da;color:#721c24;border:1px solid #f5c6cb;"></div>
+    <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:3px;">Username</label>
+    <input id="lgUser" type="text" placeholder="admin" style="width:100%;padding:8px 10px;border:1px solid #ccc;border-radius:6px;font-size:13px;margin-bottom:10px;box-sizing:border-box;">
+    <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:3px;">Password</label>
+    <input id="lgPass" type="password" placeholder="••••••" style="width:100%;padding:8px 10px;border:1px solid #ccc;border-radius:6px;font-size:13px;margin-bottom:14px;box-sizing:border-box;">
+    <button id="lgSubmit" style="width:100%;padding:10px;background:#234a7b;color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;">Login</button>
+    <div style="font-size:11px;color:#aaa;text-align:center;margin-top:10px;">Default: admin / admin</div>
+  </div>
+</div>
+
+<!-- USER MANAGEMENT MODAL -->
+<div id="userMgmtModal" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.5);justify-content:center;align-items:center;">
+  <div style="background:#fff;padding:24px;width:580px;max-height:80vh;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.25);overflow-y:auto;">
+    <h3 style="margin:0 0 16px;font-size:16px;color:#234a7b;border-bottom:2px solid #e4efff;padding-bottom:10px;">Team Management</h3>
+    <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+      <input id="umName" placeholder="Full Name" style="flex:2;padding:7px 10px;border:1px solid #ccc;border-radius:6px;font-size:12px;">
+      <input id="umUser" placeholder="Username" style="flex:1;padding:7px 10px;border:1px solid #ccc;border-radius:6px;font-size:12px;">
+      <input id="umPass" placeholder="Password" type="text" style="flex:1;padding:7px 10px;border:1px solid #ccc;border-radius:6px;font-size:12px;">
+      <select id="umRole" style="padding:7px 6px;border:1px solid #ccc;border-radius:6px;font-size:12px;">
+        <option>Admin</option><option>Senior CA</option><option>CA</option><option>Article Assistant</option><option>Staff</option>
+      </select>
+      <button id="umAddBtn" style="padding:7px 14px;background:#15c39a;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">+ Add</button>
+    </div>
+    <div id="umList" style="border:1px solid #dde5ff;border-radius:6px;max-height:300px;overflow-y:auto;font-size:12px;"></div>
+    <div style="text-align:right;margin-top:14px;"><button id="umCloseBtn" style="padding:7px 16px;background:#6c757d;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;">Close</button></div>
+  </div>
+</div>
+
+<!-- CLIENT MANAGER MODAL -->
+<div id="clientMgmtModal" style="display:none;position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,0.5);justify-content:center;align-items:center;">
+  <div style="background:#fff;padding:24px;width:560px;max-height:80vh;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.25);overflow-y:auto;">
+    <h3 style="margin:0 0 16px;font-size:16px;color:#234a7b;border-bottom:2px solid #e4efff;padding-bottom:10px;">🏢 Client / Company Manager</h3>
+    <div style="background:#f0f7ff;border:1px solid #d3e0ff;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;">
+      <strong>Current Client:</strong> <span id="cmCurrentLabel" style="color:#234a7b;font-weight:700;">None (Global Data)</span>
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;">
+      <input id="cmName" placeholder="Company Name *" style="flex:2;padding:7px 10px;border:1px solid #ccc;border-radius:6px;font-size:12px;">
+      <input id="cmPan" placeholder="PAN" style="flex:1;padding:7px 10px;border:1px solid #ccc;border-radius:6px;font-size:12px;text-transform:uppercase;">
+      <input id="cmGstin" placeholder="GSTIN" style="flex:1;padding:7px 10px;border:1px solid #ccc;border-radius:6px;font-size:12px;text-transform:uppercase;">
+      <button onclick="addNewClient()" style="padding:7px 14px;background:#15c39a;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">+ Add</button>
+    </div>
+    <div id="cmList" style="border:1px solid #dde5ff;border-radius:6px;max-height:250px;overflow-y:auto;font-size:12px;"></div>
+    <div style="display:flex;justify-content:space-between;margin-top:14px;">
+      <button onclick="switchToGlobal()" style="padding:7px 14px;background:#e9ecef;color:#333;border:1px solid #ccc;border-radius:6px;font-size:12px;cursor:pointer;">Use Global Data (No Client)</button>
+      <button onclick="document.getElementById('clientMgmtModal').style.display='none'" style="padding:7px 16px;background:#6c757d;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="dash-footer">
+  © 2026 <strong>AccountingTool</strong> &nbsp;·&nbsp; GrowthIQ Technologies LLP &nbsp;·&nbsp; Automated Financial Tools designed by experienced CAs
+  &nbsp;·&nbsp; <a href="#" onclick="openUserMgmt();return false;" style="color:#15c39a;font-weight:600;">Manage Team</a>
+</div>
+
+<script src="engine.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+"use strict";
+
+/* ── Indian number short-format (₹12.5L, ₹3.2Cr) ── */
+function fmtShort(v) {
+  if (!v && v !== 0) return '—';
+  const abs = Math.abs(v);
+  let s;
+  if (abs >= 1e7)      s = (v / 1e7).toFixed(2) + ' Cr';
+  else if (abs >= 1e5) s = (v / 1e5).toFixed(2) + ' L';
+  else                 s = '₹' + Math.round(abs).toLocaleString('en-IN');
+  return (v < 0 ? '(₹' : '₹') + s.replace('₹','') + (v < 0 ? ')' : '');
+}
+
+/* ── Drag-and-drop handlers ── */
+function dzOver(e)  { e.preventDefault(); const el = document.getElementById('dropZone'); if (el) el.classList.add('drag-over'); }
+function dzLeave(e) { const el = document.getElementById('dropZone'); if (el) el.classList.remove('drag-over'); }
+function dzDrop(e)  {
+  e.preventDefault();
+  document.getElementById('dropZone').classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) handleFileSelect(file);
+}
+
+/* ── Main import handler ── */
+function handleFileSelect(file) {
+  if (!file) return;
+  showProgress(true);
+
+  const name = file.name.toLowerCase();
+  const reader = new FileReader();
+
+  if (name.endsWith('.xml')) {
+    reader.onload = e => processImport('xml', e.target.result);
+    reader.readAsText(file);
+  } else if (name.endsWith('.csv')) {
+    reader.onload = e => {
+      const rows = e.target.result.trim().split('\n').map(r =>
+        r.split(',').map(c => c.replace(/^"|"$/g,'').trim())
+      );
+      processImport('excel', rows);
+    };
+    reader.readAsText(file);
+  } else {
+    /* Excel .xlsx / .xls */
+    reader.onload = e => {
+      try {
+        const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+        /* Try each sheet until one parses successfully */
+        let rows = null;
+        for (const sn of wb.SheetNames) {
+          const candidate = XLSX.utils.sheet_to_json(wb.Sheets[sn], { header: 1, defval: '' });
+          /* Need at least 2 rows and the first data row must have a string in col-0 */
+          if (candidate.length > 1) { rows = candidate; break; }
+        }
+        if (rows) processImport('excel', rows);
+        else      importFailed('No valid data sheet found in the Excel file.');
+      } catch (err) { importFailed(err.message); }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+}
+
+/* ── Process parsed data through the engine ── */
+function processImport(type, data) {
+  let ok = false;
+  try {
+    ok = type === 'xml'
+      ? AccountingEngine.importTallyXML(data)
+      : AccountingEngine.importExcelTB(data);
+  } catch(e) { importFailed(e.message); return; }
+
+  if (!ok) { importFailed('Could not read ledger data. Check column format (Ledger | Debit | Credit).'); return; }
+
+  /* Auto-regroup every ledger with smart keyword matching */
+  const ledgers = AccountingEngine.getLedgers();
+  ledgers.forEach(l => { l.group = AccountingEngine.guessGroup(l.name); });
+  localStorage.setItem('LEDGERS', JSON.stringify(ledgers));
+
+  showProgress(false);
+  showResults();
+}
+
+/* ── Render the result card ── */
+function showResults() {
+  // Import panel was removed; this function is a no-op unless result card exists
+  if (!document.getElementById('resultCard')) return;
+  try {
+    const tb     = AccountingEngine.getTrialBalance();
+    const report = AccountingEngine.getReportData();
+    const co     = AccountingEngine.getCompanyDetails();
+
+    /* Company / FY */
+    document.getElementById('rCompany').textContent = (co.name || 'Imported Company').toUpperCase();
+    document.getElementById('rFY').textContent = 'Financial Year: ' + (co.financialYear || '—');
+
+    /* Balance badge */
+    const diff = Math.abs(tb.totalDr - tb.totalCr);
+    const bal  = diff < 0.5;
+    const bBadge = document.getElementById('rBalBadge');
+    bBadge.textContent  = bal ? '✓ TB Balanced' : '✗ Diff: ₹' + Math.round(diff).toLocaleString('en-IN');
+    bBadge.className    = 'rbadge ' + (bal ? 'ok' : 'err');
+
+    document.getElementById('rLedBadge').textContent = tb.items.length + ' Ledgers';
+
+    /* Revenue */
+    let revenue = 0;
+    report.trading.incomes.forEach(g => revenue -= g.total);
+    report.pl.incomes.forEach(g     => revenue -= g.total);
+    document.getElementById('rRevenue').textContent = fmtShort(revenue);
+
+    /* Net Profit */
+    const np = report.netProfit;
+    const profEl = document.getElementById('rProfit');
+    profEl.textContent = fmtShort(np);
+    profEl.className   = 'rstat-val' + (np < 0 ? ' neg' : '');
+
+    /* Total Assets / Liabilities */
+    document.getElementById('rAssets').textContent = fmtShort(report.totalAssets);
+    document.getElementById('rLiab').textContent   = fmtShort(report.totalLiabilities + np);
+
+    /* Difference row */
+    const diffRow = document.getElementById('rDiffRow');
+    if (!bal) {
+      document.getElementById('rDiffMsg').textContent =
+        'Trial balance difference of ₹' + Math.round(diff).toLocaleString('en-IN');
+      diffRow.classList.add('show');
+    } else {
+      diffRow.classList.remove('show');
+    }
+
+    document.getElementById('resultCard').classList.add('show');
+  } catch(e) {
+    alert('Import succeeded but could not compute summary: ' + e.message);
+    document.getElementById('resultCard').classList.add('show');
+  }
+}
+
+/* ── Load sample demo data ── */
+function loadSampleData() {
+  showProgress(true);
+  setTimeout(() => {
+    AccountingEngine.loadSorichData();
+    showProgress(false);
+    showResults();
+  }, 400);
+}
+
+/* ── Clear all imported data ── */
+async function clearData() {
+  if (!confirm('Clear all imported trial balance data? This cannot be undone.')) return;
+  /* Set LEDGERS/VOUCHERS to empty arrays — NOT removed — so engine's initDefaults()
+     does not auto-repopulate with sample data on the next page load */
+  localStorage.setItem('LEDGERS', '[]');
+  localStorage.setItem('VOUCHERS', '[]');
+  ['AE','BD_DATA','BS_BUILDER_V2','PL_BUILDER_V2','N1','N1_POL','N1_GEN','N2','N2_DATA','N3','N3_FA','N3_PPE','N4','N4_DATA','N5','N5_DATA','N6','N6_DATA','N7_DATA','TX_DATA','AUDIT_REPORT','ROUNDING','FAR','CF_DATA','CARO_DATA','GST_DATA','STC_DATA','AUDIT_LOG','TB_GRAND_TOTAL','FS_META','NOTES_V1'].forEach(k => localStorage.removeItem(k));
+  /* Sync the cleared state to the Electron file so data does not come back on reload */
+  await AccountingEngine.persistToElectron();
+  const rc = document.getElementById('resultCard'); if (rc) rc.classList.remove('show');
+  const dr = document.getElementById('rDiffRow'); if (dr) dr.classList.remove('show');
+  showToast('✓ Data cleared successfully');
+}
+
+/* ── Brief toast notification ── */
+function showToast(msg) {
+  let t = document.getElementById('_toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = '_toast';
+    t.style.cssText = 'position:fixed;bottom:28px;left:50%;transform:translateX(-50%);' +
+      'background:#1a3a62;color:#fff;padding:10px 24px;border-radius:6px;font-size:13px;' +
+      'font-weight:700;box-shadow:0 4px 16px rgba(0,0,0,0.25);z-index:9999;transition:opacity .3s;';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(t._tid);
+  t._tid = setTimeout(() => { t.style.opacity = '0'; }, 2200);
+}
+
+/* ── UI helpers ── */
+function showProgress(show) {
+  if (!document.getElementById('importProgress')) return;  // Import panel removed — no-op
+  document.getElementById('importProgress').classList.toggle('show', show);
+  document.getElementById('dropZone').style.opacity = show ? '0.5' : '1';
+  document.getElementById('dropZone').style.pointerEvents = show ? 'none' : '';
+}
+
+function importFailed(msg) {
+  showProgress(false);
+  alert('❌ Import failed: ' + msg + '\n\nMake sure your Excel has columns: Ledger Name | Debit | Credit');
+}
+
+/* ── On page load: check login, show results ── */
+document.addEventListener('DOMContentLoaded', () => {
+  /* Enforce login */
+  if (!AccountingEngine.isLoggedIn()) {
+    document.getElementById('loginOverlay').style.display = 'flex';
+    document.getElementById('lgUser').focus();
+  }
+  try {
+    const ledgers = AccountingEngine.getLedgers();
+    if (ledgers && ledgers.length > 0) showResults();
+  } catch(e) {}
+});
+
+/* ── Login handler ── */
+document.getElementById('lgSubmit').onclick = () => {
+  const u = document.getElementById('lgUser').value.trim();
+  const p = document.getElementById('lgPass').value;
+  const err = document.getElementById('loginErr');
+  if (!u) { err.style.display='block'; err.textContent='Enter username.'; return; }
+  if (!p) { err.style.display='block'; err.textContent='Enter password.'; return; }
+  const result = AccountingEngine.login(u, p);
+  if (result.success) {
+    document.getElementById('loginOverlay').style.display = 'none';
+    AccountingEngine.showUserBadge();
+    showToast('Welcome, ' + (result.user.name || u) + '!');
+  } else {
+    /* Show helpful message with registered user count */
+    const users = AccountingEngine.getUsers();
+    const hint = users.length > 0
+      ? result.message + ' (' + users.length + ' team member(s) registered)'
+      : result.message + ' — No team members added yet. Use admin/admin.';
+    err.style.display='block'; err.textContent = hint;
+  }
+};
+document.getElementById('lgPass').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('lgSubmit').click(); });
+document.getElementById('lgUser').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('lgPass').focus(); });
+
+/* ── User Management ── */
+function openUserMgmt() {
+  if (!AccountingEngine.isLoggedIn()) { alert('Please login first.'); return; }
+  const cur = AccountingEngine.getCurrentUser();
+  if (cur && cur.role !== 'Admin' && cur.username !== 'admin') { alert('Only admins can manage team members.'); return; }
+  refreshUserList();
+  document.getElementById('userMgmtModal').style.display = 'flex';
+}
+
+function refreshUserList() {
+  const users = AccountingEngine.getUsers();
+  const c = document.getElementById('umList');
+  if (users.length === 0) {
+    c.innerHTML = '<div style="padding:14px;color:#888;text-align:center;">No team members yet. Add your first member above.</div>';
+    return;
+  }
+  let h = '<table style="width:100%;border-collapse:collapse;">';
+  h += '<tr style="background:#f4f8ff;"><th style="padding:6px 10px;text-align:left;">Name</th><th style="padding:6px 10px;">Username</th><th style="padding:6px 10px;">Password</th><th style="padding:6px 10px;">Role</th><th style="padding:6px 10px;">Status</th><th style="padding:6px 10px;">Actions</th></tr>';
+  users.forEach(u => {
+    const statusColor = u.active !== false ? '#15c39a' : '#c0392b';
+    const statusText = u.active !== false ? 'Active' : 'Inactive';
+    h += '<tr style="border-top:1px solid #eee;">';
+    h += '<td style="padding:5px 10px;font-weight:600;">' + (u.name || u.username) + '</td>';
+    h += '<td style="padding:5px 10px;text-align:center;color:#888;">' + u.username + '</td>';
+    h += '<td style="padding:5px 10px;text-align:center;font-family:monospace;color:#888;">' + (u.password || '—') + '</td>';
+    h += '<td style="padding:5px 10px;text-align:center;">' + (u.role || 'Staff') + '</td>';
+    h += '<td style="padding:5px 10px;text-align:center;color:' + statusColor + ';font-weight:600;">' + statusText + '</td>';
+    h += '<td style="padding:5px 10px;text-align:center;">';
+    h += '<button onclick="toggleUser(\'' + u.username + '\')" style="font-size:10px;padding:2px 8px;cursor:pointer;margin:0 2px;">' + (u.active !== false ? 'Deactivate' : 'Activate') + '</button>';
+    if (u.username !== 'admin') h += '<button onclick="removeUser(\'' + u.username + '\')" style="font-size:10px;padding:2px 8px;cursor:pointer;margin:0 2px;color:#c0392b;">Delete</button>';
+    h += '</td></tr>';
+  });
+  h += '</table>';
+  c.innerHTML = h;
+}
+
+document.getElementById('umAddBtn').onclick = () => {
+  const name = document.getElementById('umName').value.trim();
+  const username = document.getElementById('umUser').value.trim();
+  const password = document.getElementById('umPass').value.trim();
+  const role = document.getElementById('umRole').value;
+  if (!name || !username) { alert('Name and Username are required.'); return; }
+  if (!password) { alert('Password is required. Please set a password for the team member.'); return; }
+  const r = AccountingEngine.addUser({ name, username, password, role });
+  if (r.success) {
+    document.getElementById('umName').value = '';
+    document.getElementById('umUser').value = '';
+    document.getElementById('umPass').value = '';
+    refreshUserList();
+    showToast('✓ Added: ' + name + ' (password: ' + password + ')');
+  } else { alert(r.message); }
+};
+
+function toggleUser(u) { AccountingEngine.toggleUserActive(u); refreshUserList(); }
+function removeUser(u) { if (confirm('Delete user "' + u + '"?')) { AccountingEngine.deleteUser(u); refreshUserList(); } }
+
+document.getElementById('umCloseBtn').onclick = () => { document.getElementById('userMgmtModal').style.display = 'none'; };
+document.getElementById('userMgmtModal').onclick = (e) => { if (e.target === document.getElementById('userMgmtModal')) document.getElementById('userMgmtModal').style.display = 'none'; };
+
+/* ── FY Carry Forward ── */
+async function openFYCarryForward() {
+  const bd = AccountingEngine.getCompanyDetails();
+  if (!confirm('Year-End Carry Forward\n\nThis will:\n1. Save current FY (' + bd.financialYear + ') as a snapshot\n2. Set closing balances as next year opening balances\n3. Clear vouchers & AE for the new year\n4. Advance FY dates by 1 year\n\nContinue?')) return;
+  const result = AccountingEngine.carryForwardToNextFY();
+  if (result.success) {
+    await AccountingEngine.persistToElectron();
+    alert('✓ Carried forward ' + result.ledgerCount + ' ledgers.\nNew FY: ' + result.newFY);
+    location.reload();
+  } else {
+    alert('Carry forward failed.');
+  }
+}
+
+/* ── Save FY Snapshot ── */
+function openSaveFY() {
+  const fyKey = AccountingEngine._currentFYKey();
+  AccountingEngine.saveFYSnapshot(fyKey);
+  showToast('✓ FY snapshot saved: ' + fyKey);
+}
+
+/* ── Audit Log ── */
+function openAuditLog() {
+  const log = AccountingEngine.getAuditLog();
+  if (log.length === 0) { alert('No audit entries yet. Actions will be logged automatically.'); return; }
+  let msg = 'AUDIT TRAIL (latest 20 entries)\n' + '─'.repeat(40) + '\n';
+  const recent = log.slice(-20).reverse();
+  recent.forEach(e => {
+    const d = new Date(e.ts);
+    const time = d.toLocaleDateString('en-IN', {day:'2-digit',month:'short'}) + ' ' + d.toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit'});
+    msg += time + '  [' + e.action + ']  ' + (e.detail || '') + '\n';
+  });
+  msg += '\n(' + log.length + ' total entries — view full log from Balance Sheet Builder home)';
+  alert(msg);
+}
+
+/* ── CLIENT MANAGER ── */
+function openClientManager() {
+  refreshClientList();
+  const cur = AccountingEngine.getCurrentClientId();
+  const clients = AccountingEngine.getClients();
+  const cc = clients.find(c => c.id === cur);
+  document.getElementById('cmCurrentLabel').textContent = cc ? cc.name : 'None (Global Data)';
+  document.getElementById('clientMgmtModal').style.display = 'flex';
+}
+
+function refreshClientList() {
+  const clients = AccountingEngine.getClients();
+  const cur = AccountingEngine.getCurrentClientId();
+  const c = document.getElementById('cmList');
+  if (!clients.length) {
+    c.innerHTML = '<div style="padding:14px;color:#888;text-align:center;">No clients added. Each client gets isolated data.</div>';
+    return;
+  }
+  let h = '<table style="width:100%;border-collapse:collapse;">';
+  h += '<tr style="background:#f4f8ff;"><th style="padding:6px 10px;text-align:left;">Company</th><th style="padding:6px 10px;">PAN</th><th style="padding:6px 10px;">GSTIN</th><th style="padding:6px 10px;">Actions</th></tr>';
+  clients.forEach(cl => {
+    const isActive = cl.id === cur;
+    h += '<tr style="border-top:1px solid #eee;' + (isActive ? 'background:#e8faf5;' : '') + '">';
+    h += '<td style="padding:5px 10px;font-weight:600;">' + cl.name + (isActive ? ' <span style="color:#15c39a;">●</span>' : '') + '</td>';
+    h += '<td style="padding:5px 10px;text-align:center;font-family:monospace;font-size:11px;">' + (cl.pan || '—') + '</td>';
+    h += '<td style="padding:5px 10px;text-align:center;font-family:monospace;font-size:11px;">' + (cl.gstin || '—') + '</td>';
+    h += '<td style="padding:5px 10px;text-align:center;">';
+    if (!isActive) h += '<button onclick="switchToClient(\'' + cl.id + '\')" style="font-size:10px;padding:2px 8px;cursor:pointer;background:#234a7b;color:#fff;border:none;border-radius:3px;margin:0 2px;">Switch</button>';
+    else h += '<span style="font-size:10px;color:#15c39a;font-weight:700;">Active</span>';
+    h += ' <button onclick="deleteClientUI(\'' + cl.id + '\')" style="font-size:10px;padding:2px 8px;cursor:pointer;color:#c0392b;border:1px solid #c0392b;background:none;border-radius:3px;margin:0 2px;">Delete</button>';
+    h += '</td></tr>';
+  });
+  h += '</table>';
+  c.innerHTML = h;
+}
+
+function addNewClient() {
+  const name = document.getElementById('cmName').value.trim();
+  if (!name) { alert('Company name is required.'); return; }
+  const pan = document.getElementById('cmPan').value.trim();
+  const gstin = document.getElementById('cmGstin').value.trim();
+  const newId = AccountingEngine.addClient(name);
+  if (newId) {
+    // Merge PAN/GSTIN into newly-seeded BD_DATA (addClient only seeds name).
+    try {
+      const bd = JSON.parse(localStorage.getItem('BD_DATA') || '{}');
+      if (pan) bd.pan = pan;
+      if (gstin) bd.gstin = gstin;
+      localStorage.setItem('BD_DATA', JSON.stringify(bd));
+      if (AccountingEngine.persistToElectron) AccountingEngine.persistToElectron();
+    } catch(e) {}
+    document.getElementById('cmName').value = '';
+    document.getElementById('cmPan').value = '';
+    document.getElementById('cmGstin').value = '';
+    refreshClientList();
+    showToast('✓ Client added: ' + name);
+  } else {
+    alert('Failed to add client.');
+  }
+}
+
+function switchToClient(id) {
+  AccountingEngine.switchClient(id);
+  showToast('✓ Switched client');
+  location.reload();
+}
+
+function switchToGlobal() {
+  AccountingEngine.switchClient(null);
+  showToast('✓ Switched to global data');
+  location.reload();
+}
+
+function deleteClientUI(id) {
+  if (AccountingEngine.deleteClient(id)) {
+    refreshClientList();
+  }
+}
+
+document.getElementById('clientMgmtModal').onclick = (e) => { if (e.target === document.getElementById('clientMgmtModal')) document.getElementById('clientMgmtModal').style.display = 'none'; };
+
+/* ── WORKSPACE IMPORT (input was removed with import panel — guarded) ── */
+const _wsImport = document.getElementById('wsImportFile');
+if (_wsImport) _wsImport.onchange = async function() {
+  const file = this.files[0];
+  if (!file) return;
+  try {
+    const ok = await AccountingEngine.importWorkspace(file);
+    if (ok) { alert('✓ Workspace imported. Reloading…'); location.reload(); }
+  } catch(e) { alert('Import failed: ' + e); }
+  this.value = '';
+};
+
+</script>
+</body>
+</html>

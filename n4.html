@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>N4 — Notes 10 to 15: DTA, Inventories, Receivables, Cash, ST Loans, Other CA</title>
+<link rel="stylesheet" href="style.css">
+<style>
+body{font-family:Arial,sans-serif;background:#f4f4f4;margin:0;padding:0 0 90px;}
+.notes-wrap{background:#fff;max-width:1100px;margin:16px auto;padding:28px 36px;border:1px solid #c0c8d3;box-shadow:0 2px 10px rgba(0,0,0,.07);font-family:Calibri,'Segoe UI',Arial,sans-serif;}
+.note-header{margin-bottom:14px;border-bottom:2px solid #000;padding-bottom:6px;}
+.note-header .co-name{font-size:14px;font-weight:700;}
+.note-header .co-title{font-size:12px;font-weight:700;}
+.note-header .co-date{font-size:10.5px;display:flex;justify-content:space-between;margin-top:4px;}
+.note-header .co-date .right{font-style:italic;color:#444;}
+
+.note-block{margin-top:22px;}
+.note-heading{display:flex;align-items:baseline;gap:10px;font-size:13px;font-weight:700;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid #bbb;}
+.note-heading .num{min-width:28px;}
+
+.n-table{width:100%;border-collapse:collapse;font-size:11px;border:1px solid #000;margin-bottom:8px;font-variant-numeric:tabular-nums;}
+.n-table td, .n-table th{border:1px solid #000;padding:4px 8px;vertical-align:middle;}
+.n-table th{background:#e9ecef;font-weight:700;text-align:center;}
+.n-table th.left{text-align:left;}
+.n-table .amt{text-align:right;width:130px;white-space:nowrap;}
+.n-table .py{color:#555;}
+.n-table tr.sub td{font-weight:700;background:#fafafa;}
+.n-table tr.tot td{font-weight:700;border-top:1px solid #000;border-bottom:2px double #000;}
+.n-table input[type="number"], .n-table input[type="text"]{width:100%;text-align:right;border:none;background:#fffef3;padding:2px 4px;font:inherit;box-sizing:border-box;font-variant-numeric:tabular-nums;}
+.n-table input[type="text"]{text-align:left;}
+.n-table input:focus{outline:2px solid #ffcc00;background:#fff;}
+.n-table td.auto{background:#eef5ff;}
+.n-table td.ro{background:#f5f5f5;}
+
+.sub-heading{font-size:11.5px;font-weight:700;margin:12px 0 6px;text-decoration:underline;}
+
+.toolbar-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
+.btn-primary{background:#234a7b;color:#fff;border:none;padding:6px 14px;border-radius:3px;cursor:pointer;font-size:12px;font-weight:600;}
+.btn-save{background:#006400;color:#fff;border:none;padding:6px 14px;border-radius:3px;cursor:pointer;font-size:12px;font-weight:600;}
+.btn-secondary{background:#6c757d;color:#fff;border:none;padding:5px 12px;border-radius:3px;cursor:pointer;font-size:11px;}
+button:hover:not(.tab){filter:brightness(1.1);}
+
+#statusBar{max-width:1100px;margin:14px auto;padding:8px 12px;font-size:13px;font-weight:600;border-radius:3px;}
+.status-success{background:#d4edda;color:#155724;border:1px solid #c3e6cb;}
+.status-normal{background:#e2e3e5;color:#41464b;border:1px solid #d6d8db;}
+
+.legend{font-size:10.5px;color:#555;display:flex;gap:14px;flex-wrap:wrap;margin-bottom:6px;}
+.legend .swatch{display:inline-block;width:12px;height:12px;border:1px solid #888;vertical-align:middle;margin-right:4px;}
+
+@media print{
+  body{background:#fff;padding:0;}
+  .toolbar-row, .legend, .bottom-tabs, #statusBar, .btn-secondary{display:none !important;}
+  .notes-wrap{box-shadow:none;border:none;padding:0;margin:0;}
+  @page{margin:1.2cm 1.4cm;size:A4 portrait;}
+}
+</style>
+</head>
+<body>
+<script src="engine.js"></script>
+
+<div id="statusBar" class="status-normal">Loading...</div>
+
+<div class="notes-wrap">
+  <div class="toolbar-row">
+    <div style="font-weight:700;color:#14345a;">N4 — Notes 10 to 15: Assets Side (DTA, Inventories, Receivables, Cash, Loans, Other CA)</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button type="button" class="btn-primary" onclick="render()">⟳ Refresh from TB</button>
+      <button type="button" class="btn-save" onclick="saveAll()">💾 Save</button>
+      <button type="button" class="btn-primary" onclick="window.print()">🖨 Print</button>
+    </div>
+  </div>
+  <div class="legend">
+    <span><span class="swatch" style="background:#eef5ff;"></span>Auto from TB</span>
+    <span><span class="swatch" style="background:#fffef3;"></span>Editable</span>
+    <span><span class="swatch" style="background:#f5f5f5;"></span>Formula total</span>
+  </div>
+
+  <div class="note-header">
+    <div class="co-name" id="coName">Company Name</div>
+    <div class="co-title">Notes to the Financial Statements</div>
+    <div class="co-date">
+      <span id="cyLabel">Year ended March 31, 2024</span>
+      <span class="right" id="roundLabel">All amounts in INR, unless otherwise stated</span>
+    </div>
+  </div>
+
+  <div id="noteContainer"></div>
+</div>
+
+<div class="bottom-tabs">
+  <a href="dashboard.html" class="tab">HOME</a>
+  <a href="bd.html" class="tab">BD</a>
+  <a href="tb.html" class="tab">TB</a>
+  <a href="ae.html" class="tab">AE</a>
+  <a href="balance.html" class="tab">BS</a>
+  <a href="pl.html" class="tab">PL</a>
+  <a href="cf.html" class="tab">CF</a>
+  <a href="n1.html" class="tab">N1</a>
+  <a href="n2.html" class="tab">N2</a>
+  <a href="n3.html" class="tab">N3</a>
+  <a href="n4.html" class="tab active">N4</a>
+  <a href="n5.html" class="tab">N5</a>
+  <a href="n6.html" class="tab">N6</a>
+  <a href="n7.html" class="tab">N7</a>
+    <a href="tx.html" class="tab">TX</a>
+  <a href="audit-report.html" class="tab">AR</a>
+    <a href="fs-package.html" class="tab">FS</a>
+    <button type="button" class="tab plus">+</button>
+</div>
+
+<script>
+const status = document.getElementById('statusBar');
+let CY_YR = '2024', PY_YR = '2023';
+
+function fmt(v){if(v===undefined||v===null||isNaN(v)||v===0)return'-';const a=Math.abs(v);const s=a.toLocaleString('en-IN',{minimumFractionDigits:0,maximumFractionDigits:0});return v<0?'('+s+')':s;}
+function n(v){return Number(v)||0;}
+
+function loadCompany(){
+  const bd = AccountingEngine.getCompanyDetails();
+  const fy = bd.financialYear || '1-Apr-23 to 31-Mar-24';
+  const endDate = (fy.split(' to ')[1] || 'March 31, 2024').trim();
+  const m = endDate.match(/\d{4}/);
+  CY_YR = m ? m[0] : '2024';
+  PY_YR = String(Number(CY_YR) - 1);
+  const meta = JSON.parse(localStorage.getItem('FS_META') || '{}');
+  document.getElementById('coName').textContent = meta.companyName || bd.name || 'Company Name';
+  document.getElementById('cyLabel').textContent = 'Year ended ' + endDate;
+  const rounding = localStorage.getItem('ROUNDING') || 'unrounded';
+  document.getElementById('roundLabel').textContent =
+    rounding === 'rounded' ? 'All amounts in INR Thousands, unless otherwise stated' :
+    rounding === 'lakhs' ? 'All amounts in INR Lakhs, unless otherwise stated' :
+    'All amounts in INR Unrounded, unless otherwise stated';
+}
+
+function render(){
+  loadCompany();
+  let cy = {}, py = {};
+  try { cy = AccountingEngine.getScheduleIIIReport('CY') || {}; } catch(e) {}
+  try { if (AccountingEngine.hasPYData && AccountingEngine.hasPYData()) py = AccountingEngine.getScheduleIIIReport('PY') || {}; } catch(e) {}
+
+  const dtaCY  = cy.bsNotes?.n10_dta?.total || 0,          dtaPY  = py.bsNotes?.n10_dta?.total || 0;
+  const invCY  = cy.bsNotes?.n11_inventories?.total || 0,  invPY  = py.bsNotes?.n11_inventories?.total || 0;
+  const trCY   = cy.bsNotes?.n12_tradeReceivables?.total || 0, trPY = py.bsNotes?.n12_tradeReceivables?.total || 0;
+  const cashCY = cy.bsNotes?.n13_cashBank?.total || 0,     cashPY = py.bsNotes?.n13_cashBank?.total || 0;
+  const slaCY  = cy.bsNotes?.n14_stLoans?.total || 0,      slaPY  = py.bsNotes?.n14_stLoans?.total || 0;
+  const ocaCY  = cy.bsNotes?.n15_otherCA?.total || 0,      ocaPY  = py.bsNotes?.n15_otherCA?.total || 0;
+
+  // Split cash items from items if available
+  let cashHandCY = 0, bankCY = 0;
+  (cy.bsNotes?.n13_cashBank?.items || []).forEach(i => {
+    const nm = (i.name||'').toLowerCase();
+    if (nm.includes('cash')) cashHandCY += i.amount; else bankCY += i.amount;
+  });
+  if (!cashHandCY && !bankCY) bankCY = cashCY;
+  let cashHandPY = 0, bankPY = 0;
+  (py.bsNotes?.n13_cashBank?.items || []).forEach(i => {
+    const nm = (i.name||'').toLowerCase();
+    if (nm.includes('cash')) cashHandPY += i.amount; else bankPY += i.amount;
+  });
+
+  // Split ST loans into categories
+  const stLoansCY = cy.bsNotes?.n14_stLoans || {};
+  const stLoansPY = py.bsNotes?.n14_stLoans || {};
+
+  const u = JSON.parse(localStorage.getItem('N4_DATA') || '{}');
+  const g = (k, d) => u[k] !== undefined ? u[k] : d;
+
+  let h = '';
+
+  /* NOTE 10 */
+  h += `<div class="note-block">
+    <div class="note-heading"><span class="num">10.</span><span>Deferred Tax Assets (Net)</span></div>
+    <table class="n-table">
+      <thead><tr><th class="left">Particulars</th><th>As at<br>March 31, ${CY_YR}</th><th class="py">As at<br>March 31, ${PY_YR}</th></tr></thead>
+      <tbody>
+        <tr><td>Deferred Tax Asset [Net]</td>
+          <td class="amt auto"><input type="number" id="n10_dta" value="${g('n10_dta', dtaCY)||''}" placeholder="${dtaCY}"></td>
+          <td class="amt py"><input type="number" id="n10_dtaPY" value="${g('n10_dtaPY', dtaPY)||''}" placeholder="${dtaPY}"></td></tr>
+        <tr class="tot"><td style="text-align:right;">Total</td>
+          <td class="amt">${fmt(n(g('n10_dta', dtaCY)))}</td>
+          <td class="amt py">${fmt(n(g('n10_dtaPY', dtaPY)))}</td></tr>
+      </tbody>
+    </table>
+  </div>`;
+
+  /* NOTE 11: Inventories */
+  h += `<div class="note-block">
+    <div class="note-heading"><span class="num">11.</span><span>Inventories</span></div>
+    <table class="n-table">
+      <thead><tr><th class="left">Particulars</th><th>As at<br>March 31, ${CY_YR}</th><th class="py">As at<br>March 31, ${PY_YR}</th></tr></thead>
+      <tbody>
+        <tr><td>Raw materials</td>
+          <td class="amt"><input type="number" id="n11_rm" value="${g('n11_rm','')}"></td>
+          <td class="amt py"><input type="number" id="n11_rmPY" value="${g('n11_rmPY','')}"></td></tr>
+        <tr><td>Work-in-progress</td>
+          <td class="amt"><input type="number" id="n11_wip" value="${g('n11_wip','')}"></td>
+          <td class="amt py"><input type="number" id="n11_wipPY" value="${g('n11_wipPY','')}"></td></tr>
+        <tr><td>Finished goods</td>
+          <td class="amt auto"><input type="number" id="n11_fg" value="${g('n11_fg', invCY)||''}" placeholder="${invCY}"></td>
+          <td class="amt py"><input type="number" id="n11_fgPY" value="${g('n11_fgPY', invPY)||''}" placeholder="${invPY}"></td></tr>
+        <tr><td>Stock-in-trade</td>
+          <td class="amt"><input type="number" id="n11_sit" value="${g('n11_sit','')}"></td>
+          <td class="amt py"><input type="number" id="n11_sitPY" value="${g('n11_sitPY','')}"></td></tr>
+        <tr><td>Stores and spares</td>
+          <td class="amt"><input type="number" id="n11_ss" value="${g('n11_ss','')}"></td>
+          <td class="amt py"><input type="number" id="n11_ssPY" value="${g('n11_ssPY','')}"></td></tr>
+        <tr class="tot"><td style="text-align:right;">Total</td>
+          <td class="amt">${fmt(n(g('n11_rm')) + n(g('n11_wip')) + n(g('n11_fg', invCY)) + n(g('n11_sit')) + n(g('n11_ss')))}</td>
+          <td class="amt py">${fmt(n(g('n11_rmPY')) + n(g('n11_wipPY')) + n(g('n11_fgPY', invPY)) + n(g('n11_sitPY')) + n(g('n11_ssPY')))}</td></tr>
+      </tbody>
+    </table>
+    <div style="font-size:11px;color:#555;margin-top:6px;font-style:italic;">Above inventories include goods in transit: <input type="number" id="n11_git" value="${g('n11_git','')}" placeholder="0" style="width:100px;padding:2px;border:1px solid #ccc;background:#fffef3;"> (CY) | <input type="number" id="n11_gitPY" value="${g('n11_gitPY','')}" placeholder="0" style="width:100px;padding:2px;border:1px solid #ccc;background:#fffef3;"> (PY)</div>
+  </div>`;
+
+  /* NOTE 12: Trade Receivables + Ageing */
+  h += `<div class="note-block">
+    <div class="note-heading"><span class="num">12.</span><span>Trade Receivables</span></div>
+    <table class="n-table">
+      <thead><tr><th class="left">Particulars</th><th>As at<br>March 31, ${CY_YR}</th><th class="py">As at<br>March 31, ${PY_YR}</th></tr></thead>
+      <tbody>
+        <tr><td>Unsecured, considered good</td>
+          <td class="amt auto"><input type="number" id="n12_unsec" value="${g('n12_unsec', trCY)||''}" placeholder="${trCY}"></td>
+          <td class="amt py"><input type="number" id="n12_unsecPY" value="${g('n12_unsecPY', trPY)||''}" placeholder="${trPY}"></td></tr>
+        <tr><td>Secured, considered good</td>
+          <td class="amt"><input type="number" id="n12_sec" value="${g('n12_sec','')}"></td>
+          <td class="amt py"><input type="number" id="n12_secPY" value="${g('n12_secPY','')}"></td></tr>
+        <tr><td>Doubtful</td>
+          <td class="amt"><input type="number" id="n12_doubt" value="${g('n12_doubt','')}"></td>
+          <td class="amt py"><input type="number" id="n12_doubtPY" value="${g('n12_doubtPY','')}"></td></tr>
+        <tr><td>Less: Provision for doubtful receivables</td>
+          <td class="amt"><input type="number" id="n12_prov" value="${g('n12_prov','')}"></td>
+          <td class="amt py"><input type="number" id="n12_provPY" value="${g('n12_provPY','')}"></td></tr>
+        <tr class="tot"><td style="text-align:right;">Total</td>
+          <td class="amt">${fmt(n(g('n12_unsec', trCY)) + n(g('n12_sec')) + n(g('n12_doubt')) - n(g('n12_prov')))}</td>
+          <td class="amt py">${fmt(n(g('n12_unsecPY', trPY)) + n(g('n12_secPY')) + n(g('n12_doubtPY')) - n(g('n12_provPY')))}</td></tr>
+      </tbody>
+    </table>
+    ${receivablesAgeing('cy', CY_YR)}
+    ${receivablesAgeing('py', PY_YR)}
+  </div>`;
+
+  /* NOTE 13: Cash and Cash Equivalents */
+  h += `<div class="note-block">
+    <div class="note-heading"><span class="num">13.</span><span>Cash and Cash Equivalents</span></div>
+    <table class="n-table">
+      <thead><tr><th class="left">Particulars</th><th>As at<br>March 31, ${CY_YR}</th><th class="py">As at<br>March 31, ${PY_YR}</th></tr></thead>
+      <tbody>
+        <tr><td>Cash on Hand</td>
+          <td class="amt auto"><input type="number" id="n13_cash" value="${g('n13_cash', cashHandCY)||''}" placeholder="${cashHandCY}"></td>
+          <td class="amt py"><input type="number" id="n13_cashPY" value="${g('n13_cashPY', cashHandPY)||''}" placeholder="${cashHandPY}"></td></tr>
+        <tr><td>Balances with Banks</td>
+          <td class="amt auto"><input type="number" id="n13_bank" value="${g('n13_bank', bankCY)||''}" placeholder="${bankCY}"></td>
+          <td class="amt py"><input type="number" id="n13_bankPY" value="${g('n13_bankPY', bankPY)||''}" placeholder="${bankPY}"></td></tr>
+        <tr><td>Other bank balances</td>
+          <td class="amt"><input type="number" id="n13_otherBank" value="${g('n13_otherBank','')}"></td>
+          <td class="amt py"><input type="number" id="n13_otherBankPY" value="${g('n13_otherBankPY','')}"></td></tr>
+        <tr><td>Cheques in hand / drafts</td>
+          <td class="amt"><input type="number" id="n13_chq" value="${g('n13_chq','')}"></td>
+          <td class="amt py"><input type="number" id="n13_chqPY" value="${g('n13_chqPY','')}"></td></tr>
+        <tr class="tot"><td style="text-align:right;">Total</td>
+          <td class="amt">${fmt(n(g('n13_cash', cashHandCY)) + n(g('n13_bank', bankCY)) + n(g('n13_otherBank')) + n(g('n13_chq')))}</td>
+          <td class="amt py">${fmt(n(g('n13_cashPY', cashHandPY)) + n(g('n13_bankPY', bankPY)) + n(g('n13_otherBankPY')) + n(g('n13_chqPY')))}</td></tr>
+      </tbody>
+    </table>
+  </div>`;
+
+  /* NOTE 14: Short-term loans and advances */
+  h += `<div class="note-block">
+    <div class="note-heading"><span class="num">14.</span><span>Short-term loans and advances</span></div>
+    <table class="n-table">
+      <thead><tr><th class="left">Particulars</th><th>As at<br>March 31, ${CY_YR}</th><th class="py">As at<br>March 31, ${PY_YR}</th></tr></thead>
+      <tbody>
+        <tr class="sub"><td colspan="3">Unsecured, considered good</td></tr>
+        <tr><td>Advance Tax and TDS [Net]</td>
+          <td class="amt auto"><input type="number" id="n14_tax" value="${g('n14_tax', stLoansCY.advanceTax || 0)||''}" placeholder="${stLoansCY.advanceTax || 0}"></td>
+          <td class="amt py"><input type="number" id="n14_taxPY" value="${g('n14_taxPY', stLoansPY.advanceTax || 0)||''}" placeholder="${stLoansPY.advanceTax || 0}"></td></tr>
+        <tr><td>GST Receivable</td>
+          <td class="amt auto"><input type="number" id="n14_gst" value="${g('n14_gst', stLoansCY.gstInput || 0)||''}" placeholder="${stLoansCY.gstInput || 0}"></td>
+          <td class="amt py"><input type="number" id="n14_gstPY" value="${g('n14_gstPY', stLoansPY.gstInput || 0)||''}" placeholder="${stLoansPY.gstInput || 0}"></td></tr>
+        <tr><td>Prepaid Expenses</td>
+          <td class="amt"><input type="number" id="n14_prepaid" value="${g('n14_prepaid','')}"></td>
+          <td class="amt py"><input type="number" id="n14_prepaidPY" value="${g('n14_prepaidPY','')}"></td></tr>
+        <tr><td>Advances to others</td>
+          <td class="amt auto"><input type="number" id="n14_adv" value="${g('n14_adv', stLoansCY.advances || 0)||''}" placeholder="${stLoansCY.advances || 0}"></td>
+          <td class="amt py"><input type="number" id="n14_advPY" value="${g('n14_advPY', stLoansPY.advances || 0)||''}" placeholder="${stLoansPY.advances || 0}"></td></tr>
+        <tr class="tot"><td style="text-align:right;">Total</td>
+          <td class="amt">${fmt(n(g('n14_tax', stLoansCY.advanceTax || 0)) + n(g('n14_gst', stLoansCY.gstInput || 0)) + n(g('n14_prepaid')) + n(g('n14_adv', stLoansCY.advances || 0)))}</td>
+          <td class="amt py">${fmt(n(g('n14_taxPY', stLoansPY.advanceTax || 0)) + n(g('n14_gstPY', stLoansPY.gstInput || 0)) + n(g('n14_prepaidPY')) + n(g('n14_advPY', stLoansPY.advances || 0)))}</td></tr>
+      </tbody>
+    </table>
+  </div>`;
+
+  /* NOTE 15: Other current assets */
+  h += `<div class="note-block">
+    <div class="note-heading"><span class="num">15.</span><span>Other current assets</span></div>
+    <table class="n-table">
+      <thead><tr><th class="left">Particulars</th><th>As at<br>March 31, ${CY_YR}</th><th class="py">As at<br>March 31, ${PY_YR}</th></tr></thead>
+      <tbody>
+        <tr><td>Security Deposits</td>
+          <td class="amt"><input type="number" id="n15_sd" value="${g('n15_sd','')}"></td>
+          <td class="amt py"><input type="number" id="n15_sdPY" value="${g('n15_sdPY','')}"></td></tr>
+        <tr><td>Other current assets</td>
+          <td class="amt auto"><input type="number" id="n15_oth" value="${g('n15_oth', ocaCY)||''}" placeholder="${ocaCY}"></td>
+          <td class="amt py"><input type="number" id="n15_othPY" value="${g('n15_othPY', ocaPY)||''}" placeholder="${ocaPY}"></td></tr>
+        <tr class="tot"><td style="text-align:right;">Total</td>
+          <td class="amt">${fmt(n(g('n15_sd')) + n(g('n15_oth', ocaCY)))}</td>
+          <td class="amt py">${fmt(n(g('n15_sdPY')) + n(g('n15_othPY', ocaPY)))}</td></tr>
+      </tbody>
+    </table>
+  </div>`;
+
+  document.getElementById('noteContainer').innerHTML = h;
+  document.querySelectorAll('#noteContainer input').forEach(inp => {
+    inp.addEventListener('change', () => saveAll(true));
+  });
+}
+
+function receivablesAgeing(suffix, yr){
+  const u = JSON.parse(localStorage.getItem('N4_DATA') || '{}');
+  const g = (k) => u[k] !== undefined ? u[k] : '';
+  const rows = [
+    ['ug','Undisputed - Considered Good'],
+    ['ud','Undisputed - Considered doubtful'],
+    ['dg','Disputed - Considered Good'],
+    ['dd','Disputed - Considered doubtful']
+  ];
+  const cols = ['notDue','lt6','m6to12','y12','y23','gt3'];
+  let h = `<div class="sub-heading">Ageing for trade receivables as at March 31, ${yr}</div>
+    <table class="n-table">
+      <thead>
+        <tr><th class="left" rowspan="2">Particulars</th><th colspan="7">Outstanding for following periods from Due Date of Payment</th></tr>
+        <tr><th>Not Due</th><th>Less than 6 months</th><th>6 months - 1 year</th><th>1 - 2 years</th><th>2 - 3 years</th><th>More than 3 years</th><th>Total</th></tr>
+      </thead><tbody>`;
+  let colTotals = [0,0,0,0,0,0,0];
+  rows.forEach(([rk, label]) => {
+    let rowTotal = 0;
+    let rowHtml = `<tr><td>${label}</td>`;
+    cols.forEach((ck, ci) => {
+      const key = `n12_age_${suffix}_${rk}_${ck}`;
+      const val = n(g(key));
+      rowTotal += val;
+      colTotals[ci] += val;
+      rowHtml += `<td class="amt"><input type="number" id="${key}" value="${u[key]||''}"></td>`;
+    });
+    rowHtml += `<td class="amt">${fmt(rowTotal)}</td></tr>`;
+    colTotals[6] += rowTotal;
+    h += rowHtml;
+  });
+  h += `<tr class="tot"><td style="text-align:right;">Total</td>`;
+  colTotals.forEach(t => h += `<td class="amt">${fmt(t)}</td>`);
+  h += `</tr></tbody></table>`;
+  return h;
+}
+
+function saveAll(silent){
+  const u = JSON.parse(localStorage.getItem('N4_DATA') || '{}');
+  document.querySelectorAll('#noteContainer input').forEach(el => {
+    if (el.id) u[el.id] = el.value;
+  });
+  localStorage.setItem('N4_DATA', JSON.stringify(u));
+  AccountingEngine.persistToElectron && AccountingEngine.persistToElectron();
+  if (!silent) { status.textContent = '✓ N4 saved.'; status.className = 'status-success'; }
+  render();
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  render();
+  status.textContent = 'N4 loaded. Edit yellow cells to override TB values.';
+  status.className = 'status-success';
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') window.history.back();
+  if ((e.key.toLowerCase() === 's') && (e.ctrlKey || e.altKey)) { e.preventDefault(); saveAll(); }
+});
+</script>
+</body>
+</html>

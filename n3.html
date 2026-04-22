@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>N3 — Note 9: Property, Plant and Equipment</title>
+<link rel="stylesheet" href="style.css">
+<style>
+body{font-family:Arial,sans-serif;background:#f4f4f4;margin:0;padding:0 0 90px;}
+.notes-wrap{background:#fff;max-width:1200px;margin:16px auto;padding:28px 36px;border:1px solid #c0c8d3;box-shadow:0 2px 10px rgba(0,0,0,.07);font-family:Calibri,'Segoe UI',Arial,sans-serif;}
+.note-header{margin-bottom:14px;border-bottom:2px solid #000;padding-bottom:6px;}
+.note-header .co-name{font-size:14px;font-weight:700;}
+.note-header .co-title{font-size:12px;font-weight:700;}
+.note-header .co-date{font-size:10.5px;display:flex;justify-content:space-between;margin-top:4px;}
+.note-header .co-date .right{font-style:italic;color:#444;}
+
+.note-block{margin-top:22px;}
+.note-heading{display:flex;align-items:baseline;gap:10px;font-size:13px;font-weight:700;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid #bbb;}
+.note-heading .num{min-width:28px;}
+
+.ppe-table{width:100%;border-collapse:collapse;font-size:10.5px;border:1px solid #000;margin-bottom:8px;font-variant-numeric:tabular-nums;}
+.ppe-table td, .ppe-table th{border:1px solid #000;padding:4px 6px;vertical-align:middle;text-align:center;}
+.ppe-table th{background:#e9ecef;font-weight:700;}
+.ppe-table th.left, .ppe-table td.left{text-align:left;}
+.ppe-table .amt{text-align:right;}
+.ppe-table tr.cat td{background:#fafafa;font-weight:700;text-align:left;}
+.ppe-table tr.tot td{font-weight:700;border-top:1px solid #000;border-bottom:2px double #000;}
+.ppe-table input[type="number"]{width:85px;text-align:right;border:none;background:#fffef3;padding:2px 3px;font:inherit;box-sizing:border-box;font-variant-numeric:tabular-nums;}
+.ppe-table input[type="text"]{width:100%;border:none;background:#fffef3;padding:2px 3px;font:inherit;box-sizing:border-box;}
+.ppe-table input:focus{outline:2px solid #ffcc00;background:#fff;}
+.ppe-table td.auto{background:#eef5ff;}
+.ppe-table td.ro{background:#f5f5f5;}
+.ppe-table .gross{background:#fff6e0;}
+.ppe-table .dep{background:#ffe0e0;}
+.ppe-table .nbv{background:#e0ffe0;}
+
+.section-title{font-size:12px;font-weight:700;margin:12px 0 6px;color:#14345a;}
+
+.toolbar-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
+.btn-primary{background:#234a7b;color:#fff;border:none;padding:6px 14px;border-radius:3px;cursor:pointer;font-size:12px;font-weight:600;}
+.btn-save{background:#006400;color:#fff;border:none;padding:6px 14px;border-radius:3px;cursor:pointer;font-size:12px;font-weight:600;}
+.btn-secondary{background:#6c757d;color:#fff;border:none;padding:5px 10px;border-radius:3px;cursor:pointer;font-size:11px;}
+.btn-remove{background:#c0392b;color:#fff;border:none;padding:2px 7px;border-radius:3px;cursor:pointer;font-size:10px;}
+button:hover:not(.tab){filter:brightness(1.1);}
+
+#statusBar{max-width:1200px;margin:14px auto;padding:8px 12px;font-size:13px;font-weight:600;border-radius:3px;}
+.status-success{background:#d4edda;color:#155724;border:1px solid #c3e6cb;}
+.status-normal{background:#e2e3e5;color:#41464b;border:1px solid #d6d8db;}
+
+.legend{font-size:10.5px;color:#555;display:flex;gap:14px;flex-wrap:wrap;margin-bottom:6px;}
+.legend .swatch{display:inline-block;width:12px;height:12px;border:1px solid #888;vertical-align:middle;margin-right:4px;}
+
+@media print{
+  body{background:#fff;padding:0;}
+  .toolbar-row, .legend, .bottom-tabs, #statusBar, .btn-remove, .btn-secondary{display:none !important;}
+  .notes-wrap{box-shadow:none;border:none;padding:0;margin:0;}
+  @page{margin:1.0cm 1.2cm;size:A4 landscape;}
+}
+</style>
+</head>
+<body>
+<script src="engine.js"></script>
+
+<div id="statusBar" class="status-normal">Loading...</div>
+
+<div class="notes-wrap">
+  <div class="toolbar-row">
+    <div style="font-weight:700;color:#14345a;">N3 — Note 9: Property, Plant and Equipment and Intangible Assets</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button type="button" class="btn-primary" onclick="render()">⟳ Refresh from TB</button>
+      <button type="button" class="btn-save" onclick="saveAll()">💾 Save</button>
+      <button type="button" class="btn-primary" onclick="window.print()">🖨 Print</button>
+    </div>
+  </div>
+  <div class="legend">
+    <span><span class="swatch" style="background:#eef5ff;"></span>Auto from TB</span>
+    <span><span class="swatch" style="background:#fffef3;"></span>Editable</span>
+    <span><span class="swatch" style="background:#fff6e0;"></span>Gross Block</span>
+    <span><span class="swatch" style="background:#ffe0e0;"></span>Depreciation</span>
+    <span><span class="swatch" style="background:#e0ffe0;"></span>Net Book Value</span>
+  </div>
+
+  <!-- Page header -->
+  <div class="note-header">
+    <div class="co-name" id="coName">Company Name</div>
+    <div class="co-title">Notes to the Financial Statements</div>
+    <div class="co-date">
+      <span id="cyLabel">Year ended March 31, 2024</span>
+      <span class="right" id="roundLabel">All amounts in INR, unless otherwise stated</span>
+    </div>
+  </div>
+
+  <div id="noteContainer"></div>
+</div>
+
+<!-- BOTTOM TABS -->
+<div class="bottom-tabs">
+  <a href="dashboard.html" class="tab">HOME</a>
+  <a href="bd.html" class="tab">BD</a>
+  <a href="tb.html" class="tab">TB</a>
+  <a href="ae.html" class="tab">AE</a>
+  <a href="balance.html" class="tab">BS</a>
+  <a href="pl.html" class="tab">PL</a>
+  <a href="cf.html" class="tab">CF</a>
+  <a href="n1.html" class="tab">N1</a>
+  <a href="n2.html" class="tab">N2</a>
+  <a href="n3.html" class="tab active">N3</a>
+  <a href="n4.html" class="tab">N4</a>
+  <a href="n5.html" class="tab">N5</a>
+  <a href="n6.html" class="tab">N6</a>
+  <a href="n7.html" class="tab">N7</a>
+    <a href="tx.html" class="tab">TX</a>
+  <a href="audit-report.html" class="tab">AR</a>
+    <a href="fs-package.html" class="tab">FS</a>
+    <button type="button" class="tab plus">+</button>
+</div>
+
+<script>
+const status = document.getElementById('statusBar');
+let CY_YR = '2024', PY_YR = '2023', BY_YR = '2022';
+
+function fmt(v){if(v===undefined||v===null||isNaN(v)||v===0)return'-';const a=Math.abs(v);const s=a.toLocaleString('en-IN',{minimumFractionDigits:0,maximumFractionDigits:0});return v<0?'('+s+')':s;}
+function n(v){return Number(v)||0;}
+
+function loadCompany(){
+  const bd = AccountingEngine.getCompanyDetails();
+  const fy = bd.financialYear || '1-Apr-23 to 31-Mar-24';
+  const endDate = (fy.split(' to ')[1] || 'March 31, 2024').trim();
+  const m = endDate.match(/\d{4}/);
+  CY_YR = m ? m[0] : '2024';
+  PY_YR = String(Number(CY_YR) - 1);
+  BY_YR = String(Number(CY_YR) - 2);
+  const meta = JSON.parse(localStorage.getItem('FS_META') || '{}');
+  document.getElementById('coName').textContent = meta.companyName || bd.name || 'Company Name';
+  document.getElementById('cyLabel').textContent = 'Year ended ' + endDate;
+  const rounding = localStorage.getItem('ROUNDING') || 'unrounded';
+  document.getElementById('roundLabel').textContent =
+    rounding === 'rounded' ? 'All amounts in INR Thousands, unless otherwise stated' :
+    rounding === 'lakhs' ? 'All amounts in INR Lakhs, unless otherwise stated' :
+    'All amounts in INR Unrounded, unless otherwise stated';
+}
+
+function defaultFAFromTB(){
+  // Auto-detect fixed asset ledgers from the TB
+  const bal = AccountingEngine.getLedgerBalances('CY');
+  const faGroups = ['fixed assets','non current assets','tangible asset','intangible asset','plant','machinery','property, plant'];
+  const list = [];
+  for (const nm in bal) {
+    const g = (bal[nm].group || '').toLowerCase();
+    if (faGroups.some(k => g.includes(k))) {
+      list.push({ name: nm, openPY: Math.abs(bal[nm].current), addCY: 0, delCY: 0, openCYDep: 0, depCY: 0, depOnDel: 0, isInt: false });
+    }
+  }
+  return list;
+}
+
+function getFAData(){
+  let data = JSON.parse(localStorage.getItem('N3_PPE') || 'null');
+  if (!data || !Array.isArray(data) || data.length === 0) {
+    data = defaultFAFromTB();
+    // Also convert legacy N3_FA key if present
+    try {
+      const legacy = JSON.parse(localStorage.getItem('N3_FA') || '{}');
+      if (legacy && typeof legacy === 'object') {
+        Object.keys(legacy).forEach(k => {
+          const m = k.match(/^fa_(.+?)_(add|dis|dep)$/);
+          if (m) {
+            const rowName = m[1], field = m[2];
+            const row = data.find(r => r.name === rowName);
+            if (row) {
+              if (field === 'add') row.addCY = Number(legacy[k]) || 0;
+              else if (field === 'dis') row.delCY = Number(legacy[k]) || 0;
+              else if (field === 'dep') row.depCY = Number(legacy[k]) || 0;
+            }
+          }
+        });
+      }
+    } catch(e) {}
+  }
+  return data;
+}
+
+function render(){
+  loadCompany();
+  const data = getFAData();
+  const tan = data.filter(r => !r.isInt);
+  const intn = data.filter(r => r.isInt);
+
+  let h = '';
+
+  /* CURRENT PERIOD TABLE */
+  h += `<div class="note-block">
+    <div class="note-heading"><span class="num">9.</span><span>Property, Plant and Equipment and Intangible Assets for 'Current period'</span></div>
+    <table class="ppe-table">
+      <thead>
+        <tr><th class="left" rowspan="2" style="width:200px;">Particulars</th>
+            <th colspan="4" class="gross">Gross Block</th>
+            <th colspan="4" class="dep">Depreciation and Amortisation</th>
+            <th colspan="2" class="nbv">Net Book Value</th>
+            <th rowspan="2" style="width:40px;">Actions</th></tr>
+        <tr><th class="gross">As at<br>March 31, ${PY_YR}</th><th class="gross">Additions</th><th class="gross">Deductions</th><th class="gross">As at<br>March 31, ${CY_YR}</th>
+            <th class="dep">As at<br>March 31, ${PY_YR}</th><th class="dep">For the year</th><th class="dep">On Deductions</th><th class="dep">As at<br>March 31, ${CY_YR}</th>
+            <th class="nbv">As at<br>March 31, ${CY_YR}</th><th class="nbv">As at<br>March 31, ${PY_YR}</th></tr>
+      </thead>
+      <tbody>
+        <tr class="cat"><td colspan="12">9A. Property, Plant and Equipment (Tangible)</td></tr>`;
+  h += renderPPERows(tan, 'tan');
+  h += `<tr class="tot">${renderTotals(tan)}</tr>
+        <tr class="cat"><td colspan="12">9B. Intangible Assets</td></tr>`;
+  h += renderPPERows(intn, 'int');
+  h += `<tr class="tot">${renderTotals(intn)}</tr>
+      </tbody>
+    </table>
+    <div style="margin-top:6px;display:flex;gap:6px;">
+      <button type="button" class="btn-secondary" onclick="addPPERow(false)">+ Add Tangible Asset</button>
+      <button type="button" class="btn-secondary" onclick="addPPERow(true)">+ Add Intangible Asset</button>
+    </div>
+  </div>`;
+
+  /* PREVIOUS PERIOD TABLE (mirror with adjusted years) */
+  h += `<div class="note-block">
+    <div class="note-heading"><span class="num">9.</span><span>Property, Plant and Equipment and Intangible Assets for 'Previous period'</span></div>
+    <table class="ppe-table">
+      <thead>
+        <tr><th class="left" rowspan="2" style="width:200px;">Particulars</th>
+            <th colspan="4" class="gross">Gross Block</th>
+            <th colspan="4" class="dep">Depreciation and Amortisation</th>
+            <th colspan="2" class="nbv">Net Book Value</th></tr>
+        <tr><th class="gross">As at<br>March 31, ${BY_YR}</th><th class="gross">Additions</th><th class="gross">Deductions</th><th class="gross">As at<br>March 31, ${PY_YR}</th>
+            <th class="dep">As at<br>March 31, ${BY_YR}</th><th class="dep">For the year</th><th class="dep">On Deductions</th><th class="dep">As at<br>March 31, ${PY_YR}</th>
+            <th class="nbv">As at<br>March 31, ${PY_YR}</th><th class="nbv">As at<br>March 31, ${BY_YR}</th></tr>
+      </thead>
+      <tbody>
+        <tr class="cat"><td colspan="11">9A. Property, Plant and Equipment (Tangible)</td></tr>`;
+  h += renderPPERowsPY(tan, 'tan');
+  h += `<tr class="tot">${renderTotalsPY(tan)}</tr>
+        <tr class="cat"><td colspan="11">9B. Intangible Assets</td></tr>`;
+  h += renderPPERowsPY(intn, 'int');
+  h += `<tr class="tot">${renderTotalsPY(intn)}</tr>
+      </tbody>
+    </table>
+  </div>`;
+
+  h += `<div class="note-block">
+    <div class="section-title">Revaluation of Property, Plant and Equipment</div>
+    <div style="font-size:11px;color:#555;font-style:italic;">The Company has not revalued any of its Property, Plant and Equipment during the year.</div>
+  </div>`;
+
+  document.getElementById('noteContainer').innerHTML = h;
+
+  // Bind input changes
+  document.querySelectorAll('.ppe-table input').forEach(inp => {
+    inp.addEventListener('change', onCellChange);
+  });
+}
+
+function renderPPERows(list, prefix){
+  let h = '';
+  list.forEach((r, idx) => {
+    const globalIdx = getGlobalIdx(prefix, idx);
+    const openCY = n(r.openPY) + n(r.addCY) - n(r.delCY);
+    const depOpenCY = n(r.openCYDep);
+    const depCloseCY = depOpenCY + n(r.depCY) - n(r.depOnDel);
+    const nbvCY = openCY - depCloseCY;
+    const nbvPY = n(r.openPY) - depOpenCY;
+    h += `<tr>
+      <td class="left"><input type="text" data-idx="${globalIdx}" data-f="name" value="${r.name||''}"></td>
+      <td class="amt gross"><input type="number" data-idx="${globalIdx}" data-f="openPY" value="${r.openPY||''}"></td>
+      <td class="amt gross"><input type="number" data-idx="${globalIdx}" data-f="addCY" value="${r.addCY||''}"></td>
+      <td class="amt gross"><input type="number" data-idx="${globalIdx}" data-f="delCY" value="${r.delCY||''}"></td>
+      <td class="amt gross ro">${fmt(openCY)}</td>
+      <td class="amt dep"><input type="number" data-idx="${globalIdx}" data-f="openCYDep" value="${r.openCYDep||''}"></td>
+      <td class="amt dep"><input type="number" data-idx="${globalIdx}" data-f="depCY" value="${r.depCY||''}"></td>
+      <td class="amt dep"><input type="number" data-idx="${globalIdx}" data-f="depOnDel" value="${r.depOnDel||''}"></td>
+      <td class="amt dep ro">${fmt(depCloseCY)}</td>
+      <td class="amt nbv ro">${fmt(nbvCY)}</td>
+      <td class="amt nbv ro">${fmt(nbvPY)}</td>
+      <td><button type="button" class="btn-remove" onclick="removePPERow(${globalIdx})">×</button></td>
+    </tr>`;
+  });
+  if (list.length === 0) h = `<tr><td colspan="12" style="text-align:center;padding:12px;color:#888;font-style:italic;">No ${prefix === 'tan' ? 'tangible' : 'intangible'} assets. Click "Add" to create one.</td></tr>`;
+  return h;
+}
+
+function renderPPERowsPY(list, prefix){
+  let h = '';
+  list.forEach((r, localIdx) => {
+    const globalIdx = getGlobalIdx(prefix, localIdx);
+    const openBY = n(r.openBY || 0);
+    const addPY = n(r.addPY || 0);
+    const delPY = n(r.delPY || 0);
+    const openPY = openBY + addPY - delPY;
+    const depOpenBY = n(r.openBYDep || 0);
+    const depPY = n(r.depPY || 0);
+    const depOnDelPY = n(r.depOnDelPY || 0);
+    const depClosePY = depOpenBY + depPY - depOnDelPY;
+    const nbvPY = openPY - depClosePY;
+    const nbvBY = openBY - depOpenBY;
+    h += `<tr>
+      <td class="left">${r.name||''}</td>
+      <td class="amt gross"><input type="number" data-idx="${globalIdx}" data-f="openBY" value="${r.openBY||''}"></td>
+      <td class="amt gross"><input type="number" data-idx="${globalIdx}" data-f="addPY" value="${r.addPY||''}"></td>
+      <td class="amt gross"><input type="number" data-idx="${globalIdx}" data-f="delPY" value="${r.delPY||''}"></td>
+      <td class="amt gross ro">${fmt(openPY)}</td>
+      <td class="amt dep"><input type="number" data-idx="${globalIdx}" data-f="openBYDep" value="${r.openBYDep||''}"></td>
+      <td class="amt dep"><input type="number" data-idx="${globalIdx}" data-f="depPY" value="${r.depPY||''}"></td>
+      <td class="amt dep"><input type="number" data-idx="${globalIdx}" data-f="depOnDelPY" value="${r.depOnDelPY||''}"></td>
+      <td class="amt dep ro">${fmt(depClosePY)}</td>
+      <td class="amt nbv ro">${fmt(nbvPY)}</td>
+      <td class="amt nbv ro">${fmt(nbvBY)}</td>
+    </tr>`;
+  });
+  if (list.length === 0) h = `<tr><td colspan="11" style="text-align:center;padding:12px;color:#888;font-style:italic;">No data</td></tr>`;
+  return h;
+}
+
+function renderTotals(list){
+  const t = list.reduce((a,r) => ({
+    openPY: a.openPY + n(r.openPY), addCY: a.addCY + n(r.addCY), delCY: a.delCY + n(r.delCY),
+    openCYDep: a.openCYDep + n(r.openCYDep), depCY: a.depCY + n(r.depCY), depOnDel: a.depOnDel + n(r.depOnDel)
+  }), {openPY:0,addCY:0,delCY:0,openCYDep:0,depCY:0,depOnDel:0});
+  const closeGross = t.openPY + t.addCY - t.delCY;
+  const closeDep = t.openCYDep + t.depCY - t.depOnDel;
+  const nbvCY = closeGross - closeDep;
+  const nbvPY = t.openPY - t.openCYDep;
+  return `<td class="left">Total</td>
+    <td class="amt gross">${fmt(t.openPY)}</td>
+    <td class="amt gross">${fmt(t.addCY)}</td>
+    <td class="amt gross">${fmt(t.delCY)}</td>
+    <td class="amt gross">${fmt(closeGross)}</td>
+    <td class="amt dep">${fmt(t.openCYDep)}</td>
+    <td class="amt dep">${fmt(t.depCY)}</td>
+    <td class="amt dep">${fmt(t.depOnDel)}</td>
+    <td class="amt dep">${fmt(closeDep)}</td>
+    <td class="amt nbv">${fmt(nbvCY)}</td>
+    <td class="amt nbv">${fmt(nbvPY)}</td>
+    <td></td>`;
+}
+
+function renderTotalsPY(list){
+  const t = list.reduce((a,r) => ({
+    openBY: a.openBY + n(r.openBY), addPY: a.addPY + n(r.addPY), delPY: a.delPY + n(r.delPY),
+    openBYDep: a.openBYDep + n(r.openBYDep), depPY: a.depPY + n(r.depPY), depOnDelPY: a.depOnDelPY + n(r.depOnDelPY)
+  }), {openBY:0,addPY:0,delPY:0,openBYDep:0,depPY:0,depOnDelPY:0});
+  const closeGrossPY = t.openBY + t.addPY - t.delPY;
+  const closeDepPY = t.openBYDep + t.depPY - t.depOnDelPY;
+  const nbvPY = closeGrossPY - closeDepPY;
+  const nbvBY = t.openBY - t.openBYDep;
+  return `<td class="left">Total</td>
+    <td class="amt gross">${fmt(t.openBY)}</td>
+    <td class="amt gross">${fmt(t.addPY)}</td>
+    <td class="amt gross">${fmt(t.delPY)}</td>
+    <td class="amt gross">${fmt(closeGrossPY)}</td>
+    <td class="amt dep">${fmt(t.openBYDep)}</td>
+    <td class="amt dep">${fmt(t.depPY)}</td>
+    <td class="amt dep">${fmt(t.depOnDelPY)}</td>
+    <td class="amt dep">${fmt(closeDepPY)}</td>
+    <td class="amt nbv">${fmt(nbvPY)}</td>
+    <td class="amt nbv">${fmt(nbvBY)}</td>`;
+}
+
+function getGlobalIdx(prefix, localIdx){
+  const data = getFAData();
+  let seen = 0;
+  for (let i = 0; i < data.length; i++) {
+    const isInt = !!data[i].isInt;
+    if ((prefix === 'int' && isInt) || (prefix === 'tan' && !isInt)) {
+      if (seen === localIdx) return i;
+      seen++;
+    }
+  }
+  return -1;
+}
+
+function onCellChange(e){
+  const inp = e.target;
+  const idx = Number(inp.dataset.idx);
+  const f = inp.dataset.f;
+  const data = getFAData();
+  if (idx < 0 || idx >= data.length) return;
+  data[idx][f] = f === 'name' ? inp.value : (inp.value === '' ? 0 : Number(inp.value));
+  localStorage.setItem('N3_PPE', JSON.stringify(data));
+  render();
+}
+
+function addPPERow(isIntangible){
+  const data = getFAData();
+  data.push({ name: 'New Asset', openPY: 0, addCY: 0, delCY: 0, openCYDep: 0, depCY: 0, depOnDel: 0, isInt: !!isIntangible });
+  localStorage.setItem('N3_PPE', JSON.stringify(data));
+  render();
+}
+
+function removePPERow(idx){
+  if (!confirm('Remove this asset row?')) return;
+  const data = getFAData();
+  if (idx >= 0 && idx < data.length) {
+    data.splice(idx, 1);
+    localStorage.setItem('N3_PPE', JSON.stringify(data));
+    render();
+  }
+}
+
+function saveAll(){
+  const data = getFAData();
+  localStorage.setItem('N3_PPE', JSON.stringify(data));
+  AccountingEngine.persistToElectron && AccountingEngine.persistToElectron();
+  status.textContent = '✓ N3 saved. Total assets: ' + data.length;
+  status.className = 'status-success';
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  render();
+  status.textContent = 'N3 loaded. Fill in additions/deductions/depreciation for CY and PY periods.';
+  status.className = 'status-success';
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') window.history.back();
+  if ((e.key.toLowerCase() === 's') && (e.ctrlKey || e.altKey)) { e.preventDefault(); saveAll(); }
+});
+</script>
+</body>
+</html>

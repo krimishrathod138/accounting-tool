@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Salary Tax Calculator — AccountingTool</title>
+<link rel="stylesheet" href="tools.css"/>
+<style>
+body{font-family:'Inter',Arial,sans-serif;background:#f4f6f9;margin:0}
+.at-header{background:#fff;padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #15c39a;box-shadow:0 2px 8px rgba(0,0,0,.07);position:sticky;top:0;z-index:200}
+.at-logo{font-size:21px;font-weight:800;color:#15c39a;display:flex;align-items:center;gap:8px}
+.at-logo span{color:#1a1a1a}
+.at-logo-box{width:34px;height:34px;background:#15c39a;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px}
+.back-link{font-size:13px;color:#555;padding:6px 14px;border:1px solid #ddd;border-radius:6px;text-decoration:none;transition:.18s}
+.back-link:hover{background:#e8faf5;color:#15c39a;border-color:#15c39a}
+.tool-banner{background:linear-gradient(120deg,#15c39a,#0a8068);color:#fff;padding:16px 28px;display:flex;align-items:center;gap:16px}
+.tool-banner-icon{width:46px;height:46px;background:rgba(255,255,255,.18);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px}
+.tool-banner h1{font-size:19px;font-weight:700;margin:0}
+.tool-banner p{font-size:12px;opacity:.85;margin:3px 0 0}
+.at-toolbar{background:#fff;padding:10px 24px;border-bottom:1px solid #e2e8f0;display:flex;gap:8px;align-items:center}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;border:none;transition:.18s}
+.btn-primary{background:#15c39a;color:#fff}.btn-primary:hover{background:#11a683}
+.btn-secondary{background:#fff;color:#444;border:1px solid #d0d0d0}.btn-secondary:hover{background:#f5f5f5}
+.btn-danger{background:#e53e3e;color:#fff}.btn-danger:hover{background:#c53030}
+/* LAYOUT */
+.stc-layout{display:grid;grid-template-columns:520px 1fr;gap:20px;max-width:1400px;margin:20px auto;padding:0 24px}
+.at-card{background:#fff;border-radius:10px;padding:18px 20px;box-shadow:0 1px 4px rgba(0,0,0,.07);border:1px solid #e2e8f0;margin-bottom:16px}
+.section-label{font-size:11px;font-weight:700;color:#15c39a;text-transform:uppercase;letter-spacing:1px;margin:18px 0 10px;display:flex;align-items:center;gap:8px}
+.section-label::after{content:'';flex:1;height:1px;background:#d6f5ec}
+.form-grid{display:grid;gap:10px 16px}
+.form-cols-2{grid-template-columns:1fr 1fr}
+.form-group{display:flex;flex-direction:column;gap:4px}
+.form-group label{font-size:11px;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:.4px}
+.form-group input,.form-group select{padding:7px 10px;border:1px solid #d0d0d0;border-radius:6px;font-size:13px;font-family:inherit;transition:.18s}
+.form-group input:focus,.form-group select:focus{outline:none;border-color:#15c39a;box-shadow:0 0 0 3px rgba(21,195,154,.1)}
+.form-group input[readonly]{background:#f9f9f9;color:#555;cursor:default}
+/* RESULTS */
+.regime-tabs{display:flex;gap:4px;margin-bottom:16px}
+.regime-tab{padding:9px 24px;cursor:pointer;font-size:13px;font-weight:600;border:none;background:#f3f4f6;border-radius:8px;font-family:inherit;color:#555;transition:.18s}
+.regime-tab.active{background:#15c39a;color:#fff}
+.comp-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f5f5f5;font-size:13px}
+.comp-row:last-child{border-bottom:none}
+.comp-row.sub{padding-left:16px;color:#555}
+.comp-row.total{font-weight:700;border-top:2px solid #15c39a;border-bottom:none;margin-top:4px;padding-top:10px}
+.comp-row.tax-total{font-weight:700;color:#15c39a;font-size:14px;background:#e8faf5;margin:0 -12px;padding:10px 12px;border-radius:6px}
+.comp-row .neg{color:#e53e3e}
+.comp-row .pos{color:#0a7c5c}
+/* COMPARISON TABLE */
+.cmp-table{width:100%;border-collapse:collapse;font-size:13px}
+.cmp-table th{background:#f0faf7;color:#2d4a3e;padding:9px 12px;text-align:left;border-bottom:2px solid #15c39a;font-size:12px}
+.cmp-table td{padding:9px 12px;border-bottom:1px solid #f2f2f2}
+.cmp-table .num{text-align:right;font-variant-numeric:tabular-nums}
+.cmp-table .winner{background:#e8faf5;font-weight:700;color:#0a7c5c}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-green{background:#dcfff6;color:#0a7c5c}
+.at-footer{text-align:center;padding:18px;color:#c0c0c0;font-size:12px;border-top:1px solid #eee;margin-top:10px}
+@media(max-width:1000px){.stc-layout{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<script src="engine.js"></script>
+
+<!-- HEADER -->
+<header class="at-header">
+  <div class="at-logo"><div class="at-logo-box">📊</div>Accounting<span>Tool</span></div>
+  <a href="index.html" class="back-link">← Dashboard</a>
+</header>
+
+<!-- BANNER -->
+<div class="tool-banner">
+  <div class="tool-banner-icon">💰</div>
+  <div>
+    <h1>Salary Tax Calculator</h1>
+    <p id="stcBanner">Compute Income Tax &amp; Monthly TDS under Old &amp; New Tax Regime</p>
+  </div>
+</div>
+
+<!-- TOOLBAR -->
+<div class="at-toolbar">
+  <button class="btn btn-primary" onclick="calculate()">🔢 Calculate Tax</button>
+  <button class="btn btn-secondary" onclick="resetForm()">↺ Reset</button>
+  <button class="btn btn-secondary" onclick="window.print()">🖨 Print</button>
+  <button class="btn btn-secondary" onclick="saveEmployee()">💾 Save Employee</button>
+  <button class="btn btn-secondary" onclick="exportExcelSTC()">📊 Export Excel</button>
+  <button class="btn btn-secondary" onclick="showSavedList()">👥 All Employees (<span id="empCount">0</span>)</button>
+</div>
+
+<!-- SAVED EMPLOYEES LIST (hidden by default) -->
+<div id="empListPanel" style="display:none;background:#f8faff;border:1px solid #d3e0ff;border-radius:8px;margin:12px 20px;padding:14px;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+    <strong style="color:#234a7b;">Saved Employees</strong>
+    <button class="btn btn-sm btn-secondary" onclick="document.getElementById('empListPanel').style.display='none'">✕ Close</button>
+  </div>
+  <div id="empListBody" style="max-height:200px;overflow-y:auto;font-size:12px;"></div>
+</div>
+
+<div class="stc-layout">
+
+<!-- LEFT: INPUTS -->
+<div>
+
+  <!-- Employee Details -->
+  <div class="at-card">
+    <div class="section-label">Employee Details</div>
+    <div class="form-grid form-cols-2">
+      <div class="form-group" style="grid-column:1/-1"><label>Employee Name</label><input id="empName" type="text" placeholder="Full Name"></div>
+      <div class="form-group"><label>PAN Number</label><input id="empPan" type="text" placeholder="ABCDE1234F" style="text-transform:uppercase"></div>
+      <div class="form-group"><label>Financial Year</label><select id="empFY"></select></div>
+      <div class="form-group"><label>Date of Birth</label><input id="empDob" type="date" oninput="calculate()"></div>
+      <div class="form-group"><label>Resident Status</label><select id="empRes" onchange="calculate()"><option value="R">Resident</option><option value="NR">Non-Resident</option></select></div>
+    </div>
+  </div>
+
+  <!-- Salary Components -->
+  <div class="at-card">
+    <div class="section-label">Salary Income (Monthly)</div>
+    <div class="form-grid form-cols-2">
+      <div class="form-group"><label>Basic Salary (₹/month)</label><input id="basic" type="number" min="0" placeholder="0" oninput="calcGross()"></div>
+      <div class="form-group"><label>DA - Dearness Allowance</label><input id="da" type="number" min="0" placeholder="0" oninput="calcGross()"></div>
+      <div class="form-group"><label>HRA Received</label><input id="hraRec" type="number" min="0" placeholder="0" oninput="calcGross()"></div>
+      <div class="form-group"><label>Special Allowance</label><input id="special" type="number" min="0" placeholder="0" oninput="calcGross()"></div>
+      <div class="form-group"><label>LTA (Leave Travel)</label><input id="lta" type="number" min="0" placeholder="0" oninput="calcGross()"></div>
+      <div class="form-group"><label>Other Allowances</label><input id="other" type="number" min="0" placeholder="0" oninput="calcGross()"></div>
+    </div>
+    <div class="form-grid form-cols-2" style="margin-top:10px">
+      <div class="form-group"><label>Annual Bonus / Incentive (₹)</label><input id="bonus" type="number" min="0" placeholder="0" oninput="calcGross()"></div>
+      <div class="form-group"><label>Annual Gross Salary (₹)</label><input id="grossSalary" type="number" readonly placeholder="Auto-calculated"></div>
+    </div>
+  </div>
+
+  <!-- HRA Exemption -->
+  <div class="at-card">
+    <div class="section-label">HRA Exemption (Old Regime)</div>
+    <div class="form-grid form-cols-2">
+      <div class="form-group"><label>City</label>
+        <select id="city" onchange="calculate()">
+          <option value="metro">Metro (Mumbai/Delhi/Kolkata/Chennai)</option>
+          <option value="nonmetro">Non-Metro</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Actual Rent Paid (₹/month)</label><input id="rent" type="number" min="0" placeholder="0" oninput="calculate()"></div>
+      <div class="form-group"><label>HRA Exemption (₹ annual)</label><input id="hraExempt" type="number" readonly placeholder="Auto-calculated"></div>
+    </div>
+  </div>
+
+  <!-- Old Regime Deductions -->
+  <div class="at-card">
+    <div class="section-label">Deductions (Old Regime)</div>
+    <div class="form-grid form-cols-2">
+      <div class="form-group"><label>LTA Exemption (₹)</label><input id="ltaExempt" type="number" min="0" placeholder="0" oninput="calculate()"></div>
+      <div class="form-group"><label>Standard Deduction (₹)</label><input id="stdDed" type="number" value="50000" readonly></div>
+      <div class="form-group"><label>Professional Tax (₹/year)</label><input id="profTax" type="number" min="0" value="2400" oninput="calculate()"></div>
+    </div>
+    <div class="section-label" style="margin-top:14px">Chapter VI-A Deductions</div>
+    <div class="form-grid form-cols-2">
+      <div class="form-group"><label>80C (LIC/PPF/ELSS etc.) max ₹1.5L</label><input id="d80c" type="number" min="0" max="150000" placeholder="0" oninput="calculate()"></div>
+      <div class="form-group"><label>80D Medical Insurance (₹)</label><input id="d80d" type="number" min="0" placeholder="0" oninput="calculate()"></div>
+      <div class="form-group"><label>80CCD(1B) NPS (max ₹50,000)</label><input id="d80nps" type="number" min="0" max="50000" placeholder="0" oninput="calculate()"></div>
+      <div class="form-group"><label>80TTA Savings Interest (max ₹10K)</label><input id="d80tta" type="number" min="0" max="10000" placeholder="0" oninput="calculate()"></div>
+      <div class="form-group"><label>80G Donations (₹)</label><input id="d80g" type="number" min="0" placeholder="0" oninput="calculate()"></div>
+      <div class="form-group"><label>Other Deductions (₹)</label><input id="dOther" type="number" min="0" placeholder="0" oninput="calculate()"></div>
+    </div>
+  </div>
+
+  <!-- New Regime -->
+  <div class="at-card">
+    <div class="section-label">New Regime (FY 2024-25)</div>
+    <div class="form-grid form-cols-2">
+      <div class="form-group"><label>Standard Deduction (₹)</label><input type="number" value="75000" readonly></div>
+      <div class="form-group"><label>80CCD(2) NPS Employer Contribution</label><input id="npsEmp" type="number" min="0" placeholder="0" oninput="calculate()"></div>
+    </div>
+    <div style="background:#fff8dc;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;font-size:12px;color:#78350f;margin-top:10px">
+      Under New Regime (FY 2024-25), only Standard Deduction ₹75,000 and Employer NPS contribution (80CCD(2)) are allowed.
+    </div>
+  </div>
+
+</div>
+
+<!-- RIGHT: RESULTS -->
+<div>
+  <div class="at-card" style="position:sticky;top:76px">
+
+    <!-- REGIME TABS -->
+    <div class="regime-tabs">
+      <button class="regime-tab active" id="oldTab" onclick="showRegime('old')">Old Regime</button>
+      <button class="regime-tab" id="newTab" onclick="showRegime('new')">New Regime</button>
+    </div>
+
+    <!-- OLD REGIME RESULTS -->
+    <div id="old-results">
+      <div id="old-comp"></div>
+    </div>
+
+    <!-- NEW REGIME RESULTS -->
+    <div id="new-results" style="display:none">
+      <div id="new-comp"></div>
+    </div>
+
+    <!-- COMPARISON TABLE -->
+    <div class="section-label" style="margin-top:20px">Comparison — Old vs New Regime</div>
+    <table class="cmp-table">
+      <thead><tr><th></th><th class="num">Old Regime</th><th class="num">New Regime</th></tr></thead>
+      <tbody>
+        <tr><td>Gross Salary</td><td class="num" id="c-gross-old">₹0</td><td class="num" id="c-gross-new">₹0</td></tr>
+        <tr><td>Total Deductions</td><td class="num neg" id="c-ded-old">₹0</td><td class="num neg" id="c-ded-new">₹0</td></tr>
+        <tr><td>Taxable Income</td><td class="num" id="c-tax-old">₹0</td><td class="num" id="c-tax-new">₹0</td></tr>
+        <tr><td>Tax Before Cess</td><td class="num" id="c-pretax-old">₹0</td><td class="num" id="c-pretax-new">₹0</td></tr>
+        <tr><td>Health &amp; Education Cess (4%)</td><td class="num" id="c-cess-old">₹0</td><td class="num" id="c-cess-new">₹0</td></tr>
+        <tr><td>Rebate u/s 87A</td><td class="num neg" id="c-rebate-old">₹0</td><td class="num neg" id="c-rebate-new">₹0</td></tr>
+        <tr id="ctr-total"><td><strong>Net Tax Payable</strong></td><td class="num" id="c-total-old"><strong>₹0</strong></td><td class="num" id="c-total-new"><strong>₹0</strong></td></tr>
+        <tr><td>Monthly TDS</td><td class="num" id="c-tds-old">₹0</td><td class="num" id="c-tds-new">₹0</td></tr>
+        <tr id="better-row"><td><strong>Better Option</strong></td><td class="num" id="better-old">—</td><td class="num" id="better-new">—</td></tr>
+      </tbody>
+    </table>
+
+  </div>
+</div>
+
+</div>
+
+<div class="at-footer">© 2026 AccountingTool | Salary Tax Calculator | FY 2024-25 | As per Finance Act 2024</div>
+
+<script>
+function fmt(n) {
+  n = parseFloat(n)||0;
+  return "₹" + Math.abs(n).toLocaleString('en-IN', {minimumFractionDigits:0, maximumFractionDigits:0});
+}
+
+function v(id) { return parseFloat(document.getElementById(id).value)||0; }
+
+function calcGross() {
+  const monthly = v("basic") + v("da") + v("hraRec") + v("special") + v("lta") + v("other");
+  const annual  = monthly * 12 + v("bonus");
+  document.getElementById("grossSalary").value = annual;
+  calculate();
+}
+
+function calcHRAExempt() {
+  const basicA = v("basic") * 12;
+  const daA    = v("da") * 12;
+  const hraA   = v("hraRec") * 12;
+  const rentA  = v("rent") * 12;
+  const city   = document.getElementById("city").value;
+
+  const basicDA = basicA + daA;
+  const a1 = hraA;
+  const a2 = city === "metro" ? 0.5 * basicDA : 0.4 * basicDA;
+  const a3 = Math.max(0, rentA - 0.1 * basicDA);
+  const exempt = Math.min(a1, a2, a3);
+  document.getElementById("hraExempt").value = Math.round(exempt);
+  return Math.round(exempt);
+}
+
+function calcTax(income, regime) {
+  income = Math.max(0, income);
+  let tax = 0;
+
+  if (regime === "old") {
+    /* Basic exemption: Normal ₹2.5L, Senior (60+) ₹3L, Super Senior (80+) ₹5L */
+    const dob = document.getElementById("empDob") ? document.getElementById("empDob").value : '';
+    let exempt = 250000;
+    if (dob) {
+      const age = Math.floor((new Date() - new Date(dob)) / (365.25 * 24 * 60 * 60 * 1000));
+      if (age >= 80) exempt = 500000;
+      else if (age >= 60) exempt = 300000;
+    }
+    if (income <= exempt) tax = 0;
+    else if (income <= 500000) tax = (income - exempt) * 0.05;
+    else if (income <= 1000000) tax = (500000 - exempt) * 0.05 + (income - 500000) * 0.20;
+    else tax = (500000 - exempt) * 0.05 + 500000 * 0.20 + (income - 1000000) * 0.30;
+  } else { // new 2024-25
+    if (income <= 300000) tax = 0;
+    else if (income <= 700000) tax = (income - 300000) * 0.05;
+    else if (income <= 1000000) tax = 20000 + (income - 700000) * 0.10;
+    else if (income <= 1200000) tax = 50000 + (income - 1000000) * 0.15;
+    else if (income <= 1500000) tax = 80000 + (income - 1200000) * 0.20;
+    else tax = 140000 + (income - 1500000) * 0.30;
+  }
+  return Math.round(tax);
+}
+
+function calculate() {
+  /* PAN format validation indicator */
+  const pan = (document.getElementById("empPan").value || '').trim().toUpperCase();
+  if (pan && !/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(pan)) {
+    document.getElementById("empPan").style.borderColor = '#e74c3c';
+    document.getElementById("empPan").title = 'Invalid PAN format (expected: ABCDE1234F)';
+  } else {
+    document.getElementById("empPan").style.borderColor = '';
+    document.getElementById("empPan").title = '';
+  }
+
+  const gross = v("grossSalary") || (() => { calcGross(); return v("grossSalary"); })();
+  const hraEx = calcHRAExempt();
+
+  // OLD REGIME
+  const ltaEx  = Math.min(v("ltaExempt"), v("lta") * 12);
+  const stdOld = 50000;
+  const profTax = Math.min(v("profTax"), 2400);
+  let chVI = Math.min(v("d80c"), 150000) + v("d80d") + Math.min(v("d80nps"), 50000)
+            + Math.min(v("d80tta"), 10000) + v("d80g") + v("dOther");
+  /* Senior citizen detection from DOB */
+  let ageCategory = 'normal';  /* normal / senior (60+) / superSenior (80+) */
+  const dob = document.getElementById("empDob").value;
+  if (dob) {
+    const age = Math.floor((new Date() - new Date(dob)) / (365.25 * 24 * 60 * 60 * 1000));
+    if (age >= 80) ageCategory = 'superSenior';
+    else if (age >= 60) ageCategory = 'senior';
+  }
+
+  const totalDedOld = hraEx + ltaEx + stdOld + profTax + chVI;
+  const taxableOld = Math.max(0, gross - totalDedOld);
+  let taxOld = calcTax(taxableOld, "old");
+  /* Rebate u/s 87A — Old regime: ₹5L (normal), ₹3L (senior/super senior get higher basic exemption instead) */
+  const rebateOld = taxableOld <= 500000 ? taxOld : 0;
+  const taxAfterRebateOld = Math.max(0, taxOld - rebateOld);
+  const cessOld = Math.round(taxAfterRebateOld * 0.04);
+  const netTaxOld = taxAfterRebateOld + cessOld;
+  const tdsOld = Math.round(netTaxOld / 12);
+
+  // NEW REGIME
+  const stdNew   = 75000;
+  const npsEmpN  = v("npsEmp");
+  const totalDedNew = stdNew + npsEmpN;
+  const taxableNew = Math.max(0, gross - totalDedNew);
+  let taxNew = calcTax(taxableNew, "new");
+  const rebateNew = taxableNew <= 700000 ? taxNew : 0;
+  const taxAfterRebateNew = Math.max(0, taxNew - rebateNew);
+  const cessNew = Math.round(taxAfterRebateNew * 0.04);
+  const netTaxNew = taxAfterRebateNew + cessNew;
+  const tdsNew = Math.round(netTaxNew / 12);
+
+  // RENDER OLD COMPUTATION
+  document.getElementById("old-comp").innerHTML = buildComp({
+    gross, hraEx, ltaEx, stdDed: stdOld, profTax,
+    chVI, totalDed: totalDedOld, taxable: taxableOld,
+    taxBefore: taxOld, rebate: rebateOld,
+    taxAfterRebate: taxAfterRebateOld, cess: cessOld,
+    netTax: netTaxOld, tds: tdsOld, regime: "Old"
+  });
+
+  document.getElementById("new-comp").innerHTML = buildComp({
+    gross, hraEx: 0, ltaEx: 0, stdDed: stdNew, profTax: 0,
+    chVI: 0, npsEmp: npsEmpN, totalDed: totalDedNew, taxable: taxableNew,
+    taxBefore: taxNew, rebate: rebateNew,
+    taxAfterRebate: taxAfterRebateNew, cess: cessNew,
+    netTax: netTaxNew, tds: tdsNew, regime: "New"
+  });
+
+  // COMPARISON TABLE
+  ["old","new"].forEach(r => {
+    const vals = r === "old"
+      ? { gross, ded: totalDedOld, tax: taxableOld, pre: taxOld, cess: cessOld, rebate: rebateOld, net: netTaxOld, tds: tdsOld }
+      : { gross, ded: totalDedNew, tax: taxableNew, pre: taxNew, cess: cessNew, rebate: rebateNew, net: netTaxNew, tds: tdsNew };
+    document.getElementById("c-gross-" + r).textContent  = fmt(vals.gross);
+    document.getElementById("c-ded-" + r).textContent    = "("+fmt(vals.ded)+")";
+    document.getElementById("c-tax-" + r).textContent    = fmt(vals.tax);
+    document.getElementById("c-pretax-" + r).textContent = fmt(vals.pre);
+    document.getElementById("c-cess-" + r).textContent   = fmt(vals.cess);
+    document.getElementById("c-rebate-" + r).textContent = vals.rebate > 0 ? "("+fmt(vals.rebate)+")" : "Nil";
+    document.getElementById("c-total-" + r).innerHTML    = "<strong>"+fmt(vals.net)+"</strong>";
+    document.getElementById("c-tds-" + r).textContent    = fmt(vals.tds) + "/mo";
+  });
+
+  // Winner
+  const oldRow = document.getElementById("c-total-old").closest("tr");
+  const newRow = document.getElementById("c-total-new").closest("tr");
+  if (netTaxOld < netTaxNew) {
+    document.getElementById("better-old").innerHTML = '<span class="badge badge-green">✓ BETTER</span>';
+    document.getElementById("better-new").innerHTML = "—";
+    oldRow.classList.add("winner"); newRow.classList.remove("winner");
+  } else if (netTaxNew < netTaxOld) {
+    document.getElementById("better-new").innerHTML = '<span class="badge badge-green">✓ BETTER</span>';
+    document.getElementById("better-old").innerHTML = "—";
+    newRow.classList.add("winner"); oldRow.classList.remove("winner");
+  } else {
+    document.getElementById("better-old").innerHTML = '<span class="badge badge-green">= Same</span>';
+    document.getElementById("better-new").innerHTML = '<span class="badge badge-green">= Same</span>';
+    oldRow.classList.remove("winner"); newRow.classList.remove("winner");
+  }
+}
+
+function buildComp(d) {
+  const row = (label, val, cls="", sub=false) =>
+    `<div class="comp-row ${sub?"sub":""} ${cls}"><span>${label}</span><span>${val}</span></div>`;
+  let html = "";
+  html += row("Gross Salary", fmt(d.gross));
+  if (d.hraEx) html += row("Less: HRA Exemption", "("+fmt(d.hraEx)+")", "neg", true);
+  if (d.ltaEx) html += row("Less: LTA Exemption", "("+fmt(d.ltaEx)+")", "neg", true);
+  html += row("Less: Standard Deduction", "("+fmt(d.stdDed)+")", "neg", true);
+  if (d.profTax) html += row("Less: Professional Tax", "("+fmt(d.profTax)+")", "neg", true);
+  if (d.chVI)  html += row("Less: Chapter VI-A (80C etc.)", "("+fmt(d.chVI)+")", "neg", true);
+  if (d.npsEmp) html += row("Less: NPS Employer 80CCD(2)", "("+fmt(d.npsEmp)+")", "neg", true);
+  html += row("Taxable Income", fmt(d.taxable), "total");
+  html += `<div style="height:10px"></div>`;
+  html += row("Tax on Income", fmt(d.taxBefore));
+  if (d.rebate > 0) html += row("Less: Rebate u/s 87A", "("+fmt(d.rebate)+")", "neg");
+  html += row("Tax after Rebate", fmt(d.taxAfterRebate));
+  html += row("Add: H&E Cess @ 4%", fmt(d.cess));
+  html += `<div class="comp-row tax-total"><span>Net Tax Payable</span><span>${fmt(d.netTax)}</span></div>`;
+  html += row("Monthly TDS (÷12)", fmt(d.tds));
+  return html;
+}
+
+function showRegime(r) {
+  document.getElementById("old-results").style.display = r === "old" ? "block" : "none";
+  document.getElementById("new-results").style.display = r === "new" ? "block" : "none";
+  document.getElementById("oldTab").classList.toggle("active", r === "old");
+  document.getElementById("newTab").classList.toggle("active", r === "new");
+}
+
+function resetForm() {
+  if (!confirm("Reset all inputs?")) return;
+  ["basic","da","hraRec","special","lta","other","bonus","rent","ltaExempt",
+   "d80c","d80d","d80nps","d80tta","d80g","dOther","npsEmp"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
+  document.getElementById("profTax").value = "2400";
+  document.getElementById("grossSalary").value = "";
+  document.getElementById("hraExempt").value = "";
+  calculate();
+}
+
+// Initial run
+calculate();
+
+/* ── Auto-load company details & dynamic FY ── */
+(function() {
+  try {
+    const bd = AccountingEngine.getCompanyDetails();
+    const banner = document.getElementById('stcBanner');
+    if (banner && bd.name) banner.textContent = bd.name + ' — Income Tax & TDS Calculator';
+    /* Populate FY dropdown */
+    const sel = document.getElementById('empFY');
+    const now = new Date();
+    const curStart = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1;
+    sel.innerHTML = '';
+    for (let y = curStart + 1; y >= curStart - 3; y--) {
+      const opt = document.createElement('option');
+      opt.value = y + '-' + String(y + 1).slice(2);
+      opt.textContent = 'FY ' + y + '-' + String(y + 1).slice(2);
+      if (y === curStart) opt.selected = true;
+      sel.appendChild(opt);
+    }
+  } catch(e) {}
+})();
+
+/* ================================================================
+   MULTI-EMPLOYEE: Save / Load / Export
+   ================================================================ */
+const STC_KEY = 'STC_EMPLOYEES';
+const FIELD_IDS = ["empName","empPan","empFY","empDob","empRes","basic","da","hraRec","special","lta","other","bonus","rent","metro","ltaExempt","d80c","d80d","d80nps","d80tta","d80g","dOther","npsEmp","profTax"];
+
+function getSavedEmployees() { return JSON.parse(localStorage.getItem(STC_KEY) || '[]'); }
+function updateEmpCount() { document.getElementById('empCount').textContent = getSavedEmployees().length; }
+
+function saveEmployee() {
+  const name = document.getElementById('empName').value.trim();
+  const pan = document.getElementById('empPan').value.trim();
+  if (!name) { alert('Enter Employee Name before saving.'); return; }
+  calculate(); /* ensure latest values */
+
+  const record = {};
+  FIELD_IDS.forEach(id => { const el = document.getElementById(id); if (el) record[id] = el.value; });
+  record.grossSalary = document.getElementById('grossSalary').value;
+  record.hraExempt = document.getElementById('hraExempt').value;
+  record.savedAt = new Date().toISOString();
+
+  let emps = getSavedEmployees();
+  const idx = emps.findIndex(e => e.empPan === pan && pan || e.empName === name);
+  if (idx !== -1) {
+    if (!confirm('Employee "' + name + '" already saved. Update?')) return;
+    emps[idx] = record;
+  } else {
+    emps.push(record);
+  }
+  localStorage.setItem(STC_KEY, JSON.stringify(emps));
+  if (typeof AccountingEngine !== 'undefined') AccountingEngine.persistToElectron();
+  updateEmpCount();
+  alert('✓ Saved: ' + name);
+}
+
+function loadEmployee(idx) {
+  const emps = getSavedEmployees();
+  if (!emps[idx]) return;
+  const rec = emps[idx];
+  FIELD_IDS.forEach(id => { const el = document.getElementById(id); if (el && rec[id] !== undefined) el.value = rec[id]; });
+  if (rec.grossSalary) document.getElementById('grossSalary').value = rec.grossSalary;
+  calculate();
+  document.getElementById('empListPanel').style.display = 'none';
+}
+
+function deleteEmployee(idx) {
+  const emps = getSavedEmployees();
+  if (!confirm('Delete "' + (emps[idx].empName || 'Employee') + '"?')) return;
+  emps.splice(idx, 1);
+  localStorage.setItem(STC_KEY, JSON.stringify(emps));
+  if (typeof AccountingEngine !== 'undefined') AccountingEngine.persistToElectron();
+  updateEmpCount();
+  showSavedList();
+}
+
+function showSavedList() {
+  const emps = getSavedEmployees();
+  const panel = document.getElementById('empListPanel');
+  const body = document.getElementById('empListBody');
+  if (!emps.length) { body.innerHTML = '<div style="color:#888;text-align:center;padding:10px;">No employees saved yet.</div>'; }
+  else {
+    let h = '<table style="width:100%;border-collapse:collapse;">';
+    h += '<tr style="background:#e4efff;"><th style="padding:5px 8px;text-align:left;">Name</th><th style="padding:5px 8px;">PAN</th><th style="padding:5px 8px;">Gross (Annual)</th><th style="padding:5px 8px;">Actions</th></tr>';
+    emps.forEach((e, i) => {
+      const gross = parseFloat(e.grossSalary) || 0;
+      h += '<tr style="border-top:1px solid #eee;">';
+      h += '<td style="padding:4px 8px;font-weight:600;">' + (e.empName || '—') + '</td>';
+      h += '<td style="padding:4px 8px;text-align:center;font-family:monospace;font-size:11px;">' + (e.empPan || '—') + '</td>';
+      h += '<td style="padding:4px 8px;text-align:center;">₹' + gross.toLocaleString('en-IN') + '</td>';
+      h += '<td style="padding:4px 8px;text-align:center;">';
+      h += '<button onclick="loadEmployee(' + i + ')" style="font-size:10px;padding:2px 8px;cursor:pointer;margin:0 2px;">Load</button>';
+      h += '<button onclick="deleteEmployee(' + i + ')" style="font-size:10px;padding:2px 8px;cursor:pointer;color:#c0392b;margin:0 2px;">Delete</button>';
+      h += '</td></tr>';
+    });
+    h += '</table>';
+    body.innerHTML = h;
+  }
+  panel.style.display = 'block';
+}
+
+function exportExcelSTC() {
+  if (typeof XLSX === 'undefined') {
+    /* Load XLSX dynamically */
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+    s.onload = () => _doExportSTC();
+    document.head.appendChild(s);
+    return;
+  }
+  _doExportSTC();
+}
+
+function _doExportSTC() {
+  const emps = getSavedEmployees();
+  if (!emps.length) { alert('No saved employees. Save at least one employee first.'); return; }
+
+  const rows = [['Employee Name','PAN','FY','DOB','Basic (M)','DA (M)','HRA (M)','Special (M)','LTA (M)','Other (M)','Bonus (M)','Gross (Annual)','80C','80D','80NPS','Prof Tax','Old Regime Tax','New Regime Tax','Better Regime','Monthly TDS (Better)']];
+
+  emps.forEach(e => {
+    const gross = parseFloat(e.grossSalary) || 0;
+    const basic = parseFloat(e.basic) || 0;
+    /* Quick tax calc for export */
+    const std50 = 50000, std75 = 75000;
+    const hra = parseFloat(e.hraExempt) || 0;
+    const ltaEx = Math.min(parseFloat(e.ltaExempt)||0, (parseFloat(e.lta)||0)*12);
+    const profTax = Math.min(parseFloat(e.profTax)||0, 2400);
+    const chVI = Math.min(parseFloat(e.d80c)||0,150000) + (parseFloat(e.d80d)||0) + Math.min(parseFloat(e.d80nps)||0,50000) + Math.min(parseFloat(e.d80tta)||0,10000) + (parseFloat(e.d80g)||0);
+    const taxableOld = Math.max(0, gross - hra - ltaEx - std50 - profTax - chVI);
+    const taxableNew = Math.max(0, gross - std75);
+    /* Simple tax calc old */
+    let taxOld = 0;
+    if (taxableOld > 1000000) taxOld = 112500 + (taxableOld-1000000)*0.30;
+    else if (taxableOld > 500000) taxOld = 12500 + (taxableOld-500000)*0.20;
+    else if (taxableOld > 250000) taxOld = (taxableOld-250000)*0.05;
+    if (taxableOld <= 500000) taxOld = 0;
+    taxOld = Math.round(taxOld * 1.04);
+    /* Simple tax calc new */
+    let taxNew = 0;
+    if (taxableNew > 1500000) taxNew = 140000 + (taxableNew-1500000)*0.30;
+    else if (taxableNew > 1200000) taxNew = 80000 + (taxableNew-1200000)*0.20;
+    else if (taxableNew > 1000000) taxNew = 50000 + (taxableNew-1000000)*0.15;
+    else if (taxableNew > 700000) taxNew = 20000 + (taxableNew-700000)*0.10;
+    else if (taxableNew > 300000) taxNew = (taxableNew-300000)*0.05;
+    if (taxableNew <= 700000) taxNew = 0;
+    taxNew = Math.round(taxNew * 1.04);
+    const better = taxOld <= taxNew ? 'Old' : 'New';
+    const tds = Math.round(Math.min(taxOld, taxNew) / 12);
+
+    rows.push([e.empName||'', e.empPan||'', e.empFY||'', e.empDob||'', basic, parseFloat(e.da)||0, parseFloat(e.hraRec)||0, parseFloat(e.special)||0, parseFloat(e.lta)||0, parseFloat(e.other)||0, parseFloat(e.bonus)||0, gross, parseFloat(e.d80c)||0, parseFloat(e.d80d)||0, parseFloat(e.d80nps)||0, profTax, taxOld, taxNew, better, tds]);
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = rows[0].map((_, i) => ({ wch: i < 4 ? 18 : 14 }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Salary TDS');
+  XLSX.writeFile(wb, 'Salary_TDS_Report.xlsx');
+  alert('✓ Exported ' + emps.length + ' employees to Excel.');
+}
+
+updateEmpCount();
+</script>
+</body>
+</html>

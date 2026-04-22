@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cash Flow Statement (Indirect Method)</title>
+<link rel="stylesheet" href="style.css">
+<style>
+body{font-family:Arial,sans-serif;background:#f4f4f4;margin:0;padding:0 0 90px;}
+.cf-wrap{background:#fff;max-width:1000px;margin:16px auto;padding:28px 36px;border:1px solid #c0c8d3;box-shadow:0 2px 10px rgba(0,0,0,.07);font-family:Calibri,'Segoe UI',Arial,sans-serif;font-size:11.5px;line-height:1.5;}
+.cf-header{margin-bottom:14px;border:1px solid #000;padding:8px 10px;text-align:center;}
+.cf-header .co-name{font-size:13px;font-weight:700;}
+.cf-header .co-cin{font-style:italic;font-size:11px;}
+.cf-header .co-title{font-style:italic;font-size:11px;margin-top:2px;}
+
+.cf-table{width:100%;border-collapse:collapse;font-size:11px;border:1px solid #000;margin-bottom:0;font-variant-numeric:tabular-nums;border-top:0;}
+.cf-table td{border:1px solid #000;padding:3px 8px;vertical-align:middle;}
+.cf-table th{background:#e9ecef;font-weight:700;padding:6px 8px;border:1px solid #000;text-align:center;}
+.cf-table th.left{text-align:left;}
+.cf-table .amt{text-align:right;width:130px;white-space:nowrap;}
+.cf-table .py{color:#555;}
+.cf-table tr.sec td{font-weight:700;}
+.cf-table tr.subhead td{font-weight:700;}
+.cf-table tr.subtot td{font-weight:700;border-top:1px solid #000;}
+.cf-table tr.grptot td{font-weight:700;border-top:1px solid #000;border-bottom:1px solid #000;}
+.cf-table tr.grand td{font-weight:700;background:#f5f5f5;border-top:2px solid #000;border-bottom:3px double #000;}
+.cf-table .desc-indent{padding-left:20px;}
+.cf-table .desc-indent2{padding-left:30px;color:#333;}
+.cf-table input[type="number"]{width:100%;text-align:right;border:none;background:#fffef3;padding:2px 4px;font:inherit;box-sizing:border-box;font-variant-numeric:tabular-nums;}
+.cf-table input[type="number"]:focus{outline:2px solid #ffcc00;background:#fff;}
+.cf-table td.auto{background:#eef5ff;}
+
+.notes-section{margin-top:14px;font-size:11px;line-height:1.6;}
+.notes-section .note-row{display:flex;gap:8px;margin-bottom:6px;}
+.notes-section .note-num{font-weight:700;min-width:18px;}
+.notes-section .note-text{flex:1;}
+
+.components-table{width:50%;border-collapse:collapse;font-size:11px;border:1px solid #000;margin:8px 0;font-variant-numeric:tabular-nums;}
+.components-table td{border:1px solid #000;padding:3px 8px;}
+.components-table th{background:#e9ecef;padding:4px 8px;border:1px solid #000;text-align:center;}
+.components-table .amt{text-align:right;width:110px;}
+.components-table tr.sub td{font-weight:600;}
+.components-table tr.total td{font-weight:700;border-top:1px solid #000;border-bottom:2px double #000;}
+
+.sig-table{width:100%;margin-top:30px;font-size:11px;}
+.sig-table td{vertical-align:top;padding:3px 8px;width:50%;}
+.sig-left{font-style:italic;padding-bottom:8px;}
+
+.toolbar-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
+.btn-primary{background:#234a7b;color:#fff;border:none;padding:6px 14px;border-radius:3px;cursor:pointer;font-size:12px;font-weight:600;}
+.btn-save{background:#006400;color:#fff;border:none;padding:6px 14px;border-radius:3px;cursor:pointer;font-size:12px;font-weight:600;}
+button:hover:not(.tab){filter:brightness(1.1);}
+
+#statusBar{max-width:1000px;margin:14px auto;padding:8px 12px;font-size:13px;font-weight:600;border-radius:3px;}
+.status-success{background:#d4edda;color:#155724;border:1px solid #c3e6cb;}
+.status-normal{background:#e2e3e5;color:#41464b;border:1px solid #d6d8db;}
+
+.legend{font-size:10.5px;color:#555;display:flex;gap:14px;flex-wrap:wrap;margin-bottom:6px;}
+.legend .swatch{display:inline-block;width:12px;height:12px;border:1px solid #888;vertical-align:middle;margin-right:4px;}
+
+.info-box{background:#f0f7ff;border:1px solid #cbd9ef;padding:10px 14px;margin-bottom:12px;border-radius:4px;font-size:11px;}
+.info-box strong{color:#14345a;}
+
+.recon-box{background:#f8f9fa;border:1px solid #c0c8d3;padding:10px 14px;margin-top:12px;border-radius:4px;font-size:11px;}
+.recon-box.ok{background:#d4edda;border-color:#c3e6cb;color:#155724;}
+.recon-box.bad{background:#f8d7da;border-color:#f5c6cb;color:#721c24;}
+
+@media print{
+  body{background:#fff;padding:0;}
+  .toolbar-row,.bottom-tabs,#statusBar,.info-box,.legend,.recon-box{display:none !important;}
+  .cf-wrap{box-shadow:none;border:none;padding:0;margin:0;}
+  @page{margin:1.4cm 1.6cm;size:A4 portrait;}
+  .cf-table input[type="number"]{background:transparent !important;}
+  .cf-table td.auto{background:transparent !important;}
+}
+</style>
+</head>
+<body>
+<script src="engine.js"></script>
+
+<div id="statusBar" class="status-normal">Loading...</div>
+
+<div class="cf-wrap">
+  <div class="toolbar-row">
+    <div style="font-weight:700;color:#14345a;">Cash Flow Statement (Indirect Method — AS 3)</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button type="button" class="btn-primary" onclick="render()">⟳ Refresh</button>
+      <button type="button" class="btn-save" onclick="saveOverrides()">💾 Save</button>
+      <button type="button" class="btn-primary" onclick="toggleDiag()" style="background:#8a5a00;">🔍 Show Classification</button>
+      <button type="button" class="btn-primary" onclick="window.print()">🖨 Print</button>
+    </div>
+  </div>
+  <div class="legend">
+    <span><span class="swatch" style="background:#eef5ff;"></span>Auto from BS+PL delta</span>
+    <span><span class="swatch" style="background:#fffef3;"></span>Editable override</span>
+    <span><span class="swatch" style="background:#f5f5f5;"></span>Section total</span>
+  </div>
+
+  <div class="cf-header">
+    <div class="co-name" id="coName">Company Name</div>
+    <div class="co-cin" id="coCin">CIN : —</div>
+    <div class="co-title" id="coTitle">Balance Sheet as at 31st March 2024</div>
+  </div>
+
+  <div id="cfContent"></div>
+  <div id="cfDiag" style="display:none;"></div>
+  <div id="cfNotes"></div>
+  <div id="cfSignatures"></div>
+</div>
+
+<div class="bottom-tabs">
+  <a href="dashboard.html" class="tab">HOME</a>
+  <a href="bd.html" class="tab">BD</a>
+  <a href="tb.html" class="tab">TB</a>
+  <a href="ae.html" class="tab">AE</a>
+  <a href="balance.html" class="tab">BS</a>
+  <a href="pl.html" class="tab">PL</a>
+  <a href="cf.html" class="tab active">CF</a>
+  <a href="n1.html" class="tab">N1</a>
+  <a href="n2.html" class="tab">N2</a>
+  <a href="n3.html" class="tab">N3</a>
+  <a href="n4.html" class="tab">N4</a>
+  <a href="n5.html" class="tab">N5</a>
+  <a href="n6.html" class="tab">N6</a>
+  <a href="n7.html" class="tab">N7</a>
+  <a href="tx.html" class="tab">TX</a>
+  <a href="audit-report.html" class="tab">AR</a>
+  <a href="fs-package.html" class="tab">FS</a>
+  <button type="button" class="tab plus">+</button>
+</div>
+
+<script>
+const status = document.getElementById('statusBar');
+let CY_END = 'March 31, 2024', PY_END = 'March 31, 2023';
+
+function fmt(v){if(v===undefined||v===null||isNaN(v)||v===0)return'-';const a=Math.abs(v);const s=a.toLocaleString('en-IN',{minimumFractionDigits:0,maximumFractionDigits:0});return v<0?'('+s+')':s;}
+function n(v){return Number(v)||0;}
+// Round to whole rupees — avoids "1664801.7900000" display artefacts in type=number inputs
+function R(v){v = Number(v); return isNaN(v)?0:Math.round(v);}
+
+function loadCompany(){
+  const bd = AccountingEngine.getCompanyDetails();
+  const meta = JSON.parse(localStorage.getItem('FS_META') || '{}');
+  const fy = bd.financialYear || '';
+  let endLabel = 'March 31, 2024';
+  if (fy.includes('to')) endLabel = (fy.split(' to ')[1] || '').trim() || endLabel;
+  CY_END = endLabel;
+  const m = endLabel.match(/\d{4}/);
+  if (m) PY_END = endLabel.replace(m[0], String(Number(m[0]) - 1));
+  document.getElementById('coName').textContent = (meta.companyName || bd.name || 'Company Name').toUpperCase();
+  document.getElementById('coCin').textContent = 'CIN : ' + (meta.cin || bd.cin || '—');
+  document.getElementById('coTitle').textContent = 'Cash Flow Statement for the year ended ' + endLabel;
+}
+
+function render(){
+  loadCompany();
+  const cf = AccountingEngine.getCashFlowStatement();
+  const o = cf.operating, inv = cf.investing, fin = cf.financing, sum = cf.summary;
+  const comp = cf.cashComponents || { cashOnHand:0, bankCurrent:0, otherBank:0 };
+  const compPY = cf.cashComponentsPY || { cashOnHand:0, bankCurrent:0, otherBank:0 };
+  const u = JSON.parse(localStorage.getItem('CF_OVERRIDES') || '{}');
+  const g = (k, def) => (u[k] !== undefined && u[k] !== '') ? Number(u[k]) : def;
+
+  let h = '';
+  if (!cf.hasPY) {
+    h += `<div class="info-box" style="background:#f8d7da;border:2px solid #c0392b;color:#721c24;font-size:13px;">
+      <strong style="font-size:14px;">🚨 Previous Year data is NOT loaded — Cash Flow will not balance.</strong><br><br>
+      Without PY, every working-capital, investing and financing delta is <b>0</b>. Capex = 0, Equity/FD flow = 0,
+      Loan movement = 0, opening cash = 0. The reconciliation will show a large gap equal to (closing cash − CY net profit).<br><br>
+      <b>To fix:</b> Go to <a href="tb.html" style="color:#c0392b;text-decoration:underline;font-weight:700;">Trial Balance page</a>,
+      flip the "Import to:" toggle to <b>Previous Year</b>, then upload last year's TB Excel. Come back here — all values will populate.
+    </div>`;
+  } else {
+    h += `<div class="info-box"><strong>Auto-computed</strong> from Balance Sheet (CY − PY) + P&amp;L Other Income classifier. Blue cells = auto-computed. Override any value by typing in the yellow cells.</div>`;
+  }
+
+  // === OPERATING ACTIVITIES ===
+  const vPBT       = g('a_pbt',       o.netProfit);
+  const vDep       = g('a_dep',       o.adjDep);
+  const vIntFD     = g('a_intFD',     o.adjIntFD);
+  const vDiv       = g('a_div',       o.adjDividend);
+  const vLTCG      = g('a_ltcg',      o.adjLTCG);
+  const vFnO       = g('a_fno',       o.adjFnO);
+  const vSTCG      = g('a_stcg',      o.adjSTCG);
+  const vSpec      = g('a_spec',      o.adjSpec);
+  const vOthNonOp  = g('a_oth',       o.adjOtherNonOp);
+  const vWriteBack = g('a_wb',        o.adjWriteBack);
+  const vIntExp    = g('a_int',       o.adjIntExp);
+  const vPBW       = vPBT + vDep + vIntFD + vDiv + vLTCG + vFnO + vSTCG + vSpec + vOthNonOp + vWriteBack + vIntExp;
+
+  const vWcRec     = g('wc_rec',      o.wcReceivables);
+  const vWcStLoans = g('wc_stl',      o.wcStLoans);
+  const vWcOthCA   = g('wc_oca',      o.wcOtherCA);
+  const vWcInv     = g('wc_inv',      o.wcInventories);
+  const vWcPay     = g('wc_pay',      o.wcPayables);
+  const vWcStBorr  = g('wc_stb',      o.wcStBorrowings);
+  const vWcStProv  = g('wc_prov',     o.wcStProvisions);
+  const vWcOthCL   = g('wc_ocl',      o.wcOtherCL);
+  const vWC        = vWcRec + vWcStLoans + vWcOthCA + vWcInv + vWcPay + vWcStBorr + vWcStProv + vWcOthCL;
+  const vCFO       = vPBW + vWC;
+  const vTax       = g('a_tax',       o.taxesPaid);
+  const vNetA      = vCFO - vTax;
+
+  // === INVESTING ACTIVITIES ===
+  const vCapex     = g('b_capex',     -inv.capexTotal);
+  const vIntRec    = g('b_intRec',    inv.interestReceived);
+  const vDivRec    = g('b_divRec',    inv.dividendReceived);
+  const vEquity    = g('b_equity',    inv.equityInvFlow);
+  const vFD        = g('b_fd',        inv.fdFlow);
+  const vBLTCG     = g('b_ltcg',      inv.ltcg);
+  const vBFnO      = g('b_fno',       inv.fno);
+  const vBSTCG     = g('b_stcg',      inv.stcg);
+  const vBSpec     = g('b_spec',      inv.speculation);
+  const vNetB      = vCapex + vIntRec + vDivRec + vEquity + vFD + vBLTCG + vBFnO + vBSTCG + vBSpec;
+
+  // === FINANCING ACTIVITIES ===
+  const vLoans     = g('c_loans',     fin.ltBorrChange);
+  const vEq        = g('c_eq',        fin.shareCapChange);
+  const vIntPaid   = g('c_int',       -fin.financeCostsPaid);
+  const vNetC      = vLoans + vEq + vIntPaid;
+
+  const vTotal     = vNetA + vNetB + vNetC;
+  const vOpen      = g('s_open',      sum.openingCash);
+  const vImplied   = vOpen + vTotal;
+  const vClose     = g('s_close',     sum.closingCash);
+  const vReconDiff = vClose - vImplied;
+
+  // Build CY+PY data table
+  h += `<table class="cf-table">
+    <thead><tr><th class="left">Particulars</th><th>As at<br>${CY_END}</th></tr></thead>
+    <tbody>
+
+    <tr class="sec"><td><b>(A) Cash flows from operating activities:</b></td><td></td></tr>
+    <tr><td>Profit / (loss) before tax</td>
+      <td class="amt"><input type="number" id="a_pbt" value="${u.a_pbt||''}" placeholder="${R(o.netProfit)}"></td></tr>
+    <tr class="subhead"><td><u>Adjustments for:</u></td><td></td></tr>
+    <tr><td class="desc-indent">Depreciation and amortisation</td>
+      <td class="amt"><input type="number" id="a_dep" value="${u.a_dep||''}" placeholder="${R(o.adjDep)}"></td></tr>
+    <tr><td class="desc-indent">Interest on fixed deposits and IT refunds</td>
+      <td class="amt"><input type="number" id="a_intFD" value="${u.a_intFD||''}" placeholder="${R(o.adjIntFD)}"></td></tr>
+    <tr><td class="desc-indent">Dividend</td>
+      <td class="amt"><input type="number" id="a_div" value="${u.a_div||''}" placeholder="${R(o.adjDividend)}"></td></tr>
+    <tr><td class="desc-indent">Long Term Capital Gain/Loss</td>
+      <td class="amt"><input type="number" id="a_ltcg" value="${u.a_ltcg||''}" placeholder="${R(o.adjLTCG)}"></td></tr>
+    <tr><td class="desc-indent">Profit &amp; Loss on Future and Option</td>
+      <td class="amt"><input type="number" id="a_fno" value="${u.a_fno||''}" placeholder="${R(o.adjFnO)}"></td></tr>
+    <tr><td class="desc-indent">Short Term Capital Gain/Loss</td>
+      <td class="amt"><input type="number" id="a_stcg" value="${u.a_stcg||''}" placeholder="${R(o.adjSTCG)}"></td></tr>
+    <tr><td class="desc-indent">Speculation Income/Loss</td>
+      <td class="amt"><input type="number" id="a_spec" value="${u.a_spec||''}" placeholder="${R(o.adjSpec)}"></td></tr>
+    <tr><td class="desc-indent">Other non-operating Income</td>
+      <td class="amt"><input type="number" id="a_oth" value="${u.a_oth||''}" placeholder="${R(o.adjOtherNonOp)}"></td></tr>
+    <tr><td class="desc-indent">Sundry balances/Assets written back (net)</td>
+      <td class="amt"><input type="number" id="a_wb" value="${u.a_wb||''}" placeholder="${R(o.adjWriteBack)}"></td></tr>
+    <tr><td class="desc-indent">Interest expenses</td>
+      <td class="amt"><input type="number" id="a_int" value="${u.a_int||''}" placeholder="${R(o.adjIntExp)}"></td></tr>
+    <tr class="subtot"><td>Operating profit / (loss) before working capital changes</td>
+      <td class="amt">${fmt(vPBW)}</td></tr>
+
+    <tr class="subhead"><td><u>Adjustment for working capital changes:</u></td><td></td></tr>
+    <tr><td class="desc-indent">(Increase) / decrease in trade and other receivables</td>
+      <td class="amt"><input type="number" id="wc_rec" value="${u.wc_rec||''}" placeholder="${R(o.wcReceivables)}"></td></tr>
+    <tr><td class="desc-indent">(Increase) / decrease in short-term loans and advances</td>
+      <td class="amt"><input type="number" id="wc_stl" value="${u.wc_stl||''}" placeholder="${R(o.wcStLoans)}"></td></tr>
+    <tr><td class="desc-indent">(Increase) / decrease in Other Current Assets</td>
+      <td class="amt"><input type="number" id="wc_oca" value="${u.wc_oca||''}" placeholder="${R(o.wcOtherCA)}"></td></tr>
+    <tr><td class="desc-indent">(Increase) / decrease in inventories</td>
+      <td class="amt"><input type="number" id="wc_inv" value="${u.wc_inv||''}" placeholder="${R(o.wcInventories)}"></td></tr>
+    <tr><td class="desc-indent">Increase / (decrease) in trade payables</td>
+      <td class="amt"><input type="number" id="wc_pay" value="${u.wc_pay||''}" placeholder="${R(o.wcPayables)}"></td></tr>
+    <tr><td class="desc-indent">(Increase) / decrease in Short-term borrowings</td>
+      <td class="amt"><input type="number" id="wc_stb" value="${u.wc_stb||''}" placeholder="${R(o.wcStBorrowings)}"></td></tr>
+    <tr><td class="desc-indent">Increase / (decrease) in Short Term Provisions</td>
+      <td class="amt"><input type="number" id="wc_prov" value="${u.wc_prov||''}" placeholder="${R(o.wcStProvisions)}"></td></tr>
+    <tr><td class="desc-indent">Increase / (decrease) in other liabilities</td>
+      <td class="amt"><input type="number" id="wc_ocl" value="${u.wc_ocl||''}" placeholder="${R(o.wcOtherCL)}"></td></tr>
+
+    <tr class="subtot"><td><b>Cash generated from Operations</b></td>
+      <td class="amt">${fmt(vCFO)}</td></tr>
+    <tr><td class="desc-indent">Taxes paid (net of refunds)</td>
+      <td class="amt"><input type="number" id="a_tax" value="${u.a_tax||''}" placeholder="${R(o.taxesPaid||0)}"></td></tr>
+    <tr class="grptot"><td><b>Net cash generated from / (used in) operating activities (A)</b></td>
+      <td class="amt">${fmt(vNetA)}</td></tr>
+
+    <tr><td colspan="2">&nbsp;</td></tr>
+    <tr class="sec"><td><b>(B) Cash flows from investing activities:</b></td><td></td></tr>
+    <tr><td>Purchase of fixed assets and movements in capital work-in-progress,<br>&nbsp;&nbsp;capital advances and capital creditors</td>
+      <td class="amt"><input type="number" id="b_capex" value="${u.b_capex||''}" placeholder="${R(-inv.capexTotal)}"></td></tr>
+    <tr><td>Interest income</td>
+      <td class="amt"><input type="number" id="b_intRec" value="${u.b_intRec||''}" placeholder="${R(inv.interestReceived)}"></td></tr>
+    <tr><td>Dividend Income</td>
+      <td class="amt"><input type="number" id="b_divRec" value="${u.b_divRec||''}" placeholder="${R(inv.dividendReceived)}"></td></tr>
+    <tr><td>Change in Investment in Equity shares</td>
+      <td class="amt"><input type="number" id="b_equity" value="${u.b_equity||''}" placeholder="${R(inv.equityInvFlow)}"></td></tr>
+    <tr><td>Change In Fixed Deposits</td>
+      <td class="amt"><input type="number" id="b_fd" value="${u.b_fd||''}" placeholder="${R(inv.fdFlow)}"></td></tr>
+    <tr><td>Long Term Capital Gain/Loss</td>
+      <td class="amt"><input type="number" id="b_ltcg" value="${u.b_ltcg||''}" placeholder="${R(inv.ltcg)}"></td></tr>
+    <tr><td>Profit &amp; Loss on Future and Option</td>
+      <td class="amt"><input type="number" id="b_fno" value="${u.b_fno||''}" placeholder="${R(inv.fno)}"></td></tr>
+    <tr><td>Short Term Capital Gain/Loss</td>
+      <td class="amt"><input type="number" id="b_stcg" value="${u.b_stcg||''}" placeholder="${R(inv.stcg)}"></td></tr>
+    <tr><td>Speculation Income/Loss</td>
+      <td class="amt"><input type="number" id="b_spec" value="${u.b_spec||''}" placeholder="${R(inv.speculation)}"></td></tr>
+    <tr class="grptot"><td><b>Net cash generated from / (used) in investing activities (B)</b></td>
+      <td class="amt">${fmt(vNetB)}</td></tr>
+
+    <tr><td colspan="2">&nbsp;</td></tr>
+    <tr class="sec"><td><b>(C) Cash flow from financing activities:</b></td><td></td></tr>
+    <tr><td>Loans taken / (repaid) (net)</td>
+      <td class="amt"><input type="number" id="c_loans" value="${u.c_loans||''}" placeholder="${R(fin.ltBorrChange)}"></td></tr>
+    <tr><td>Change in Equity</td>
+      <td class="amt"><input type="number" id="c_eq" value="${u.c_eq||''}" placeholder="${R(fin.shareCapChange)}"></td></tr>
+    <tr><td>Interest expenses</td>
+      <td class="amt"><input type="number" id="c_int" value="${u.c_int||''}" placeholder="${R(-fin.financeCostsPaid)}"></td></tr>
+    <tr class="grptot"><td><b>Net cash generated from / (used) in financing activities (C)</b></td>
+      <td class="amt">${fmt(vNetC)}</td></tr>
+
+    <tr><td colspan="2">&nbsp;</td></tr>
+    <tr class="grand"><td><b>Net increase / (decrease) in cash and cash equivalents (A+B+C)</b></td>
+      <td class="amt">${fmt(vTotal)}</td></tr>
+    <tr><td>Cash and cash equivalents as at beginning of year</td>
+      <td class="amt"><input type="number" id="s_open" value="${u.s_open||''}" placeholder="${R(sum.openingCash)}"></td></tr>
+    <tr class="grand"><td><b>Cash and cash equivalents as at the end of the year</b></td>
+      <td class="amt"><input type="number" id="s_close" value="${u.s_close||''}" placeholder="${R(sum.closingCash)}"></td></tr>
+    </tbody></table>`;
+
+  document.getElementById('cfContent').innerHTML = h;
+
+  // === NOTES SECTION ===
+  let notesH = `<div class="notes-section">
+    <div style="font-weight:700;margin-top:12px;margin-bottom:6px;text-decoration:underline;">Notes to cash flow statement :</div>
+    <div class="note-row"><div class="note-num">1</div><div class="note-text">
+      Components of cash and cash equivalents (refer note 17)
+      <table class="components-table">
+        <thead><tr><th class="left" style="text-align:left;">Particulars</th><th>${CY_END}</th><th>${PY_END}</th></tr></thead>
+        <tbody>
+          <tr class="sub"><td>Cash and cash equivalents</td><td></td><td></td></tr>
+          <tr><td class="desc-indent">&nbsp;- Cash on hand</td>
+            <td class="amt">${fmt(comp.cashOnHand)}</td>
+            <td class="amt">${fmt(compPY.cashOnHand)}</td></tr>
+          <tr class="sub"><td>Balances with banks</td><td></td><td></td></tr>
+          <tr><td class="desc-indent">&nbsp;- In current accounts</td>
+            <td class="amt">${fmt(comp.bankCurrent)}</td>
+            <td class="amt">${fmt(compPY.bankCurrent)}</td></tr>
+          ${comp.otherBank || compPY.otherBank ? `<tr><td class="desc-indent">&nbsp;- Other bank balances</td>
+            <td class="amt">${fmt(comp.otherBank)}</td>
+            <td class="amt">${fmt(compPY.otherBank)}</td></tr>` : ''}
+          <tr class="total"><td></td>
+            <td class="amt">${fmt(comp.cashOnHand + comp.bankCurrent + comp.otherBank)}</td>
+            <td class="amt">${fmt(compPY.cashOnHand + compPY.bankCurrent + compPY.otherBank)}</td></tr>
+        </tbody>
+      </table>
+    </div></div>
+    <div class="note-row"><div class="note-num">2</div><div class="note-text">
+      The above Cash Flow Statement has been prepared under the 'Indirect Method' as set out in
+      Accounting Standard 3 "Cash Flow Statement".
+    </div></div>
+    <div class="note-row"><div class="note-num">3</div><div class="note-text">
+      The figures of the previous year have been regrouped / reclassified wherever necessary to conform to
+      the classification / presentation of current year figures.
+    </div></div>
+  </div>`;
+  document.getElementById('cfNotes').innerHTML = notesH;
+
+  // === SIGNATURE BLOCK ===
+  const bd = AccountingEngine.getCompanyDetails();
+  const meta = JSON.parse(localStorage.getItem('FS_META') || '{}');
+  const caFirm     = meta.caFirm     || meta.auditorFirm     || '';
+  const caFirmReg  = meta.caFirmReg  || meta.auditorFirmReg  || '';
+  const caPartner  = meta.caPartner  || meta.auditorPartner  || '';
+  const caMemNo    = meta.caMemNo    || meta.auditorMemNo    || '';
+  const caUdin     = meta.caUdin     || meta.udin            || '';
+  const director1  = meta.director1  || (meta.directors && meta.directors[0]?.name) || '';
+  const director1Din = meta.director1Din || (meta.directors && meta.directors[0]?.din) || '';
+  const place      = meta.place      || 'Mumbai';
+  const signDate   = meta.signDate   || '';
+  const coUpper    = (meta.companyName || bd.name || 'Company Name').toUpperCase();
+
+  let sigH = `<table class="sig-table">
+    <tr>
+      <td class="sig-left">In terms of our report of even date</td>
+      <td class="sig-left">For and on behalf of the Board of Directors of<br><b>${coUpper}</b></td>
+    </tr>
+    <tr>
+      <td><b>For ${caFirm || '—'}</b><br>Chartered Accountants<br>Firm Registration No. ${caFirmReg || '—'}</td>
+      <td></td>
+    </tr>
+    <tr><td colspan="2" style="height:30px;"></td></tr>
+    <tr>
+      <td><b>${caPartner || 'CA —'}</b><br>Partner<br>Mem. No. ${caMemNo || '—'}</td>
+      <td><b>${director1 || 'Director'}</b><br>Director<br>DIN: ${director1Din || '—'}</td>
+    </tr>
+    <tr><td colspan="2" style="height:12px;"></td></tr>
+    <tr><td>Place: ${place}</td><td></td></tr>
+    <tr><td>Date :- ${signDate || '—'}</td><td></td></tr>
+    ${caUdin ? `<tr><td>UDIN : ${caUdin}</td><td></td></tr>` : ''}
+  </table>`;
+  document.getElementById('cfSignatures').innerHTML = sigH;
+
+  // === RECONCILIATION BANNER (screen only) ===
+  let reconH = '';
+  if (cf.hasPY) {
+    if (Math.abs(vReconDiff) < 1) {
+      reconH = `<div class="recon-box ok">✓ <b>Reconciled:</b> Opening (${fmt(vOpen)}) + Net change (${fmt(vTotal)}) = Closing (${fmt(vClose)}).</div>`;
+    } else {
+      reconH = `<div class="recon-box bad">⚠ <b>Reconciliation difference: ${fmt(vReconDiff)}</b><br>
+        Opening + Net change = ${fmt(vImplied)} but BS shows closing cash = ${fmt(vClose)}.<br>
+        Common causes: (a) Taxes paid ≠ Current Tax on P&amp;L, (b) Non-cash revaluation/fair-value gains not excluded, (c) DDT, (d) Cash FX differences.</div>`;
+    }
+  }
+  // Append reconciliation to the content area (after notes+sig)
+  document.getElementById('cfSignatures').insertAdjacentHTML('afterend',
+    (document.getElementById('_reconAnchor') ? '' : `<div id="_reconAnchor"></div>`));
+  document.getElementById('_reconAnchor').innerHTML = reconH;
+
+  // Wire input listeners
+  document.querySelectorAll('#cfContent input[type="number"]').forEach(el => {
+    el.addEventListener('change', () => saveOverrides(true));
+  });
+
+  // Always render diagnostics (hidden until user clicks the button).
+  renderDiagnostics(cf);
+}
+
+function renderDiagnostics(cf){
+  const d = cf.diag || {};
+  const nk = cf.noteKeys || {};
+  let h = `<div style="margin-top:18px;padding:14px 18px;background:#fff8e1;border:2px solid #c7a800;border-radius:6px;">
+    <div style="font-weight:700;font-size:13px;color:#6b4d00;margin-bottom:10px;">🔍 CLASSIFICATION DEBUG — How your TB got mapped into CF lines</div>
+    <div style="font-size:10.5px;color:#666;margin-bottom:12px;">
+      If a CF line's value looks wrong, check below which of your ledgers went into it.
+      Override the CF line in the yellow input box to fix it, or rename/regroup the ledger in your TB.
+    </div>`;
+
+  // --- 1. Other Income buckets (adjustments section) ---
+  h += `<details open style="margin-bottom:14px;"><summary style="font-weight:700;cursor:pointer;font-size:12px;">1. Other Income ledgers → Adjustments bucket</summary>
+    <table style="width:100%;font-size:11px;border-collapse:collapse;margin-top:6px;">
+      <thead><tr style="background:#f3f3f3;">
+        <th style="text-align:left;padding:4px 8px;border:1px solid #ccc;">Ledger</th>
+        <th style="text-align:right;padding:4px 8px;border:1px solid #ccc;">Amount</th>
+        <th style="text-align:left;padding:4px 8px;border:1px solid #ccc;">Bucket</th>
+        <th style="text-align:left;padding:4px 8px;border:1px solid #ccc;">Flows into</th>
+      </tr></thead><tbody>`;
+  const bucketNames = {
+    intFD: 'Interest on FD/IT refunds (subtract from PBT, add in investing)',
+    intOther: '✅ Other interest — kept in operating by default',
+    dividend: 'Dividend (subtract from PBT, add in investing)',
+    ltcg: 'Long Term Capital Gain (subtract from PBT, show in investing)',
+    stcg: 'Short Term Capital Gain',
+    fno: 'F&O P/L',
+    speculation: 'Speculation P/L',
+    writeBack: 'Sundry balances written back (subtract from PBT)',
+    otherNonOp: '✅ Kept in operating by default (override to -ve to reclassify as non-op)'
+  };
+  const oib = d.otherIncomeBuckets || {};
+  const oibEntries = Object.entries(oib);
+  if (oibEntries.length === 0) {
+    h += `<tr><td colspan="4" style="padding:8px;color:#888;font-style:italic;">No Other Income ledgers in TB.</td></tr>`;
+  } else {
+    oibEntries.forEach(([name, info]) => {
+      const bk = info.bucket;
+      const isWarn = bk === 'otherNonOp';
+      h += `<tr style="${isWarn ? 'background:#ffecec;' : ''}">
+        <td style="padding:3px 8px;border:1px solid #ccc;">${name}${isWarn ? ' <span style="color:#c0392b;font-size:9px;">⚠ uncategorised</span>' : ''}</td>
+        <td style="text-align:right;padding:3px 8px;border:1px solid #ccc;">${fmt(info.amount)}</td>
+        <td style="padding:3px 8px;border:1px solid #ccc;font-family:monospace;">${bk}</td>
+        <td style="padding:3px 8px;border:1px solid #ccc;font-size:10px;">${bucketNames[bk] || ''}</td>
+      </tr>`;
+    });
+  }
+  h += `</tbody></table></details>`;
+
+  // --- 2. Investment ledgers trail ---
+  h += `<details style="margin-bottom:14px;"><summary style="font-weight:700;cursor:pointer;font-size:12px;">2. Investment / FD / Capital-Advance ledgers → Investing section</summary>
+    <table style="width:100%;font-size:11px;border-collapse:collapse;margin-top:6px;">
+      <thead><tr style="background:#f3f3f3;">
+        <th style="text-align:left;padding:4px 8px;border:1px solid #ccc;">Ledger</th>
+        <th style="text-align:left;padding:4px 8px;border:1px solid #ccc;">Group</th>
+        <th style="text-align:left;padding:4px 8px;border:1px solid #ccc;">Bucket</th>
+        <th style="text-align:right;padding:4px 8px;border:1px solid #ccc;">CY</th>
+        <th style="text-align:right;padding:4px 8px;border:1px solid #ccc;">PY</th>
+        <th style="text-align:right;padding:4px 8px;border:1px solid #ccc;">Flow (PY−CY)</th>
+      </tr></thead><tbody>`;
+  const invs = d.investmentLedgers || [];
+  if (invs.length === 0) {
+    h += `<tr><td colspan="6" style="padding:8px;color:#888;font-style:italic;">No investment/FD/capital-advance ledgers auto-detected.</td></tr>`;
+  } else {
+    invs.forEach(x => {
+      const flow = (x.pyAmt || 0) - (x.cyAmt || 0);
+      h += `<tr>
+        <td style="padding:3px 8px;border:1px solid #ccc;">${x.name}</td>
+        <td style="padding:3px 8px;border:1px solid #ccc;">${x.group}</td>
+        <td style="padding:3px 8px;border:1px solid #ccc;font-family:monospace;">${x.bucket}</td>
+        <td style="text-align:right;padding:3px 8px;border:1px solid #ccc;">${fmt(x.cyAmt)}</td>
+        <td style="text-align:right;padding:3px 8px;border:1px solid #ccc;">${fmt(x.pyAmt)}</td>
+        <td style="text-align:right;padding:3px 8px;border:1px solid #ccc;">${fmt(flow)}</td>
+      </tr>`;
+    });
+  }
+  h += `</tbody></table></details>`;
+
+  // --- 3. BS note mapping ---
+  h += `<details style="margin-bottom:6px;"><summary style="font-weight:700;cursor:pointer;font-size:12px;">3. Balance Sheet groups → Schedule III notes (used for WC deltas)</summary>
+    <table style="width:100%;font-size:11px;border-collapse:collapse;margin-top:6px;">
+      <thead><tr style="background:#f3f3f3;">
+        <th style="text-align:left;padding:4px 8px;border:1px solid #ccc;">Note</th>
+        <th style="text-align:left;padding:4px 8px;border:1px solid #ccc;">Group</th>
+        <th style="text-align:right;padding:4px 8px;border:1px solid #ccc;">Amount</th>
+        <th style="text-align:center;padding:4px 8px;border:1px solid #ccc;">Year</th>
+      </tr></thead><tbody>`;
+  const noteMap = d.bsNoteMap || {};
+  const noteOrder = ['n3','n4','n5','n6','n7','n8','n9','n10','n11','n12','n13','n14','n15'];
+  let anyRow = false;
+  noteOrder.forEach(note => {
+    const rows = noteMap[note] || [];
+    rows.forEach(r => {
+      anyRow = true;
+      h += `<tr>
+        <td style="padding:3px 8px;border:1px solid #ccc;font-family:monospace;">${note}: ${nk[note] || ''}</td>
+        <td style="padding:3px 8px;border:1px solid #ccc;">${r.group}</td>
+        <td style="text-align:right;padding:3px 8px;border:1px solid #ccc;">${fmt(r.amount)}</td>
+        <td style="text-align:center;padding:3px 8px;border:1px solid #ccc;">${r.year}</td>
+      </tr>`;
+    });
+  });
+  if (!anyRow) h += `<tr><td colspan="4" style="padding:8px;color:#888;font-style:italic;">No BS groups classified.</td></tr>`;
+  h += `</tbody></table></details>
+    <div style="font-size:10.5px;color:#555;margin-top:10px;background:#fff;padding:8px;border-radius:4px;">
+      <b>How to fix a wrong CF value:</b>
+      <ol style="margin:4px 0 0 18px;padding:0;">
+        <li>Find the ledger/group above that's in the wrong bucket/note.</li>
+        <li>Either rename it in your TB to match the expected keyword, OR</li>
+        <li>Override the CF line directly — the yellow input boxes always win.</li>
+      </ol>
+      <b>Keyword cheat-sheet:</b> Interest on FD → name should include "interest" + "fd" or "fixed deposit" or "it refund". Dividend → include "dividend". Writebacks → "write back" or "writeback" or "sundry balance". Equity inv → "equity share" or "investment". FD asset → "fixed deposit" or " fd " or ending in " fd" or "term deposit". Cap advance → "capital advance" / "capital creditor" / "capital work". ST borrowings → "bank od" / "overdraft" / "cash credit" / "short term borrow".
+    </div>
+  </div>`;
+  document.getElementById('cfDiag').innerHTML = h;
+}
+
+function toggleDiag(){
+  const el = document.getElementById('cfDiag');
+  el.style.display = (el.style.display === 'none') ? 'block' : 'none';
+}
+
+function saveOverrides(silent){
+  const u = JSON.parse(localStorage.getItem('CF_OVERRIDES') || '{}');
+  document.querySelectorAll('#cfContent input[type="number"]').forEach(el => {
+    if (el.id) u[el.id] = el.value;
+  });
+  localStorage.setItem('CF_OVERRIDES', JSON.stringify(u));
+  AccountingEngine.persistToElectron && AccountingEngine.persistToElectron();
+  if (!silent) {
+    status.textContent = '✓ Cash Flow saved.';
+    status.className = 'status-success';
+  }
+  render();
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  render();
+  status.textContent = 'Cash Flow Statement loaded — Oaks-format line items, auto-computed from BS+PL movement.';
+  status.className = 'status-success';
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') window.history.back();
+  if ((e.key.toLowerCase() === 's') && (e.ctrlKey || e.altKey)) { e.preventDefault(); saveOverrides(); }
+});
+</script>
+</body>
+</html>

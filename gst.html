@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GST Reco Tool — AccountingTool</title>
+<link rel="stylesheet" href="tools.css"/>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+body{font-family:'Inter',Arial,sans-serif;background:#f4f6f9;margin:0}
+.at-header{background:#fff;padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #15c39a;box-shadow:0 2px 8px rgba(0,0,0,.07);position:sticky;top:0;z-index:200}
+.at-logo{font-size:21px;font-weight:800;color:#15c39a;display:flex;align-items:center;gap:8px}
+.at-logo span{color:#1a1a1a}
+.at-logo-box{width:34px;height:34px;background:#15c39a;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px}
+.back-link{font-size:13px;color:#555;padding:6px 14px;border:1px solid #ddd;border-radius:6px;text-decoration:none;transition:.18s}
+.back-link:hover{background:#e8faf5;color:#15c39a;border-color:#15c39a}
+.tool-banner{background:linear-gradient(120deg,#15c39a,#0a8068);color:#fff;padding:16px 28px;display:flex;align-items:center;gap:16px}
+.tool-banner-icon{width:46px;height:46px;background:rgba(255,255,255,.18);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px}
+.tool-banner h1{font-size:19px;font-weight:700;margin:0}
+.tool-banner p{font-size:12px;opacity:.85;margin:3px 0 0}
+.at-toolbar{background:#fff;padding:10px 24px;border-bottom:1px solid #e2e8f0;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;border:none;transition:.18s}
+.btn-primary{background:#15c39a;color:#fff}.btn-primary:hover{background:#11a683}
+.btn-secondary{background:#fff;color:#444;border:1px solid #d0d0d0}.btn-secondary:hover{background:#f5f5f5}
+.btn-danger{background:#e53e3e;color:#fff}.btn-danger:hover{background:#c53030}
+.btn-sm{padding:5px 10px;font-size:12px}
+/* SUMMARY CARDS */
+.summary-row{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;padding:18px 24px 0}
+.s-card{background:#fff;border-radius:10px;padding:14px 16px;border-left:4px solid #15c39a;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.s-card.blue{border-color:#3b82f6}.s-card.yellow{border-color:#f59e0b}.s-card.red{border-color:#e53e3e}.s-card.purple{border-color:#8b5cf6}
+.s-card .lbl{font-size:10px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.s-card .val{font-size:18px;font-weight:700;color:#1a1a1a;margin-top:3px}
+.s-card .sub{font-size:11px;color:#aaa;margin-top:2px}
+/* TABS */
+.at-tabs{display:flex;gap:2px;border-bottom:2px solid #e5e5e5;padding:0 24px;background:#fff}
+.at-tab{padding:10px 20px;cursor:pointer;font-size:13px;font-weight:500;color:#666;border:none;background:none;font-family:inherit;border-radius:6px 6px 0 0;transition:.18s}
+.at-tab:hover{color:#15c39a;background:#e8faf5}
+.at-tab.active{color:#15c39a;border-bottom:3px solid #15c39a;font-weight:700;background:#fff;margin-bottom:-2px}
+.tab-panel{display:none;padding:18px 24px}
+.tab-panel.active{display:block}
+/* CARDS */
+.at-card{background:#fff;border-radius:10px;padding:18px 20px;box-shadow:0 1px 4px rgba(0,0,0,.07);border:1px solid #e2e8f0;margin-bottom:18px}
+.at-card-title{font-size:14px;font-weight:700;color:#333;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid #e8faf5;display:flex;align-items:center;gap:8px}
+.at-card-title::before{content:'';width:3px;height:16px;background:#15c39a;border-radius:2px;flex-shrink:0}
+/* TABLE */
+.table-wrap{overflow-x:auto;border-radius:8px;border:1px solid #e2e8f0}
+.at-table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:900px}
+.at-table th{background:#f0faf7;color:#2d4a3e;font-weight:600;padding:9px 11px;text-align:left;border-bottom:2px solid #15c39a;white-space:nowrap;font-size:11.5px}
+.at-table td{padding:8px 11px;border-bottom:1px solid #f2f2f2;color:#333;vertical-align:middle}
+.at-table tr:last-child td{border-bottom:none}
+.at-table tr:hover td{background:#fafffe}
+.at-table .num{text-align:right;font-variant-numeric:tabular-nums}
+.at-table tfoot td{background:#edfaf5;font-weight:700;border-top:2px solid #15c39a;color:#1a4a38}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-green{background:#dcfff6;color:#0a7c5c}
+.badge-red{background:#ffeaea;color:#b91c1c}
+.badge-yellow{background:#fff8dc;color:#a16207}
+.badge-blue{background:#dbeafe;color:#1d4ed8}
+.badge-gray{background:#f3f4f6;color:#4b5563}
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:9999}
+.modal{background:#fff;border-radius:14px;padding:24px 26px;width:600px;max-width:96vw;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.2)}
+.modal-header{font-size:16px;font-weight:700;color:#222;margin-bottom:18px;padding-bottom:12px;border-bottom:2px solid #e8faf5}
+.modal-footer{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;padding-top:14px;border-top:1px solid #f0f0f0}
+.form-grid{display:grid;gap:12px 16px}
+.form-cols-2{grid-template-columns:1fr 1fr}
+.form-cols-3{grid-template-columns:1fr 1fr 1fr}
+.form-group{display:flex;flex-direction:column;gap:4px}
+.form-group label{font-size:11px;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:.4px}
+.form-group input,.form-group select{padding:8px 11px;border:1px solid #d0d0d0;border-radius:6px;font-size:13px;font-family:inherit;transition:.18s}
+.form-group input:focus,.form-group select:focus{outline:none;border-color:#15c39a;box-shadow:0 0 0 3px rgba(21,195,154,.12)}
+textarea.paste-area{width:100%;min-height:120px;padding:10px;border:1px solid #d0d0d0;border-radius:8px;font-size:12px;font-family:'Courier New',monospace;resize:vertical;box-sizing:border-box}
+textarea.paste-area:focus{outline:none;border-color:#15c39a}
+.at-alert{padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:14px}
+.at-alert-info{background:#eff6ff;border:1px solid #93c5fd;color:#1e40af}
+.at-alert-success{background:#f0fdf7;border:1px solid #86efcc;color:#065f46}
+.at-footer{text-align:center;padding:18px;color:#c0c0c0;font-size:12px;border-top:1px solid #eee;margin-top:20px}
+.actions-bar{display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.actions-bar .spacer{flex:1}
+.empty-state{text-align:center;padding:40px 20px;color:#aaa}
+.recon-section{margin-bottom:22px}
+.recon-section h4{font-size:13px;font-weight:700;color:#333;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+@media(max-width:768px){.summary-row{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<script src="engine.js"></script>
+
+<!-- HEADER -->
+<header class="at-header">
+  <div class="at-logo"><div class="at-logo-box">📊</div>Accounting<span>Tool</span></div>
+  <a href="index.html" class="back-link">← Dashboard</a>
+</header>
+
+<!-- BANNER -->
+<div class="tool-banner">
+  <div class="tool-banner-icon">🧾</div>
+  <div>
+    <h1>GST Reco Tool</h1>
+    <p>Reconcile GSTR-2A/2B with Purchase Register to identify mismatches and maximize ITC claims</p>
+  </div>
+  <div style="margin-left:auto;display:flex;gap:8px;">
+    <button class="btn btn-primary" onclick="runReco()" style="background:rgba(255,255,255,.2);border:1.5px solid rgba(255,255,255,.5)">▶ Run Reconciliation</button>
+    <button class="btn btn-secondary" onclick="exportGSTR9()" style="background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.4);color:#fff">📊 GSTR-9 Export</button>
+  </div>
+</div>
+
+<!-- SUMMARY CARDS -->
+<div class="summary-row">
+  <div class="s-card">
+    <div class="lbl">GSTR Records</div>
+    <div class="val" id="s-gstr">0</div>
+    <div class="sub">GSTR-2A/2B entries</div>
+  </div>
+  <div class="s-card blue">
+    <div class="lbl">Books Records</div>
+    <div class="val" id="s-books">0</div>
+    <div class="sub">Purchase register entries</div>
+  </div>
+  <div class="s-card">
+    <div class="lbl">Matched</div>
+    <div class="val" id="s-matched" style="color:#0a7c5c">0</div>
+    <div class="sub">found in both</div>
+  </div>
+  <div class="s-card yellow">
+    <div class="lbl">Only in GSTR</div>
+    <div class="val" id="s-onlygstr" style="color:#a16207">0</div>
+    <div class="sub">not in books</div>
+  </div>
+  <div class="s-card red">
+    <div class="lbl">Only in Books</div>
+    <div class="val" id="s-onlybooks" style="color:#b91c1c">0</div>
+    <div class="sub">not in GSTR</div>
+  </div>
+</div>
+
+<!-- TOOLBAR -->
+<div class="at-toolbar">
+  <button class="btn btn-primary" onclick="runReco()">▶ Run Reconciliation</button>
+  <button class="btn btn-secondary" onclick="exportReport()">⬇ Export Report</button>
+  <button class="btn btn-secondary" onclick="window.print()">🖨 Print</button>
+  <div style="flex:1"></div>
+  <button class="btn btn-danger btn-sm" onclick="clearGSTR()">Clear GSTR Data</button>
+  <button class="btn btn-danger btn-sm" onclick="clearBooks()">Clear Books Data</button>
+</div>
+
+<!-- TABS -->
+<div class="at-tabs">
+  <button class="at-tab active" onclick="showTab('gstr')">📥 GSTR-2A / 2B Data</button>
+  <button class="at-tab" onclick="showTab('books')">📒 Purchase Register</button>
+  <button class="at-tab" onclick="showTab('reco')">⚖ Reconciliation Report</button>
+</div>
+
+<!-- TAB 1: GSTR Data -->
+<div id="tab-gstr" class="tab-panel active">
+  <div class="at-card">
+    <div class="at-card-title">Import GSTR-2A / 2B Data</div>
+    <div class="at-alert at-alert-info">
+      <strong>Option 1:</strong> Upload Excel file (.xlsx) directly &nbsp;|&nbsp; <strong>Option 2:</strong> Paste CSV data below. Format: <code>Supplier GSTIN, Supplier Name, Invoice No, Invoice Date, Invoice Value, Taxable Amount, IGST, CGST, SGST</code>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
+      <label class="btn btn-primary" style="cursor:pointer">
+        📂 Upload GSTR Excel (.xlsx)
+        <input type="file" accept=".xlsx,.xls" style="display:none" onchange="uploadGSTRExcel(this)">
+      </label>
+      <span style="color:#aaa;font-size:12px">or paste CSV below</span>
+    </div>
+    <textarea class="paste-area" id="gstrPaste" placeholder="Paste your GSTR-2A/2B CSV data here...&#10;&#10;Example:&#10;Supplier GSTIN,Supplier Name,Invoice No,Invoice Date,Invoice Value,Taxable Amount,IGST,CGST,SGST&#10;29AAACI7263L1ZJ,ABC Pvt Ltd,INV-001,15-04-2024,118000,100000,18000,0,0&#10;27BBBCS1234K2ZP,XYZ Traders,INV-002,20-04-2024,59000,50000,0,4500,4500"></textarea>
+    <div style="display:flex;gap:10px;margin-top:10px;align-items:center">
+      <button class="btn btn-secondary btn-sm" onclick="parseGSTR()">📥 Parse CSV</button>
+      <button class="btn btn-secondary" onclick="openGSTRModal()">＋ Add Entry Manually</button>
+      <span style="color:#888;font-size:12px;margin-left:auto" id="gstrCount">0 entries loaded</span>
+    </div>
+  </div>
+
+  <div class="at-card">
+    <div class="at-card-title">Loaded GSTR Entries</div>
+    <div class="table-wrap">
+      <table class="at-table">
+        <thead>
+          <tr>
+            <th>Sr</th><th>Supplier GSTIN</th><th>Supplier Name</th><th>Invoice No</th><th>Date</th>
+            <th class="num">Invoice Value (₹)</th><th class="num">Taxable Amt (₹)</th>
+            <th class="num">IGST (₹)</th><th class="num">CGST (₹)</th><th class="num">SGST (₹)</th><th class="num">Total GST (₹)</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="gstrTableBody"></tbody>
+        <tfoot><tr>
+          <td colspan="5"><strong>TOTAL</strong></td>
+          <td class="num" id="gf-val">—</td>
+          <td class="num" id="gf-tax">—</td>
+          <td class="num" id="gf-igst">—</td>
+          <td class="num" id="gf-cgst">—</td>
+          <td class="num" id="gf-sgst">—</td>
+          <td class="num" id="gf-gst">—</td>
+          <td></td>
+        </tr></tfoot>
+      </table>
+    </div>
+    <div id="gstrEmpty" class="empty-state"><div class="icon">🧾</div><h3>No GSTR Data</h3><p>Paste CSV or add entries manually above.</p></div>
+  </div>
+</div>
+
+<!-- TAB 2: Purchase Register -->
+<div id="tab-books" class="tab-panel">
+  <div class="at-card">
+    <div class="at-card-title">Import Purchase Register Data</div>
+    <div class="at-alert at-alert-info">
+      <strong>Option 1:</strong> Upload Excel file (.xlsx) directly &nbsp;|&nbsp; <strong>Option 2:</strong> Paste CSV data below. Same format: <code>Supplier GSTIN, Supplier Name, Invoice No, Invoice Date, Invoice Value, Taxable Amount, IGST, CGST, SGST</code>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
+      <label class="btn btn-primary" style="cursor:pointer">
+        📂 Upload Purchase Register Excel (.xlsx)
+        <input type="file" accept=".xlsx,.xls" style="display:none" onchange="uploadBooksExcel(this)">
+      </label>
+      <span style="color:#aaa;font-size:12px">or paste CSV below</span>
+    </div>
+    <textarea class="paste-area" id="booksPaste" placeholder="Paste your Purchase Register CSV data here...&#10;&#10;Example:&#10;Supplier GSTIN,Supplier Name,Invoice No,Invoice Date,Invoice Value,Taxable Amount,IGST,CGST,SGST&#10;29AAACI7263L1ZJ,ABC Pvt Ltd,INV-001,15-04-2024,118000,100000,18000,0,0"></textarea>
+    <div style="display:flex;gap:10px;margin-top:10px;align-items:center">
+      <button class="btn btn-secondary btn-sm" onclick="parseBooks()">📥 Parse CSV</button>
+      <button class="btn btn-secondary" onclick="openBooksModal()">＋ Add Entry Manually</button>
+      <span style="color:#888;font-size:12px;margin-left:auto" id="booksCount">0 entries loaded</span>
+    </div>
+  </div>
+
+  <div class="at-card">
+    <div class="at-card-title">Loaded Purchase Register Entries</div>
+    <div class="table-wrap">
+      <table class="at-table">
+        <thead>
+          <tr>
+            <th>Sr</th><th>Supplier GSTIN</th><th>Supplier Name</th><th>Invoice No</th><th>Date</th>
+            <th class="num">Invoice Value (₹)</th><th class="num">Taxable Amt (₹)</th>
+            <th class="num">IGST (₹)</th><th class="num">CGST (₹)</th><th class="num">SGST (₹)</th><th class="num">Total GST (₹)</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="booksTableBody"></tbody>
+        <tfoot><tr>
+          <td colspan="5"><strong>TOTAL</strong></td>
+          <td class="num" id="bf-val">—</td>
+          <td class="num" id="bf-tax">—</td>
+          <td class="num" id="bf-igst">—</td>
+          <td class="num" id="bf-cgst">—</td>
+          <td class="num" id="bf-sgst">—</td>
+          <td class="num" id="bf-gst">—</td>
+          <td></td>
+        </tr></tfoot>
+      </table>
+    </div>
+    <div id="booksEmpty" class="empty-state"><div class="icon">📒</div><h3>No Purchase Register Data</h3><p>Paste CSV or add entries manually above.</p></div>
+  </div>
+</div>
+
+<!-- TAB 3: Reconciliation Report -->
+<div id="tab-reco" class="tab-panel">
+  <div id="recoEmpty" class="empty-state">
+    <div class="icon">⚖</div>
+    <h3>No Reconciliation Yet</h3>
+    <p>Load data in both tabs and click "Run Reconciliation".</p>
+    <button class="btn btn-primary" style="margin-top:14px" onclick="runReco()">▶ Run Reconciliation</button>
+  </div>
+  <div id="recoContent" style="display:none">
+    <!-- Matched -->
+    <div class="at-card recon-section">
+      <h4 class="at-card-title"><span class="badge badge-green">✓ MATCHED</span> Records found in both GSTR and Purchase Register</h4>
+      <div class="table-wrap"><table class="at-table" id="matchedTable">
+        <thead><tr><th>GSTIN</th><th>Supplier</th><th>Invoice No</th><th class="num">GSTR GST (₹)</th><th class="num">Books GST (₹)</th><th class="num">Diff (₹)</th><th>Status</th></tr></thead>
+        <tbody id="matchedBody"></tbody>
+      </table></div>
+    </div>
+    <!-- Only in GSTR -->
+    <div class="at-card recon-section">
+      <h4 class="at-card-title"><span class="badge badge-yellow">⚠ ONLY IN GSTR</span> Invoices in GSTR not found in Purchase Register</h4>
+      <div class="table-wrap"><table class="at-table" id="onlyGSTRTable">
+        <thead><tr><th>GSTIN</th><th>Supplier</th><th>Invoice No</th><th>Date</th><th class="num">Taxable (₹)</th><th class="num">Total GST (₹)</th><th>Remark</th></tr></thead>
+        <tbody id="onlyGSTRBody"></tbody>
+      </table></div>
+    </div>
+    <!-- Only in Books -->
+    <div class="at-card recon-section">
+      <h4 class="at-card-title"><span class="badge badge-red">✕ ONLY IN BOOKS</span> Invoices in Purchase Register not found in GSTR</h4>
+      <div class="table-wrap"><table class="at-table" id="onlyBooksTable">
+        <thead><tr><th>GSTIN</th><th>Supplier</th><th>Invoice No</th><th>Date</th><th class="num">Taxable (₹)</th><th class="num">Total GST (₹)</th><th>Remark</th></tr></thead>
+        <tbody id="onlyBooksBody"></tbody>
+      </table></div>
+    </div>
+  </div>
+</div>
+
+<div class="at-footer">© 2026 AccountingTool | GST Reco Tool</div>
+
+<!-- GSTR MODAL -->
+<div id="gstrModal" class="overlay" style="display:none">
+  <div class="modal">
+    <div class="modal-header">Add GSTR Entry</div>
+    <div class="form-grid form-cols-2" id="gstrModalForm">
+      <div class="form-group"><label>Supplier GSTIN</label><input id="gm-gstin" placeholder="15-digit GSTIN"></div>
+      <div class="form-group"><label>Supplier Name</label><input id="gm-name" placeholder="Company Name"></div>
+      <div class="form-group"><label>Invoice No</label><input id="gm-inv" placeholder="INV-001"></div>
+      <div class="form-group"><label>Invoice Date</label><input id="gm-date" type="date"></div>
+      <div class="form-group"><label>Invoice Value (₹)</label><input id="gm-val" type="number" oninput="autoGST('gm')"></div>
+      <div class="form-group"><label>Taxable Amount (₹)</label><input id="gm-tax" type="number" oninput="autoGST('gm')"></div>
+      <div class="form-group"><label>IGST (₹)</label><input id="gm-igst" type="number"></div>
+      <div class="form-group"><label>CGST (₹)</label><input id="gm-cgst" type="number"></div>
+      <div class="form-group"><label>SGST (₹)</label><input id="gm-sgst" type="number"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeGSTRModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveGSTREntry()">Add Entry</button>
+    </div>
+  </div>
+</div>
+
+<!-- BOOKS MODAL -->
+<div id="booksModal" class="overlay" style="display:none">
+  <div class="modal">
+    <div class="modal-header">Add Purchase Register Entry</div>
+    <div class="form-grid form-cols-2">
+      <div class="form-group"><label>Supplier GSTIN</label><input id="bm-gstin" placeholder="15-digit GSTIN"></div>
+      <div class="form-group"><label>Supplier Name</label><input id="bm-name" placeholder="Company Name"></div>
+      <div class="form-group"><label>Invoice No</label><input id="bm-inv" placeholder="INV-001"></div>
+      <div class="form-group"><label>Invoice Date</label><input id="bm-date" type="date"></div>
+      <div class="form-group"><label>Invoice Value (₹)</label><input id="bm-val" type="number" oninput="autoGST('bm')"></div>
+      <div class="form-group"><label>Taxable Amount (₹)</label><input id="bm-tax" type="number" oninput="autoGST('bm')"></div>
+      <div class="form-group"><label>IGST (₹)</label><input id="bm-igst" type="number"></div>
+      <div class="form-group"><label>CGST (₹)</label><input id="bm-cgst" type="number"></div>
+      <div class="form-group"><label>SGST (₹)</label><input id="bm-sgst" type="number"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeBooksModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveBooksEntry()">Add Entry</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let gstrData = [];
+let booksData = [];
+
+// Auto-fill GST fields when Invoice Value or Taxable Amount changes
+function autoGST(prefix) {
+  const val = parseFloat(document.getElementById(prefix+'-val').value)||0;
+  const tax = parseFloat(document.getElementById(prefix+'-tax').value)||0;
+  const gstAmt = Math.max(0, val - tax);
+  const igst = parseFloat(document.getElementById(prefix+'-igst').value)||0;
+  const cgst = parseFloat(document.getElementById(prefix+'-cgst').value)||0;
+  const sgst = parseFloat(document.getElementById(prefix+'-sgst').value)||0;
+  // Only auto-fill GST if all gst fields are still zero and we have a calculated GST
+  if (igst === 0 && cgst === 0 && sgst === 0 && gstAmt > 0) {
+    // Default to IGST (inter-state), user can adjust
+    document.getElementById(prefix+'-igst').value = gstAmt.toFixed(2);
+    document.getElementById(prefix+'-cgst').value = '';
+    document.getElementById(prefix+'-sgst').value = '';
+  }
+  // Also auto-fill taxable if we have invoice value and GST split
+  if (tax === 0 && val > 0 && (igst > 0 || cgst > 0 || sgst > 0)) {
+    const totalGSTAmt = igst + cgst + sgst;
+    document.getElementById(prefix+'-tax').value = Math.max(0, val - totalGSTAmt).toFixed(2);
+  }
+}
+
+// Parse a set of rows from Excel (header row + data rows) into GST record objects
+function parseExcelRows(rows) {
+  if (!rows || rows.length < 2) return [];
+  const headers = rows[0].map(h => String(h||"").trim().toLowerCase().replace(/[\s\/\-\.]+/g,""));
+  const normalize = (obj, keys) => {
+    for (const k of keys) if (obj[k] !== undefined && obj[k] !== "") return String(obj[k]).trim();
+    return "";
+  };
+  return rows.slice(1).map(row => {
+    const obj = {};
+    headers.forEach((h, i) => { obj[h] = (row[i] !== undefined && row[i] !== null) ? String(row[i]).trim() : ""; });
+    return {
+      gstin:   normalize(obj, ["suppliergstin","gstin","partygstin","suppliergst","vendorgstin"]),
+      name:    normalize(obj, ["suppliername","name","party","vendor","companyname","partyname","vendorname"]),
+      invNo:   normalize(obj, ["invoiceno","invno","invoice","documentno","billno","invoicenumber","docno"]),
+      date:    normalize(obj, ["invoicedate","date","invdate","billdate","docdate"]),
+      value:   parseFloat(normalize(obj, ["invoicevalue","value","totalvalue","grossvalue","total","invoicetotal","amount"]))||0,
+      taxable: parseFloat(normalize(obj, ["taxableamount","taxable","taxablevalue","baseamount","basic","taxableamt","taxablevalue"]))||0,
+      igst:    parseFloat(normalize(obj, ["igst","integratedtax","igstamount"]))||0,
+      cgst:    parseFloat(normalize(obj, ["cgst","centraltax","cgstamount"]))||0,
+      sgst:    parseFloat(normalize(obj, ["sgst","statetax","sgstamount","utgst","utgstamount"]))||0,
+    };
+  }).filter(r => r.gstin || r.invNo || r.name);
+}
+
+// Upload GSTR Excel file
+function uploadGSTRExcel(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, {type:'array'});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:""});
+      const parsed = parseExcelRows(rows);
+      if (!parsed.length) {
+        alert("No valid rows found in Excel.\n\nExpected columns: Supplier GSTIN, Supplier Name, Invoice No, Invoice Date, Invoice Value, Taxable Amount, IGST, CGST, SGST");
+        return;
+      }
+      gstrData = gstrData.concat(parsed);
+      saveData(); renderGSTR(); updateSummaryCards(null);
+      alert(parsed.length + " GSTR records loaded from Excel file.");
+    } catch(err) {
+      alert("Error reading Excel file: " + err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+  input.value = "";
+}
+
+// Upload Purchase Register Excel file
+function uploadBooksExcel(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, {type:'array'});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:""});
+      const parsed = parseExcelRows(rows);
+      if (!parsed.length) {
+        alert("No valid rows found in Excel.\n\nExpected columns: Supplier GSTIN, Supplier Name, Invoice No, Invoice Date, Invoice Value, Taxable Amount, IGST, CGST, SGST");
+        return;
+      }
+      booksData = booksData.concat(parsed);
+      saveData(); renderBooks(); updateSummaryCards(null);
+      alert(parsed.length + " Purchase Register records loaded from Excel file.");
+    } catch(err) {
+      alert("Error reading Excel file: " + err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+  input.value = "";
+}
+
+function loadData() {
+  try { gstrData  = JSON.parse(localStorage.getItem("GST_GSTR")  || "[]"); } catch(e){ gstrData = []; }
+  try { booksData = JSON.parse(localStorage.getItem("GST_PURCHASE") || "[]"); } catch(e){ booksData = []; }
+  renderGSTR(); renderBooks(); updateSummaryCards(null);
+}
+
+function saveData() {
+  localStorage.setItem("GST_GSTR",    JSON.stringify(gstrData));
+  localStorage.setItem("GST_PURCHASE", JSON.stringify(booksData));
+  if (typeof AccountingEngine !== 'undefined') AccountingEngine.persistToElectron();
+}
+
+function fmt(n) {
+  if (!n || isNaN(n)) return "₹0";
+  return "₹" + parseFloat(n).toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+
+function totalGST(r) { return (parseFloat(r.igst)||0)+(parseFloat(r.cgst)||0)+(parseFloat(r.sgst)||0); }
+
+function parseCSV(text) {
+  const lines = text.trim().split("\n").filter(l => l.trim());
+  if (lines.length < 2) return [];
+  const headers = lines[0].split(",").map(h => h.trim().toLowerCase().replace(/[\s\/\-]+/g,""));
+  return lines.slice(1).map(line => {
+    const cols = line.split(",").map(c => c.trim().replace(/"/g,""));
+    const obj = {};
+    headers.forEach((h, i) => { obj[h] = cols[i] || ""; });
+    const normalize = (keys) => {
+      for (const k of keys) if (obj[k] !== undefined) return obj[k];
+      return "";
+    };
+    return {
+      gstin:    normalize(["suppliergstin","gstin","gstin"]),
+      name:     normalize(["suppliername","name","party","vendor"]),
+      invNo:    normalize(["invoiceno","invno","invoice","documentno"]),
+      date:     normalize(["invoicedate","date","invdate"]),
+      value:    parseFloat(normalize(["invoicevalue","value","totalvalue","grossvalue"]))||0,
+      taxable:  parseFloat(normalize(["taxableamount","taxable","taxablevalue","baseamount"]))||0,
+      igst:     parseFloat(normalize(["igst"]))||0,
+      cgst:     parseFloat(normalize(["cgst"]))||0,
+      sgst:     parseFloat(normalize(["sgst","utgst"]))||0,
+    };
+  }).filter(r => r.gstin || r.invNo);
+}
+
+function parseGSTR() {
+  const text = document.getElementById("gstrPaste").value;
+  if (!text.trim()) { alert("Please paste CSV data first."); return; }
+  const parsed = parseCSV(text);
+  if (!parsed.length) { alert("Could not parse CSV. Check the format."); return; }
+  gstrData = gstrData.concat(parsed);
+  saveData(); renderGSTR();
+  alert(parsed.length + " records loaded into GSTR data.");
+}
+
+function parseBooks() {
+  const text = document.getElementById("booksPaste").value;
+  if (!text.trim()) { alert("Please paste CSV data first."); return; }
+  const parsed = parseCSV(text);
+  if (!parsed.length) { alert("Could not parse CSV. Check the format."); return; }
+  booksData = booksData.concat(parsed);
+  saveData(); renderBooks();
+  alert(parsed.length + " records loaded into Purchase Register.");
+}
+
+function renderGSTR() {
+  const tbody = document.getElementById("gstrTableBody");
+  const empty = document.getElementById("gstrEmpty");
+  document.getElementById("gstrCount").textContent = gstrData.length + " entries loaded";
+  if (!gstrData.length) { tbody.innerHTML = ""; empty.style.display = "block"; updateGSTRFooter(); return; }
+  empty.style.display = "none";
+  tbody.innerHTML = gstrData.map((r, i) => `<tr>
+    <td>${i+1}</td><td style="font-family:monospace;font-size:11px">${r.gstin}</td><td>${r.name}</td><td>${r.invNo}</td><td>${r.date}</td>
+    <td class="num">${fmt(r.value)}</td><td class="num">${fmt(r.taxable)}</td>
+    <td class="num">${fmt(r.igst)}</td><td class="num">${fmt(r.cgst)}</td><td class="num">${fmt(r.sgst)}</td>
+    <td class="num"><strong>${fmt(totalGST(r))}</strong></td>
+    <td><button class="btn btn-sm btn-danger" onclick="delGSTR(${i})">✕</button></td>
+  </tr>`).join("");
+  updateGSTRFooter();
+}
+
+function renderBooks() {
+  const tbody = document.getElementById("booksTableBody");
+  const empty = document.getElementById("booksEmpty");
+  document.getElementById("booksCount").textContent = booksData.length + " entries loaded";
+  if (!booksData.length) { tbody.innerHTML = ""; empty.style.display = "block"; updateBooksFooter(); return; }
+  empty.style.display = "none";
+  tbody.innerHTML = booksData.map((r, i) => `<tr>
+    <td>${i+1}</td><td style="font-family:monospace;font-size:11px">${r.gstin}</td><td>${r.name}</td><td>${r.invNo}</td><td>${r.date}</td>
+    <td class="num">${fmt(r.value)}</td><td class="num">${fmt(r.taxable)}</td>
+    <td class="num">${fmt(r.igst)}</td><td class="num">${fmt(r.cgst)}</td><td class="num">${fmt(r.sgst)}</td>
+    <td class="num"><strong>${fmt(totalGST(r))}</strong></td>
+    <td><button class="btn btn-sm btn-danger" onclick="delBooks(${i})">✕</button></td>
+  </tr>`).join("");
+  updateBooksFooter();
+}
+
+function sumField(arr, field) { return arr.reduce((s, r) => s + (parseFloat(r[field])||0), 0); }
+
+function updateGSTRFooter() {
+  document.getElementById("gf-val").textContent  = fmt(sumField(gstrData,"value"));
+  document.getElementById("gf-tax").textContent  = fmt(sumField(gstrData,"taxable"));
+  document.getElementById("gf-igst").textContent = fmt(sumField(gstrData,"igst"));
+  document.getElementById("gf-cgst").textContent = fmt(sumField(gstrData,"cgst"));
+  document.getElementById("gf-sgst").textContent = fmt(sumField(gstrData,"sgst"));
+  document.getElementById("gf-gst").textContent  = fmt(gstrData.reduce((s,r) => s+totalGST(r), 0));
+}
+
+function updateBooksFooter() {
+  document.getElementById("bf-val").textContent  = fmt(sumField(booksData,"value"));
+  document.getElementById("bf-tax").textContent  = fmt(sumField(booksData,"taxable"));
+  document.getElementById("bf-igst").textContent = fmt(sumField(booksData,"igst"));
+  document.getElementById("bf-cgst").textContent = fmt(sumField(booksData,"cgst"));
+  document.getElementById("bf-sgst").textContent = fmt(sumField(booksData,"sgst"));
+  document.getElementById("bf-gst").textContent  = fmt(booksData.reduce((s,r) => s+totalGST(r), 0));
+}
+
+function delGSTR(i)  { if (confirm("Remove this entry?")) { gstrData.splice(i,1); saveData(); renderGSTR(); } }
+function delBooks(i) { if (confirm("Remove this entry?")) { booksData.splice(i,1); saveData(); renderBooks(); } }
+function clearGSTR()  { if (confirm("Clear all GSTR data?")) { gstrData=[]; saveData(); renderGSTR(); } }
+function clearBooks() { if (confirm("Clear all purchase data?")) { booksData=[]; saveData(); renderBooks(); } }
+
+function runReco() {
+  if (!gstrData.length && !booksData.length) { alert("Please load data in both tabs first."); showTab('gstr'); return; }
+  showTab('reco');
+
+  // Build lookup keys: GSTIN + InvoiceNo (case-insensitive, trimmed)
+  // Handle duplicates by appending index suffix
+  const key = r => (r.gstin||"").trim().toLowerCase() + "|||" + (r.invNo||"").trim().toLowerCase();
+  const gstrMap  = {};
+  const booksMap = {};
+  gstrData.forEach(r  => { let k = key(r); let idx = 1; while (gstrMap[k + (idx>1?'_'+idx:'')]) idx++; gstrMap[k + (idx>1?'_'+idx:'')]  = r; });
+  booksData.forEach(r => { let k = key(r); let idx = 1; while (booksMap[k + (idx>1?'_'+idx:'')]) idx++; booksMap[k + (idx>1?'_'+idx:'')] = r; });
+
+  const allKeys = new Set([...Object.keys(gstrMap), ...Object.keys(booksMap)]);
+  const matched = [], onlyGSTR = [], onlyBooks = [];
+
+  allKeys.forEach(k => {
+    const g = gstrMap[k];
+    const b = booksMap[k];
+    if (g && b) {
+      const diff = totalGST(g) - totalGST(b);
+      matched.push({ g, b, diff });
+    } else if (g && !b) {
+      onlyGSTR.push(g);
+    } else {
+      onlyBooks.push(b);
+    }
+  });
+
+  // Render matched
+  document.getElementById("matchedBody").innerHTML = matched.length
+    ? matched.map(({g, b, diff}) => `<tr>
+        <td style="font-family:monospace;font-size:11px">${g.gstin}</td>
+        <td>${g.name}</td><td>${g.invNo}</td>
+        <td class="num">${fmt(totalGST(g))}</td>
+        <td class="num">${fmt(totalGST(b))}</td>
+        <td class="num" style="color:${Math.abs(diff)<0.01?'#0a7c5c':'#b91c1c'}">${fmt(diff)}</td>
+        <td><span class="badge ${Math.abs(diff)<0.01?'badge-green':'badge-red'}">${Math.abs(diff)<0.01?'✓ Match':'⚠ Diff'}</span></td>
+      </tr>`).join("")
+    : `<tr><td colspan="7" style="text-align:center;color:#aaa;padding:20px">No matched records</td></tr>`;
+
+  // Render only GSTR
+  document.getElementById("onlyGSTRBody").innerHTML = onlyGSTR.length
+    ? onlyGSTR.map(r => `<tr>
+        <td style="font-family:monospace;font-size:11px">${r.gstin}</td>
+        <td>${r.name}</td><td>${r.invNo}</td><td>${r.date}</td>
+        <td class="num">${fmt(r.taxable)}</td>
+        <td class="num"><strong>${fmt(totalGST(r))}</strong></td>
+        <td><span class="badge badge-yellow">Not in Books</span></td>
+      </tr>`).join("")
+    : `<tr><td colspan="7" style="text-align:center;color:#aaa;padding:20px">No unmatched GSTR records</td></tr>`;
+
+  // Render only Books
+  document.getElementById("onlyBooksBody").innerHTML = onlyBooks.length
+    ? onlyBooks.map(r => `<tr>
+        <td style="font-family:monospace;font-size:11px">${r.gstin}</td>
+        <td>${r.name}</td><td>${r.invNo}</td><td>${r.date}</td>
+        <td class="num">${fmt(r.taxable)}</td>
+        <td class="num"><strong>${fmt(totalGST(r))}</strong></td>
+        <td><span class="badge badge-red">ITC Risk</span></td>
+      </tr>`).join("")
+    : `<tr><td colspan="7" style="text-align:center;color:#aaa;padding:20px">No unmatched books records</td></tr>`;
+
+  updateSummaryCards({matched, onlyGSTR, onlyBooks});
+  document.getElementById("recoEmpty").style.display = "none";
+  document.getElementById("recoContent").style.display = "block";
+}
+
+function updateSummaryCards(result) {
+  document.getElementById("s-gstr").textContent   = gstrData.length;
+  document.getElementById("s-books").textContent  = booksData.length;
+  if (result) {
+    document.getElementById("s-matched").textContent   = result.matched.length;
+    document.getElementById("s-onlygstr").textContent  = result.onlyGSTR.length;
+    document.getElementById("s-onlybooks").textContent = result.onlyBooks.length;
+  }
+}
+
+function showTab(name) {
+  document.querySelectorAll(".at-tab").forEach((t,i) => {
+    const names = ["gstr","books","reco"];
+    t.classList.toggle("active", names[i] === name);
+  });
+  document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+  document.getElementById("tab-" + name).classList.add("active");
+}
+
+// MODAL: GSTR
+function openGSTRModal()  { document.getElementById("gstrModal").style.display = "flex"; }
+function closeGSTRModal() { document.getElementById("gstrModal").style.display = "none"; }
+function saveGSTREntry() {
+  const entry = {
+    gstin: document.getElementById("gm-gstin").value.trim(),
+    name:  document.getElementById("gm-name").value.trim(),
+    invNo: document.getElementById("gm-inv").value.trim(),
+    date:  document.getElementById("gm-date").value,
+    value: parseFloat(document.getElementById("gm-val").value)||0,
+    taxable: parseFloat(document.getElementById("gm-tax").value)||0,
+    igst:  parseFloat(document.getElementById("gm-igst").value)||0,
+    cgst:  parseFloat(document.getElementById("gm-cgst").value)||0,
+    sgst:  parseFloat(document.getElementById("gm-sgst").value)||0,
+  };
+  if (!entry.invNo) { alert("Invoice No is required."); return; }
+  if (entry.gstin && !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z0-9]{1}Z[A-Z0-9]{1}$/i.test(entry.gstin)) {
+    if (!confirm("GSTIN format looks invalid (should be 15 chars like 27AABCU9603R1ZM).\n\nSave anyway?")) return;
+  }
+  gstrData.push(entry); saveData(); renderGSTR(); closeGSTRModal();
+}
+
+// MODAL: Books
+function openBooksModal()  { document.getElementById("booksModal").style.display = "flex"; }
+function closeBooksModal() { document.getElementById("booksModal").style.display = "none"; }
+function saveBooksEntry() {
+  const entry = {
+    gstin: document.getElementById("bm-gstin").value.trim(),
+    name:  document.getElementById("bm-name").value.trim(),
+    invNo: document.getElementById("bm-inv").value.trim(),
+    date:  document.getElementById("bm-date").value,
+    value: parseFloat(document.getElementById("bm-val").value)||0,
+    taxable: parseFloat(document.getElementById("bm-tax").value)||0,
+    igst:  parseFloat(document.getElementById("bm-igst").value)||0,
+    cgst:  parseFloat(document.getElementById("bm-cgst").value)||0,
+    sgst:  parseFloat(document.getElementById("bm-sgst").value)||0,
+  };
+  if (!entry.invNo) { alert("Invoice No is required."); return; }
+  if (entry.gstin && !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z0-9]{1}Z[A-Z0-9]{1}$/i.test(entry.gstin)) {
+    if (!confirm("GSTIN format looks invalid (should be 15 chars like 27AABCU9603R1ZM).\n\nSave anyway?")) return;
+  }
+  booksData.push(entry); saveData(); renderBooks(); closeBooksModal();
+}
+
+function exportReport() {
+  if (!gstrData.length && !booksData.length) { alert("No data to export."); return; }
+
+  // Build reconciliation map (same logic as runReco — handles duplicates)
+  const key = r => (r.gstin||"").trim().toLowerCase() + "|||" + (r.invNo||"").trim().toLowerCase();
+  const gstrMap  = {};
+  const booksMap = {};
+  gstrData.forEach(r  => { let k = key(r); let idx = 1; while (gstrMap[k + (idx>1?'_'+idx:'')]) idx++; gstrMap[k + (idx>1?'_'+idx:'')]  = r; });
+  booksData.forEach(r => { const k = key(r); if (!booksMap[k]) booksMap[k] = r; });
+  const allKeys = new Set([...Object.keys(gstrMap), ...Object.keys(booksMap)]);
+
+  // Sheet 1: Reconciliation Summary
+  const recoRows = [["GSTIN","Supplier Name","Invoice No","Date","Taxable Amt","GSTR GST (₹)","Books GST (₹)","Difference (₹)","Reco Status"]];
+  allKeys.forEach(k => {
+    const g = gstrMap[k];
+    const b = booksMap[k];
+    if (g && b) {
+      const diff = totalGST(g) - totalGST(b);
+      recoRows.push([g.gstin, g.name, g.invNo, g.date, g.taxable, totalGST(g), totalGST(b), diff.toFixed(2), Math.abs(diff)<0.01 ? "Matched" : "Amount Mismatch"]);
+    } else if (g) {
+      recoRows.push([g.gstin, g.name, g.invNo, g.date, g.taxable, totalGST(g), "", "", "Only in GSTR — Not in Books"]);
+    } else if (b) {
+      recoRows.push([b.gstin, b.name, b.invNo, b.date, b.taxable, "", totalGST(b), "", "Only in Books — ITC Risk"]);
+    }
+  });
+
+  // Sheet 2: Raw GSTR Data
+  const gstrRows = [["GSTIN","Supplier Name","Invoice No","Date","Invoice Value","Taxable Amt","IGST","CGST","SGST","Total GST"]];
+  gstrData.forEach(r => gstrRows.push([r.gstin, r.name, r.invNo, r.date, r.value, r.taxable, r.igst, r.cgst, r.sgst, totalGST(r)]));
+
+  // Sheet 3: Raw Books Data
+  const booksRows = [["GSTIN","Supplier Name","Invoice No","Date","Invoice Value","Taxable Amt","IGST","CGST","SGST","Total GST"]];
+  booksData.forEach(r => booksRows.push([r.gstin, r.name, r.invNo, r.date, r.value, r.taxable, r.igst, r.cgst, r.sgst, totalGST(r)]));
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(recoRows),  "Reconciliation");
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(gstrRows),  "GSTR Data");
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(booksRows), "Purchase Register");
+  XLSX.writeFile(wb, "GST_Reco_Report.xlsx");
+  alert("Report exported with 3 sheets: Reconciliation, GSTR Data, Purchase Register.");
+}
+
+document.getElementById("gstrModal").addEventListener("click", e => { if (e.target === document.getElementById("gstrModal")) closeGSTRModal(); });
+document.getElementById("booksModal").addEventListener("click", e => { if (e.target === document.getElementById("booksModal")) closeBooksModal(); });
+
+loadData();
+
+/* ── Auto-load company details ── */
+(function() {
+  try {
+    const bd = AccountingEngine.getCompanyDetails();
+    const banner = document.querySelector('.tool-banner p');
+    if (banner && bd.name) {
+      banner.textContent = bd.name + ' — Reconcile GSTR-2A/2B with Purchase Register';
+    }
+  } catch(e) {}
+})();
+
+/* ================================================================
+   GSTR-9 ANNUAL RETURN EXPORT
+   Generates Excel in GSTR-9 table format from loaded data
+   ================================================================ */
+function exportGSTR9() {
+  if (!gstrData.length && !booksData.length) { alert('Load GSTR and/or Purchase data first.'); return; }
+  if (typeof XLSX === 'undefined') { alert('XLSX library not loaded.'); return; }
+
+  const bd = (typeof AccountingEngine !== 'undefined') ? AccountingEngine.getCompanyDetails() : {};
+  const fy = bd.financialYear || '';
+
+  /* Aggregate by tax type */
+  let totalTaxable=0, totalIGST=0, totalCGST=0, totalSGST=0, totalValue=0, totalInvoices=0;
+  const byMonth = {};
+  const months = ['Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar'];
+
+  const allData = booksData.length ? booksData : gstrData;
+  allData.forEach(r => {
+    totalTaxable += parseFloat(r.taxable)||0;
+    totalIGST += parseFloat(r.igst)||0;
+    totalCGST += parseFloat(r.cgst)||0;
+    totalSGST += parseFloat(r.sgst)||0;
+    totalValue += parseFloat(r.value)||0;
+    totalInvoices++;
+    /* Group by month */
+    const d = r.date ? new Date(r.date) : null;
+    const mKey = d ? months[((d.getMonth() - 3 + 12) % 12)] : 'Unknown';
+    if (!byMonth[mKey]) byMonth[mKey] = { taxable:0, igst:0, cgst:0, sgst:0, value:0, count:0 };
+    byMonth[mKey].taxable += parseFloat(r.taxable)||0;
+    byMonth[mKey].igst += parseFloat(r.igst)||0;
+    byMonth[mKey].cgst += parseFloat(r.cgst)||0;
+    byMonth[mKey].sgst += parseFloat(r.sgst)||0;
+    byMonth[mKey].value += parseFloat(r.value)||0;
+    byMonth[mKey].count++;
+  });
+
+  const rows = [];
+  rows.push(['GSTR-9 — Annual Return Summary']);
+  rows.push(['Company: ' + (bd.name || ''), '', 'Financial Year: ' + fy]);
+  rows.push([]);
+  rows.push(['TABLE 4 — DETAILS OF ADVANCES, INWARD AND OUTWARD SUPPLIES']);
+  rows.push(['Description', 'Taxable Value', 'IGST', 'CGST', 'SGST/UTGST', 'Total Tax', 'Invoice Value']);
+  rows.push(['Total Inward Supplies (from Books)', totalTaxable, totalIGST, totalCGST, totalSGST, totalIGST+totalCGST+totalSGST, totalValue]);
+  rows.push([]);
+  rows.push(['MONTH-WISE BREAKUP']);
+  rows.push(['Month', 'Invoices', 'Taxable Value', 'IGST', 'CGST', 'SGST/UTGST', 'Total Tax']);
+  months.forEach(m => {
+    const d = byMonth[m];
+    if (d) rows.push([m, d.count, d.taxable, d.igst, d.cgst, d.sgst, d.igst+d.cgst+d.sgst]);
+  });
+  rows.push([]);
+  rows.push(['TABLE 6 — DETAILS OF ITC AVAILED']);
+  rows.push(['Description', 'IGST', 'CGST', 'SGST/UTGST', 'Total ITC']);
+  rows.push(['Total ITC Availed (from GSTR-2A/2B)', totalIGST, totalCGST, totalSGST, totalIGST+totalCGST+totalSGST]);
+  rows.push([]);
+  rows.push(['TABLE 8 — OTHER ITC RELATED INFORMATION']);
+  rows.push(['ITC as per GSTR-2A (Auto-populated)', gstrData.reduce((s,r)=>(s+(parseFloat(r.igst)||0)+(parseFloat(r.cgst)||0)+(parseFloat(r.sgst)||0)),0)]);
+  rows.push(['ITC as per Books', booksData.reduce((s,r)=>(s+(parseFloat(r.igst)||0)+(parseFloat(r.cgst)||0)+(parseFloat(r.sgst)||0)),0)]);
+  rows.push(['Difference', gstrData.reduce((s,r)=>(s+(parseFloat(r.igst)||0)+(parseFloat(r.cgst)||0)+(parseFloat(r.sgst)||0)),0) - booksData.reduce((s,r)=>(s+(parseFloat(r.igst)||0)+(parseFloat(r.cgst)||0)+(parseFloat(r.sgst)||0)),0)]);
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{wch:35},{wch:16},{wch:14},{wch:14},{wch:14},{wch:14},{wch:14}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'GSTR-9');
+  XLSX.writeFile(wb, 'GSTR9_' + (fy || 'export') + '.xlsx');
+  alert('✓ GSTR-9 exported with ' + totalInvoices + ' transactions.');
+}
+</script>
+</body>
+</html>

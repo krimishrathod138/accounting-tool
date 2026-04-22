@@ -1,0 +1,57 @@
+{
+  "name": "balance-sheet-builder",
+  "version": "1.4.1",
+  "description": "Professional Balance Sheet Builder and Accounting Tool",
+  "main": "main.js",
+  "author": "Krimish",
+  "license": "ISC",
+  "scripts": {
+    "start": "electron .",
+    "build:mac": "electron-builder --mac",
+    "build:win": "electron-builder --win",
+    "build:all": "electron-builder --mac --win"
+  },
+  "build": {
+    "appId": "com.krimish.balance-sheet-builder",
+    "productName": "Balance Sheet Builder",
+    "files": [
+      "**/*",
+      "!dist/**",
+      "!node_modules/electron/**",
+      "!node_modules/electron-builder/**",
+      "!*.xlsx",
+      "!*.csv"
+    ],
+    "mac": {
+      "category": "public.app-category.finance",
+      "icon": "build/icon.png",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["x64", "arm64"]
+        }
+      ]
+    },
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "installerHeaderIcon": "build/icon.ico"
+    }
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1"
+  }
+}

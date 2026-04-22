@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>N2 — Notes 3 to 8: Share Capital, Reserves, Borrowings, Payables</title>
+<link rel="stylesheet" href="style.css">
+<style>
+body{font-family:Arial,sans-serif;background:#f4f4f4;margin:0;padding:0 0 90px;}
+.notes-wrap{background:#fff;max-width:1100px;margin:16px auto;padding:28px 36px;border:1px solid #c0c8d3;box-shadow:0 2px 10px rgba(0,0,0,.07);font-family:Calibri,'Segoe UI',Arial,sans-serif;}
+.note-header{margin-bottom:14px;border-bottom:2px solid #000;padding-bottom:6px;}
+.note-header .co-name{font-size:14px;font-weight:700;}
+.note-header .co-title{font-size:12px;font-weight:700;}
+.note-header .co-date{font-size:10.5px;display:flex;justify-content:space-between;margin-top:4px;}
+.note-header .co-date .right{font-style:italic;color:#444;}
+
+.note-block{margin-top:22px;}
+.note-heading{display:flex;align-items:baseline;gap:10px;font-size:13px;font-weight:700;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid #bbb;}
+.note-heading .num{min-width:28px;}
+
+.n-table{width:100%;border-collapse:collapse;font-size:11px;border:1px solid #000;margin-bottom:8px;font-variant-numeric:tabular-nums;}
+.n-table td, .n-table th{border:1px solid #000;padding:4px 8px;vertical-align:middle;}
+.n-table th{background:#e9ecef;font-weight:700;text-align:center;}
+.n-table th.left{text-align:left;}
+.n-table .amt{text-align:right;width:130px;white-space:nowrap;}
+.n-table .py{color:#555;}
+.n-table tr.sub td{font-weight:700;background:#fafafa;}
+.n-table tr.tot td{font-weight:700;border-top:1px solid #000;border-bottom:2px double #000;}
+.n-table input[type="number"], .n-table input[type="text"]{width:100%;text-align:right;border:none;background:#fffef3;padding:2px 4px;font:inherit;box-sizing:border-box;font-variant-numeric:tabular-nums;}
+.n-table input[type="text"]{text-align:left;}
+.n-table input:focus{outline:2px solid #ffcc00;background:#fff;}
+.n-table td.auto{background:#eef5ff;}
+.n-table td.ro{background:#f5f5f5;}
+
+.note-text{font-size:11px;line-height:1.55;text-align:justify;margin:6px 0 10px;}
+.note-text textarea{width:100%;min-height:60px;padding:8px;border:1px solid #999;border-radius:3px;font-family:Calibri,Arial,sans-serif;font-size:11px;line-height:1.5;resize:vertical;}
+.note-text textarea:focus{outline:none;border-color:#ffcc00;background:#fffef3;}
+
+.sub-heading{font-size:11.5px;font-weight:700;margin:12px 0 6px;text-decoration:underline;}
+
+.toolbar-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
+.btn-primary{background:#234a7b;color:#fff;border:none;padding:6px 14px;border-radius:3px;cursor:pointer;font-size:12px;font-weight:600;}
+.btn-save{background:#006400;color:#fff;border:none;padding:6px 14px;border-radius:3px;cursor:pointer;font-size:12px;font-weight:600;}
+.btn-secondary{background:#6c757d;color:#fff;border:none;padding:6px 12px;border-radius:3px;cursor:pointer;font-size:12px;}
+button:hover:not(.tab){filter:brightness(1.1);}
+
+#statusBar{max-width:1100px;margin:14px auto;padding:8px 12px;font-size:13px;font-weight:600;border-radius:3px;}
+.status-success{background:#d4edda;color:#155724;border:1px solid #c3e6cb;}
+.status-normal{background:#e2e3e5;color:#41464b;border:1px solid #d6d8db;}
+
+.legend{font-size:10.5px;color:#555;display:flex;gap:14px;flex-wrap:wrap;margin-bottom:6px;}
+.legend .swatch{display:inline-block;width:12px;height:12px;border:1px solid #888;vertical-align:middle;margin-right:4px;}
+
+@media print{
+  body{background:#fff;padding:0;}
+  .toolbar-row, .legend, .bottom-tabs, #statusBar{display:none !important;}
+  .notes-wrap{box-shadow:none;border:none;padding:0;margin:0;}
+  @page{margin:1.2cm 1.4cm;size:A4 portrait;}
+}
+</style>
+</head>
+<body>
+<script src="engine.js"></script>
+
+<div id="statusBar" class="status-normal">Loading...</div>
+
+<div class="notes-wrap">
+  <div class="toolbar-row">
+    <div style="font-weight:700;color:#14345a;">N2 — Notes 3 to 8: Share Capital · Reserves · Borrowings · Trade Payables · OCL · ST Provisions</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button type="button" class="btn-primary" onclick="render()">⟳ Refresh from TB</button>
+      <button type="button" class="btn-save" onclick="saveAll()">💾 Save</button>
+      <button type="button" class="btn-primary" onclick="window.print()">🖨 Print</button>
+    </div>
+  </div>
+  <div class="legend">
+    <span><span class="swatch" style="background:#eef5ff;"></span>Auto from TB</span>
+    <span><span class="swatch" style="background:#fffef3;"></span>Editable</span>
+    <span><span class="swatch" style="background:#f5f5f5;"></span>Formula total</span>
+  </div>
+
+  <!-- Page header -->
+  <div class="note-header">
+    <div class="co-name" id="coName">Company Name</div>
+    <div class="co-title">Notes to the Financial Statements</div>
+    <div class="co-date">
+      <span id="cyLabel">Year ended March 31, 2024</span>
+      <span class="right" id="roundLabel">All amounts in INR, unless otherwise stated</span>
+    </div>
+  </div>
+
+  <div id="noteContainer"></div>
+</div>
+
+<!-- BOTTOM TABS -->
+<div class="bottom-tabs">
+  <a href="dashboard.html" class="tab">HOME</a>
+  <a href="bd.html" class="tab">BD</a>
+  <a href="tb.html" class="tab">TB</a>
+  <a href="ae.html" class="tab">AE</a>
+  <a href="balance.html" class="tab">BS</a>
+  <a href="pl.html" class="tab">PL</a>
+  <a href="cf.html" class="tab">CF</a>
+  <a href="n1.html" class="tab">N1</a>
+  <a href="n2.html" class="tab active">N2</a>
+  <a href="n3.html" class="tab">N3</a>
+  <a href="n4.html" class="tab">N4</a>
+  <a href="n5.html" class="tab">N5</a>
+  <a href="n6.html" class="tab">N6</a>
+  <a href="n7.html" class="tab">N7</a>
+    <a href="tx.html" class="tab">TX</a>
+  <a href="audit-report.html" class="tab">AR</a>
+    <a href="fs-package.html" class="tab">FS</a>
+    <button type="button" class="tab plus">+</button>
+</div>
+
+<script>
+const status = document.getElementById('statusBar');
+let CY_YR = '2024', PY_YR = '2023';
+
+function fmt(v){if(v===undefined||v===null||isNaN(v)||v===0)return'-';const a=Math.abs(v);const s=a.toLocaleString('en-IN',{minimumFractionDigits:0,maximumFractionDigits:0});return v<0?'('+s+')':s;}
+function n(v){return Number(v)||0;}
+
+function loadCompany(){
+  const bd = AccountingEngine.getCompanyDetails();
+  const fy = bd.financialYear || '1-Apr-23 to 31-Mar-24';
+  const endDate = (fy.split(' to ')[1] || 'March 31, 2024').trim();
+  const m = endDate.match(/\d{4}/);
+  CY_YR = m ? m[0] : '2024';
+  PY_YR = String(Number(CY_YR) - 1);
+  const meta = JSON.parse(localStorage.getItem('FS_META') || '{}');
+  document.getElementById('coName').textContent = meta.companyName || bd.name || 'Company Name';
+  document.getElementById('cyLabel').textContent = 'Year ended ' + endDate;
+  const rounding = localStorage.getItem('ROUNDING') || 'unrounded';
+  document.getElementById('roundLabel').textContent =
+    rounding === 'rounded' ? 'All amounts in INR Thousands, unless otherwise stated' :
+    rounding === 'lakhs' ? 'All amounts in INR Lakhs, unless otherwise stated' :
+    'All amounts in INR Unrounded, unless otherwise stated';
+  return { meta };
+}
+
+function render(){
+  const { meta } = loadCompany();
+  let cy={}, py={};
+  try { cy = AccountingEngine.getScheduleIIIReport('CY') || {}; } catch(e) {}
+  try { if (AccountingEngine.hasPYData && AccountingEngine.hasPYData()) py = AccountingEngine.getScheduleIIIReport('PY') || {}; } catch(e) {}
+
+  const shareCapCY = cy.bsNotes?.n3_shareCapital?.total || 0;
+  const shareCapPY = py.bsNotes?.n3_shareCapital?.total || 0;
+  const reservesCY = (cy.bsNotes?.n4_reserves?.total || 0);
+  const reservesPY = (py.bsNotes?.n4_reserves?.total || 0);
+  const profitCY   = cy.pl?.profitForYear || 0;
+  const profitPY   = py.pl?.profitForYear || 0;
+  const ltBorrCY   = cy.bsNotes?.n5_ltBorrowings?.total || 0;
+  const ltBorrPY   = py.bsNotes?.n5_ltBorrowings?.total || 0;
+  const stBorrCY   = cy.bsNotes?.n6_stBorrowings?.total || 0;
+  const stBorrPY   = py.bsNotes?.n6_stBorrowings?.total || 0;
+  const tpCY       = cy.bsNotes?.n7_tradePayables?.total || 0;
+  const tpPY       = py.bsNotes?.n7_tradePayables?.total || 0;
+  const oclCY      = cy.bsNotes?.n8_otherCL?.total || 0;
+  const oclPY      = py.bsNotes?.n8_otherCL?.total || 0;
+
+  // Saved manual overrides
+  const u = JSON.parse(localStorage.getItem('N2_DATA') || '{}');
+  const g = (k, d) => u[k] !== undefined ? u[k] : d;
+  const fv = Number(meta.faceValue) || 10;
+  const issuedShares = Number(g('n3_issuedShares', meta.weightedAvgShares || 0));
+
+  let h = '';
+
+  /* ════════ NOTE 3: SHARE CAPITAL ════════ */
+  h += `<div class="note-block">
+    <div class="note-heading"><span class="num">3.</span><span>Share capital</span></div>
+    <table class="n-table">
+      <thead><tr><th class="left">Particulars</th><th>As at<br>March 31, ${CY_YR}</th><th class="py">As at<br>March 31, ${PY_YR}</th></tr></thead>
+      <tbody>
+        <tr class="sub"><td colspan="3">Authorised</td></tr>
+        <tr><td>Number of Authorised Equity shares</td><td></td><td></td></tr>
+        <tr><td><input type="number" id="n3_authShares" value="${g('n3_authShares','')}" placeholder="e.g. 50000" style="width:100px;display:inline-block;"> Equity shares of Rs. <input type="number" id="n3_fv" value="${g('n3_fv',fv)}" style="width:60px;display:inline-block;"> each</td>
+            <td class="amt">${fmt(n(g('n3_authShares')) * n(g('n3_fv',fv)))}</td>
+            <td class="amt py">${fmt(n(g('n3_authShares')) * n(g('n3_fv',fv)))}</td></tr>
+        <tr class="sub"><td colspan="3">Issued, subscribed and fully paid up</td></tr>
+        <tr><td><input type="number" id="n3_issuedShares" value="${issuedShares||''}" placeholder="e.g. 10000" style="width:100px;display:inline-block;"> Equity shares of Rs. ${g('n3_fv',fv)} each</td>
+            <td class="amt auto">${fmt(issuedShares * n(g('n3_fv',fv)) || shareCapCY)}</td>
+            <td class="amt py">${fmt(issuedShares * n(g('n3_fv',fv)) || shareCapPY)}</td></tr>
+        <tr class="tot"><td style="text-align:right;">Total</td>
+            <td class="amt">${fmt(issuedShares * n(g('n3_fv',fv)) || shareCapCY)}</td>
+            <td class="amt py">${fmt(issuedShares * n(g('n3_fv',fv)) || shareCapPY)}</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub-heading">Reconciliation of the number of Equity Shares outstanding</div>
+    <table class="n-table">
+      <thead>
+        <tr><th class="left" rowspan="2">Particulars</th><th colspan="2">As at March 31, ${CY_YR}</th><th colspan="2" class="py">As at March 31, ${PY_YR}</th></tr>
+        <tr><th>No. of Shares</th><th>Amount</th><th class="py">No. of Shares</th><th class="py">Amount</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>As at the beginning of the period</td>
+            <td class="amt">${fmt(issuedShares)}</td><td class="amt">${fmt(issuedShares * n(g('n3_fv',fv)))}</td>
+            <td class="amt py">${fmt(issuedShares)}</td><td class="amt py">${fmt(issuedShares * n(g('n3_fv',fv)))}</td></tr>
+        <tr><td>Add : Shares Issued during the period</td>
+            <td class="amt"><input type="number" id="n3_addShares" value="${g('n3_addShares','')}"></td>
+            <td class="amt">${fmt(n(g('n3_addShares')) * n(g('n3_fv',fv)))}</td>
+            <td class="amt py">-</td><td class="amt py">-</td></tr>
+        <tr><td>Less : Deductions during the period</td>
+            <td class="amt"><input type="number" id="n3_lessShares" value="${g('n3_lessShares','')}"></td>
+            <td class="amt">${fmt(n(g('n3_lessShares')) * n(g('n3_fv',fv)))}</td>
+            <td class="amt py">-</td><td class="amt py">-</td></tr>
+        <tr class="tot"><td>As at the end of the period</td>
+            <td class="amt">${fmt(issuedShares + n(g('n3_addShares')) - n(g('n3_lessShares')))}</td>
+            <td class="amt">${fmt((issuedShares + n(g('n3_addShares')) - n(g('n3_lessShares'))) * n(g('n3_fv',fv)))}</td>
+            <td class="amt py">${fmt(issuedShares)}</td>
+            <td class="amt py">${fmt(issuedShares * n(g('n3_fv',fv)))}</td></tr>
+      </tbody>
+    </table>
+
+    <div class="sub-heading">Rights, preferences and restrictions attached to shares</div>
+    <div class="note-text"><textarea id="n3_rights" rows="4">${g('n3_rights', `The Company has issued only one class of equity shares having a par value of Rs. ${g('n3_fv',fv)} per share. Each equity shareholder is entitled to one vote per share. In the event of liquidation of the Company, the holders of equity shares will be entitled to receive remaining assets of the Company, after distribution of all preferential amounts, in proportion to their shareholding. Any dividend proposed by the Board of Directors is subject to the approval of the shareholders in the ensuing Annual General Meeting, except in case of interim dividend.`)}</textarea></div>
+
+    <div class="sub-heading">Equity Shares held by Shareholders holding more than 5% shares</div>
+    <table class="n-table">
+      <thead>
+        <tr><th class="left" rowspan="2">Name of the Shareholder</th><th colspan="2">As at March 31, ${CY_YR}</th><th colspan="2" class="py">As at March 31, ${PY_YR}</th></tr>
+        <tr><th>No. of Shares</th><th>% Shares</th><th class="py">No. of Shares</th><th class="py">% Shares</th></tr>
+      </thead>
+      <tbody id="shareholders5body"></tbody>
+    </table>
+    <button type="button" class="btn-secondary" onclick="addShareholderRow()">+ Add shareholder row</button>
+
+    <div class="sub-heading">Details regarding number and class of shares for the period of five years immediately preceding March 31, ${CY_YR}</div>
+    <div class="note-text">
+      a) The company has not allotted any shares as fully paid-up without payment being received in cash.<br>
+      b) The company has not alloted any shares as fully paid up bonus shares.<br>
+      c) The company has not bought back any of its shares.
+    </div>
+
+    <div class="sub-heading">Other Details regarding issue of shares</div>
+    <div class="note-text">
+      There are no shares reserved for issue under options and contracts / commitments for the sale of shares.<br>
+      There are no securities convertible into equity or preference shares.<br>
+      There are no calls unpaid on any shares.<br>
+      There are no forfeited shares.
+    </div>
+
+    <div class="sub-heading">Equity Shares held by Promoters at the end of the year</div>
+    <table class="n-table">
+      <thead>
+        <tr><th class="left" rowspan="2">Promoter Name</th><th colspan="2">As at March 31, ${CY_YR}</th><th colspan="2" class="py">As at March 31, ${PY_YR}</th><th rowspan="2">% Change during year</th></tr>
+        <tr><th>No. of Shares</th><th>%</th><th class="py">No. of Shares</th><th class="py">%</th></tr>
+      </thead>
+      <tbody id="promotersBody"></tbody>
+    </table>
+    <button type="button" class="btn-secondary" onclick="addPromoterRow()">+ Add promoter row</button>
+  </div>`;
+
+  /* ════════ NOTE 4: RESERVES AND SURPLUS ════════ */
+  const openCY = reservesPY + profitPY;  // Opening CY = Closing PY
+  const closeCY = openCY + profitCY - n(g('n4_divPaid'));
+  const openPY = n(g('n4_openPY', 0));
+  const closePY = openPY + profitPY - n(g('n4_divPaidPY', 0));
+  h += `<div class="note-block">
+    <div class="note-heading"><span class="num">4.</span><span>Reserves and Surplus</span></div>
+    <table class="n-table">
+      <thead><tr><th class="left">Particulars</th><th>As at<br>March 31, ${CY_YR}</th><th class="py">As at<br>March 31, ${PY_YR}</th></tr></thead>
+      <tbody>
+        <tr class="sub"><td colspan="3">Surplus</td></tr>
+        <tr><td>Opening Balance</td>
+            <td class="amt auto">${fmt(openCY)}</td>
+            <td class="amt py"><input type="number" id="n4_openPY" value="${g('n4_openPY','')}" placeholder="${openPY}"></td></tr>
+        <tr><td>(+) Net Profit or (Loss) for the period</td>
+            <td class="amt auto">${fmt(profitCY)}</td>
+            <td class="amt py auto">${fmt(profitPY)}</td></tr>
+        <tr><td>(-) Dividend Paid</td>
+            <td class="amt"><input type="number" id="n4_divPaid" value="${g('n4_divPaid','')}"></td>
+            <td class="amt py"><input type="number" id="n4_divPaidPY" value="${g('n4_divPaidPY','')}"></td></tr>
+        <tr><td>(-) Transfer to Reserves</td>
+            <td class="amt"><input type="number" id="n4_tfrOut" value="${g('n4_tfrOut','')}"></td>
+            <td class="amt py"><input type="number" id="n4_tfrOutPY" value="${g('n4_tfrOutPY','')}"></td></tr>
+        <tr><td>(+) Transfer from Reserves</td>
+            <td class="amt"><input type="number" id="n4_tfrIn" value="${g('n4_tfrIn','')}"></td>
+            <td class="amt py"><input type="number" id="n4_tfrInPY" value="${g('n4_tfrInPY','')}"></td></tr>
+        <tr class="tot"><td>Closing Balance</td>
+            <td class="amt">${fmt(closeCY + n(g('n4_tfrIn')) - n(g('n4_tfrOut')))}</td>
+            <td class="amt py">${fmt(closePY + n(g('n4_tfrInPY')) - n(g('n4_tfrOutPY')))}</td></tr>
+        <tr class="tot"><td style="text-align:right;">Total</td>
+            <td class="amt">${fmt(closeCY + n(g('n4_tfrIn')) - n(g('n4_tfrOut')))}</td>
+            <td class="amt py">${fmt(closePY + n(g('n4_tfrInPY')) - n(g('n4_tfrOutPY')))}</td></tr>
+      </tbody>
+    </table>
+  </div>`;
+
+  /* ════════ NOTE 5: LONG-TERM BORROWINGS ════════ */
+  h += `<div class="note-block">
+    <div class="note-heading"><span class="num">5.</span><span>Long-Term Borrowings</span></div>
+    <table class="n-table">
+      <thead><tr><th class="left">Particulars</th><th>As at<br>March 31, ${CY_YR}</th><th class="py">As at<br>March 31, ${PY_YR}</th></tr></thead>
+      <tbody>
+        <tr class="sub"><td colspan="3">Secured</td></tr>
+        <tr><td>Term loans from Banks</td>
+            <td class="amt"><input type="number" id="n5_secBank" value="${g('n5_secBank','')}"></td>
+            <td class="amt py"><input type="number" id="n5_secBankPY" value="${g('n5_secBankPY','')}"></td></tr>
+        <tr><td>Term loans from others</td>
+            <td class="amt auto"><input type="number" id="n5_secOther" value="${g('n5_secOther', ltBorrCY)||''}" placeholder="${ltBorrCY}"></td>
+            <td class="amt py"><input type="number" id="n5_secOtherPY" value="${g('n5_secOtherPY', ltBorrPY)||''}" placeholder="${ltBorrPY}"></td></tr>
+        <tr class="sub"><td colspan="3">Unsecured</td></tr>
+        <tr><td>Loans from related parties</td>
+            <td class="amt"><input type="number" id="n5_unsecRP" value="${g('n5_unsecRP','')}"></td>
+            <td class="amt py"><input type="number" id="n5_unsecRPPY" value="${g('n5_unsecRPPY','')}"></td></tr>
+        <tr><td>Other loans</td>
+            <td class="amt"><input type="number" id="n5_unsecOth" value="${g('n5_unsecOth','')}"></td>
+            <td class="amt py"><input type="number" id="n5_unsecOthPY" value="${g('n5_unsecOthPY','')}"></td></tr>
+        <tr class="tot"><td style="text-align:right;">Total</td>
+            <td class="amt">${fmt(n(g('n5_secBank')) + n(g('n5_secOther', ltBorrCY)) + n(g('n5_unsecRP')) + n(g('n5_unsecOth')))}</td>
+            <td class="amt py">${fmt(n(g('n5_secBankPY')) + n(g('n5_secOtherPY', ltBorrPY)) + n(g('n5_unsecRPPY')) + n(g('n5_unsecOthPY')))}</td></tr>
+      </tbody>
+    </table>
+  </div>`;
+
+  /* ════════ NOTE 6: TRADE PAYABLES (with ageing) ════════ */
+  h += `<div class="note-block">
+    <div class="note-heading"><span class="num">6.</span><span>Trade Payables</span></div>
+    <table class="n-table">
+      <thead><tr><th class="left">Particulars</th><th>As at<br>March 31, ${CY_YR}</th><th class="py">As at<br>March 31, ${PY_YR}</th></tr></thead>
+      <tbody>
+        <tr><td>Total outstanding dues of micro and small enterprises</td>
+            <td class="amt"><input type="number" id="n6_msme" value="${g('n6_msme','')}"></td>
+            <td class="amt py"><input type="number" id="n6_msmePY" value="${g('n6_msmePY','')}"></td></tr>
+        <tr><td>Total outstanding dues of other than micro and small enterprises</td>
+            <td class="amt auto"><input type="number" id="n6_oth" value="${g('n6_oth', tpCY)||''}" placeholder="${tpCY}"></td>
+            <td class="amt py"><input type="number" id="n6_othPY" value="${g('n6_othPY', tpPY)||''}" placeholder="${tpPY}"></td></tr>
+        <tr class="tot"><td style="text-align:right;">Total</td>
+            <td class="amt">${fmt(n(g('n6_msme')) + n(g('n6_oth', tpCY)))}</td>
+            <td class="amt py">${fmt(n(g('n6_msmePY')) + n(g('n6_othPY', tpPY)))}</td></tr>
+      </tbody>
+    </table>
+    ${ageingTable('cy', CY_YR)}
+    ${ageingTable('py', PY_YR)}
+  </div>`;
+
+  /* ════════ NOTE 7: OTHER CURRENT LIABILITIES ════════ */
+  const oclRows = [
+    ['adv','Advance from Customers'],
+    ['emp','Employee Dues Payable'],
+    ['tds','TDS Payable'],
+    ['gst','GST Payable'],
+    ['stat','Statutory Dues Payable'],
+    ['oth','Other payables']
+  ];
+  let oclTotal = 0, oclTotalPY = 0;
+  oclRows.forEach(([k,_]) => { oclTotal += n(g('n7_'+k)); oclTotalPY += n(g('n7_'+k+'PY')); });
+  // Auto-hint for 'oth' if no manual breakdown given
+  const autoOclUsed = oclRows.every(([k]) => !u['n7_'+k]);
+  h += `<div class="note-block">
+    <div class="note-heading"><span class="num">7.</span><span>Other current liabilities</span></div>
+    <table class="n-table">
+      <thead><tr><th class="left">Particulars</th><th>As at<br>March 31, ${CY_YR}</th><th class="py">As at<br>March 31, ${PY_YR}</th></tr></thead>
+      <tbody>`;
+  oclRows.forEach(([k,label]) => {
+    const autoCY = (k === 'oth' && autoOclUsed) ? oclCY : '';
+    const autoPY = (k === 'oth' && autoOclUsed) ? oclPY : '';
+    h += `<tr><td>${label}</td>
+        <td class="amt"><input type="number" id="n7_${k}" value="${g('n7_'+k, autoCY)||''}" placeholder="${autoCY}"></td>
+        <td class="amt py"><input type="number" id="n7_${k}PY" value="${g('n7_'+k+'PY', autoPY)||''}" placeholder="${autoPY}"></td></tr>`;
+  });
+  const realOclCY = autoOclUsed ? oclCY : oclTotal;
+  const realOclPY = autoOclUsed ? oclPY : oclTotalPY;
+  h += `<tr class="tot"><td style="text-align:right;">Total</td>
+        <td class="amt">${fmt(realOclCY)}</td>
+        <td class="amt py">${fmt(realOclPY)}</td></tr>
+    </tbody></table>
+  </div>`;
+
+  /* ════════ NOTE 8: SHORT-TERM PROVISIONS ════════ */
+  h += `<div class="note-block">
+    <div class="note-heading"><span class="num">8.</span><span>Short-Term Provisions</span></div>
+    <table class="n-table">
+      <thead><tr><th class="left">Particulars</th><th>As at<br>March 31, ${CY_YR}</th><th class="py">As at<br>March 31, ${PY_YR}</th></tr></thead>
+      <tbody>
+        <tr><td>Provision for Other Employee benefits</td>
+            <td class="amt"><input type="number" id="n8_emp" value="${g('n8_emp','')}"></td>
+            <td class="amt py"><input type="number" id="n8_empPY" value="${g('n8_empPY','')}"></td></tr>
+        <tr><td>Provision for Income tax</td>
+            <td class="amt"><input type="number" id="n8_itax" value="${g('n8_itax','')}"></td>
+            <td class="amt py"><input type="number" id="n8_itaxPY" value="${g('n8_itaxPY','')}"></td></tr>
+        <tr><td>Provision for Other Expenses</td>
+            <td class="amt"><input type="number" id="n8_oth" value="${g('n8_oth','')}"></td>
+            <td class="amt py"><input type="number" id="n8_othPY" value="${g('n8_othPY','')}"></td></tr>
+        <tr class="tot"><td style="text-align:right;">Total</td>
+            <td class="amt">${fmt(n(g('n8_emp')) + n(g('n8_itax')) + n(g('n8_oth')))}</td>
+            <td class="amt py">${fmt(n(g('n8_empPY')) + n(g('n8_itaxPY')) + n(g('n8_othPY')))}</td></tr>
+      </tbody>
+    </table>
+  </div>`;
+
+  document.getElementById('noteContainer').innerHTML = h;
+
+  // Populate dynamic tables
+  populateShareholders();
+  populatePromoters();
+
+  // Auto-save on input change
+  document.querySelectorAll('#noteContainer input, #noteContainer textarea').forEach(inp => {
+    inp.addEventListener('change', () => saveAll(true));
+  });
+}
+
+function ageingTable(suffix, yr){
+  const u = JSON.parse(localStorage.getItem('N2_DATA') || '{}');
+  const g = (k, d) => u[k] !== undefined ? u[k] : d;
+  const rows = [
+    ['msme','MSME'],
+    ['oth','Others'],
+    ['dmsme','Disputed dues – MSME'],
+    ['doth','Disputed dues – Others']
+  ];
+  const cols = ['unbilled','notDue','lt1','yr12','yr23','gt3'];
+  let h = `<div class="sub-heading">Ageing for trade payables from the due date of payment for each of the category as at March 31, ${yr}</div>
+    <table class="n-table">
+      <thead>
+        <tr><th class="left" rowspan="2">Particulars</th><th colspan="7">Outstanding for following periods from due date of payment</th></tr>
+        <tr><th>Unbilled</th><th>Not Due</th><th>Less than 1 year</th><th>1 - 2 years</th><th>2 - 3 years</th><th>More than 3 years</th><th>Total</th></tr>
+      </thead><tbody>`;
+  let colTotals = [0,0,0,0,0,0,0];
+  rows.forEach(([rk, label]) => {
+    let rowTotal = 0;
+    let rowHtml = `<tr><td>${label}</td>`;
+    cols.forEach((ck, ci) => {
+      const key = `n6_age_${suffix}_${rk}_${ck}`;
+      const val = n(g(key));
+      rowTotal += val;
+      colTotals[ci] += val;
+      rowHtml += `<td class="amt"><input type="number" id="${key}" value="${u[key]||''}"></td>`;
+    });
+    rowHtml += `<td class="amt">${fmt(rowTotal)}</td></tr>`;
+    colTotals[6] += rowTotal;
+    h += rowHtml;
+  });
+  h += `<tr class="tot"><td style="text-align:right;">Total</td>`;
+  colTotals.forEach(t => h += `<td class="amt">${fmt(t)}</td>`);
+  h += `</tr></tbody></table>`;
+  return h;
+}
+
+function populateShareholders(){
+  const u = JSON.parse(localStorage.getItem('N2_DATA') || '{}');
+  const list = JSON.parse(u.n3_shareholders || '[]');
+  const tbody = document.getElementById('shareholders5body');
+  if (!tbody) return;
+  if (list.length === 0) list.push({name:'', sharesCY:0, sharesPY:0});
+  const total = list.reduce((s,x) => s + Number(x.sharesCY||0), 0) || 1;
+  const totalPY = list.reduce((s,x) => s + Number(x.sharesPY||0), 0) || 1;
+  tbody.innerHTML = list.map((s,i) => `
+    <tr>
+      <td><input type="text" data-sh-idx="${i}" data-sh-f="name" value="${s.name||''}"></td>
+      <td class="amt"><input type="number" data-sh-idx="${i}" data-sh-f="sharesCY" value="${s.sharesCY||''}"></td>
+      <td class="amt">${((Number(s.sharesCY||0)/total)*100).toFixed(2)}%</td>
+      <td class="amt py"><input type="number" data-sh-idx="${i}" data-sh-f="sharesPY" value="${s.sharesPY||''}"></td>
+      <td class="amt py">${((Number(s.sharesPY||0)/totalPY)*100).toFixed(2)}%</td>
+    </tr>
+  `).join('');
+  tbody.querySelectorAll('input').forEach(inp => inp.addEventListener('change', saveShareholders));
+}
+function addShareholderRow(){
+  const u = JSON.parse(localStorage.getItem('N2_DATA') || '{}');
+  const list = JSON.parse(u.n3_shareholders || '[]');
+  list.push({name:'', sharesCY:0, sharesPY:0});
+  u.n3_shareholders = JSON.stringify(list);
+  localStorage.setItem('N2_DATA', JSON.stringify(u));
+  render();
+}
+function saveShareholders(){
+  const u = JSON.parse(localStorage.getItem('N2_DATA') || '{}');
+  const list = JSON.parse(u.n3_shareholders || '[]');
+  document.querySelectorAll('#shareholders5body input').forEach(inp => {
+    const idx = Number(inp.dataset.shIdx);
+    const f = inp.dataset.shF;
+    while (list.length <= idx) list.push({name:'', sharesCY:0, sharesPY:0});
+    list[idx][f] = inp.value;
+  });
+  u.n3_shareholders = JSON.stringify(list);
+  localStorage.setItem('N2_DATA', JSON.stringify(u));
+  AccountingEngine.persistToElectron && AccountingEngine.persistToElectron();
+  populateShareholders();
+}
+
+function populatePromoters(){
+  const u = JSON.parse(localStorage.getItem('N2_DATA') || '{}');
+  const list = JSON.parse(u.n3_promoters || '[]');
+  const tbody = document.getElementById('promotersBody');
+  if (!tbody) return;
+  if (list.length === 0) list.push({name:'', sharesCY:0, sharesPY:0});
+  const total = list.reduce((s,x) => s + Number(x.sharesCY||0), 0) || 1;
+  const totalPY = list.reduce((s,x) => s + Number(x.sharesPY||0), 0) || 1;
+  tbody.innerHTML = list.map((p,i) => {
+    const pctCY = (Number(p.sharesCY||0)/total)*100;
+    const pctPY = (Number(p.sharesPY||0)/totalPY)*100;
+    const chg = pctPY === 0 ? '-' : (pctCY - pctPY).toFixed(2) + '%';
+    return `
+    <tr>
+      <td><input type="text" data-pr-idx="${i}" data-pr-f="name" value="${p.name||''}"></td>
+      <td class="amt"><input type="number" data-pr-idx="${i}" data-pr-f="sharesCY" value="${p.sharesCY||''}"></td>
+      <td class="amt">${pctCY.toFixed(2)}%</td>
+      <td class="amt py"><input type="number" data-pr-idx="${i}" data-pr-f="sharesPY" value="${p.sharesPY||''}"></td>
+      <td class="amt py">${pctPY.toFixed(2)}%</td>
+      <td class="amt">${chg}</td>
+    </tr>`;
+  }).join('');
+  tbody.querySelectorAll('input').forEach(inp => inp.addEventListener('change', savePromoters));
+}
+function addPromoterRow(){
+  const u = JSON.parse(localStorage.getItem('N2_DATA') || '{}');
+  const list = JSON.parse(u.n3_promoters || '[]');
+  list.push({name:'', sharesCY:0, sharesPY:0});
+  u.n3_promoters = JSON.stringify(list);
+  localStorage.setItem('N2_DATA', JSON.stringify(u));
+  render();
+}
+function savePromoters(){
+  const u = JSON.parse(localStorage.getItem('N2_DATA') || '{}');
+  const list = JSON.parse(u.n3_promoters || '[]');
+  document.querySelectorAll('#promotersBody input').forEach(inp => {
+    const idx = Number(inp.dataset.prIdx);
+    const f = inp.dataset.prF;
+    while (list.length <= idx) list.push({name:'', sharesCY:0, sharesPY:0});
+    list[idx][f] = inp.value;
+  });
+  u.n3_promoters = JSON.stringify(list);
+  localStorage.setItem('N2_DATA', JSON.stringify(u));
+  AccountingEngine.persistToElectron && AccountingEngine.persistToElectron();
+  populatePromoters();
+}
+
+function saveAll(silent){
+  const u = JSON.parse(localStorage.getItem('N2_DATA') || '{}');
+  document.querySelectorAll('#noteContainer input, #noteContainer textarea').forEach(el => {
+    if (el.id) u[el.id] = el.value;
+  });
+  localStorage.setItem('N2_DATA', JSON.stringify(u));
+  AccountingEngine.persistToElectron && AccountingEngine.persistToElectron();
+  if (!silent) { status.textContent = '✓ N2 saved.'; status.className = 'status-success'; }
+  render();
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  render();
+  status.textContent = 'N2 loaded. Edit yellow cells to override TB values.';
+  status.className = 'status-success';
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') window.history.back();
+  if ((e.key.toLowerCase() === 's') && (e.ctrlKey || e.altKey)) { e.preventDefault(); saveAll(); }
+});
+</script>
+</body>
+</html>

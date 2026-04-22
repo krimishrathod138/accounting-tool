@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Balance Sheet Builder — Schedule III</title>
+<link rel="stylesheet" href="style.css">
+<style>
+*{box-sizing:border-box;}
+body{margin:0;font-family:'Segoe UI',Arial,sans-serif;background:#eaeef4;color:#333;padding-bottom:60px;}
+/* ── Toolbar ── */
+.toolbar{
+  background:#1a3a62;color:#fff;
+  padding:8px 20px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,0.25);
+}
+.toolbar-title{font-size:15px;font-weight:800;margin-right:8px;letter-spacing:.3px;}
+.btn{
+  background:rgba(255,255,255,0.13);color:#fff;
+  border:1px solid rgba(255,255,255,0.28);padding:5px 13px;
+  border-radius:4px;cursor:pointer;font-size:12px;font-weight:600;
+  transition:background .15s;
+}
+.btn:hover{background:rgba(255,255,255,0.25);}
+.btn.green{background:#15c39a;border-color:#15c39a;}
+.btn.green:hover{background:#11a683;}
+.btn.red{background:#c0392b;border-color:#c0392b;}
+.btn.red:hover{background:#a93226;}
+#balInd{
+  margin-left:auto;font-size:12px;padding:5px 13px;
+  border-radius:4px;font-weight:700;background:#444;
+}
+.bal-ok{background:#27ae60 !important;}
+.bal-diff{background:#e74c3c !important;}
+.bal-empty{background:#555 !important;}
+
+/* ── Page ── */
+.page-wrapper{padding:20px 20px 80px;min-height:calc(100vh - 46px);}
+
+/* ── White document card ── */
+.report-doc{
+  background:#fff;max-width:960px;margin:0 auto;
+  padding:36px 44px 48px;
+  border:1px solid #c8cfd8;box-shadow:0 2px 14px rgba(0,0,0,0.09);
+}
+
+/* ── Document heading ── */
+.doc-heading{
+  text-align:center;margin-bottom:20px;
+  padding-bottom:16px;border-bottom:2.5px solid #1a3a62;
+}
+[contenteditable]{outline:none;border-radius:2px;transition:background .15s;}
+[contenteditable]:hover{background:#f0f7ff;}
+[contenteditable]:focus{background:#fffbe6;outline:1px solid #1a3a62;}
+.doc-company{
+  font-size:19px;font-weight:800;text-transform:uppercase;
+  letter-spacing:1.5px;color:#1a1a1a;cursor:text;
+}
+.doc-cin{font-size:11px;color:#888;margin-top:4px;font-family:'Courier New',monospace;cursor:text;}
+.doc-title{font-size:15px;font-weight:800;margin-top:8px;color:#1a3a62;text-transform:uppercase;letter-spacing:1.5px;}
+.doc-sub{font-size:11.5px;color:#555;margin-top:4px;font-style:italic;cursor:text;}
+
+/* ── Table ── */
+.bs-table{width:100%;border-collapse:collapse;font-size:12.5px;font-family:'Segoe UI',Arial,sans-serif;}
+.bs-table thead th{
+  background:#1a3a62;color:#fff;padding:9px 10px;
+  font-size:11.5px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.5px;border:1px solid #0d2a4a;line-height:1.5;
+}
+.bs-table thead th.r{text-align:right;}
+.bs-table thead th.c{text-align:center;}
+.bs-table thead th.lft{text-align:left;}
+.bs-table td{padding:4px 10px;vertical-align:middle;border:none;border-bottom:1px solid #f0f3f8;line-height:1.65;}
+.bs-table td.amt{text-align:right;font-family:'Courier New',monospace;white-space:nowrap;font-size:12px;width:135px;min-width:110px;}
+.bs-table td.note{text-align:center;width:56px;font-size:11.5px;font-weight:700;color:#1a3a8a;}
+.note-link{color:#1a3a8a;text-decoration:none;font-weight:700;border-bottom:1.5px dotted #1a3a8a;padding-bottom:1px;}
+.note-link:hover{color:#0d5fff;border-bottom-color:#0d5fff;}
+
+/* ── Row types ── */
+.row-section td{
+  background:#1a3a62;color:#fff;font-weight:700;font-size:13px;
+  padding:9px 12px;letter-spacing:.8px;border:none;border-top:8px solid #eaeef4;
+}
+.row-subsec td{
+  background:#dde6f5;font-weight:700;font-size:12px;
+  padding:7px 12px 7px 16px;color:#12295a;
+  border-top:1px solid #b6c8e8;border-bottom:1px solid #b6c8e8;
+}
+.row-subcat td{
+  padding:5px 10px 5px 34px;font-weight:600;font-size:12px;
+  color:#1a1a1a;background:#f8fafd;border-bottom:1px solid #eaeef4;
+}
+.row-fixedsub td{
+  padding:3px 10px 3px 56px;font-weight:500;font-size:11.5px;
+  color:#333;border-bottom:1px dotted #dee4ee;background:#fcfcff;
+}
+.row-subtot td{
+  padding:7px 10px 7px 16px;font-weight:700;font-size:12.5px;
+  color:#12295a;background:#edf2fb;
+  border-top:1px solid #b0c4e6;border-bottom:2px solid #b0c4e6;
+}
+.row-total td{
+  font-weight:800;font-size:13.5px;background:#1a3a62;color:#fff;
+  padding:10px 12px;border-top:3px solid #0d2a4a;border-bottom:3px double #fff;
+}
+.row-spacer td{height:20px;background:#eaeef4;border:none;}
+.row-warn td{
+  padding:9px 14px;font-size:12px;color:#7b1c00;
+  background:#fff3e0;border:1.5px solid #ffa500;font-weight:600;
+}
+
+/* ── Editable amount cells ── */
+.ed-amt{
+  display:inline-block;min-width:100px;width:100%;
+  text-align:right;border-radius:2px;padding:1px 3px;
+  cursor:text;color:inherit;transition:background .15s;
+}
+.ed-amt:hover:not(:focus){background:#f0f7ff;}
+.ed-amt:focus{background:#fffbe6;outline:1px solid #1a3a62;border-radius:2px;}
+.ed-amt[data-empty="1"]{color:#bbb;}
+
+/* ── Calculated amount cells ── */
+.calc-amt{display:inline-block;width:100%;text-align:right;}
+
+/* ── Signature block ── */
+.sig-block{margin-top:36px;border-top:1px solid #ccc;padding-top:24px;}
+.sig-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:28px;font-size:11.5px;}
+.sig-col .sig-role{font-weight:700;color:#1a3a62;font-size:12px;border-bottom:1px solid #1a3a62;padding-bottom:4px;margin-bottom:4px;}
+.sig-col .sig-firm{color:#444;font-size:11px;cursor:text;}
+.sig-col .sig-line{margin-top:34px;border-top:1px solid #555;padding-top:6px;}
+.sig-col .sig-name{font-weight:700;font-size:12px;color:#1a1a1a;cursor:text;}
+.sig-col .sig-detail{color:#666;font-size:11px;margin-top:2px;cursor:text;}
+.stat-note{margin-top:18px;font-size:11px;color:#666;border-top:1px solid #e4e8f0;padding-top:10px;line-height:1.8;}
+
+/* ── Help tip ── */
+.help-tip{
+  background:#e8f4fd;border:1px solid #bee3f8;color:#1a3a62;
+  font-size:11.5px;padding:7px 14px;border-radius:5px;margin-bottom:14px;
+  display:flex;align-items:center;gap:8px;
+}
+.help-tip b{font-size:14px;}
+
+/* ── Print ── */
+@media print{
+  .toolbar,.help-tip{display:none!important;}
+  .page-wrapper{padding:0!important;}
+  .report-doc{box-shadow:none!important;border:none!important;max-width:100%!important;padding:0!important;}
+  body{background:#fff!important;}
+  .row-spacer{height:10px!important;background:#fff!important;}
+  .ed-amt:hover,.ed-amt:focus{background:transparent!important;outline:none!important;}
+  @page{margin:1.5cm 2cm;size:A4 portrait;}
+}
+</style>
+</head>
+<body>
+
+<!-- ── Toolbar ── -->
+<div class="toolbar">
+  <span class="toolbar-title">&#x1F4CA; Balance Sheet Builder</span>
+  <button class="btn red"   onclick="newSheet()">&#x2795; New</button>
+  <button class="btn green" onclick="saveSheet()">&#x1F4BE; Save</button>
+  <button class="btn"       onclick="saveDraftNamed()" title="Save current state as a named draft">&#x1F4D1; Save Draft</button>
+  <button class="btn"       onclick="openDraftsMenu()" title="Open/Restore a saved draft">&#x1F4C2; Drafts</button>
+  <button class="btn"       onclick="runValidation()" title="Check BS \u2194 Notes reconciliation">&#x2713; Validate</button>
+  <button class="btn"       onclick="window.print()">&#x1F5B6; Print / PDF</button>
+  <button class="btn"       onclick="exportCSV()">&#x2B07; Export CSV</button>
+  <button class="btn green" onclick="fillFromEngine()" title="Auto-populate from imported Trial Balance data">&#x26A1; Fill from TB</button>
+  <button class="btn"       onclick="exportExcel()" title="Export to Excel (.xlsx)">&#x1F4CA; Export Excel</button>
+  <button class="btn"       onclick="location.href='n1.html'">&#x1F4DD; Notes (N1-N6)</button>
+  <button class="btn green" onclick="location.href='fs-package.html'" title="Download complete Financial Statements (BS + P&L + Notes 1-27 + TX)">&#x1F4C4; Download Financials</button>
+  <button class="btn"       onclick="location.href='dashboard.html'">&#x2302; Home</button>
+  <span id="balInd" class="bal-empty">&#8212; No data &#8212;</span>
+  <span id="pyInd" style="margin-left:8px;font-size:11px;padding:3px 8px;border-radius:3px;display:none;"></span>
+</div>
+<script>
+  (function updatePYInd(){
+    if (window.AccountingEngine && window.AccountingEngine.hasPYData && window.AccountingEngine.hasPYData()) {
+      const el = document.getElementById('pyInd');
+      if (el) { el.textContent = '✓ PY Data Available'; el.style.display = 'inline-block'; el.style.background = '#d4edda'; el.style.color = '#155724'; el.style.border = '1px solid #c3e6cb'; }
+    }
+  })();
+</script>
+
+<!-- ── Page ── -->
+<div class="page-wrapper">
+<div class="report-doc">
+
+  <!-- Help tip -->
+  <div class="help-tip" id="helpTip">
+    <b>&#9998;</b>
+    <span>Click any <strong>blue-highlighted amount</strong> to edit &mdash; type a number and press <kbd>Tab</kbd> or <kbd>Enter</kbd>. All totals calculate automatically. Click company name, date, etc. to edit. Data is auto-saved.</span>
+    <button onclick="document.getElementById('helpTip').style.display='none'" style="margin-left:auto;background:none;border:none;color:#1a3a62;cursor:pointer;font-size:15px;">&#x2715;</button>
+  </div>
+
+  <!-- ── Company Heading ── -->
+  <div class="doc-heading">
+    <div class="doc-company" id="fCompany" contenteditable="true" spellcheck="false">MY BUSINESS PRIVATE LIMITED</div>
+    <div class="doc-cin"     id="fCIN"     contenteditable="true" spellcheck="false">CIN: U12345MH2020PTC123456</div>
+    <div class="doc-title">Balance Sheet</div>
+    <div class="doc-sub"     id="fDate"    contenteditable="true" spellcheck="false">as at 31st March 2025</div>
+    <div class="doc-sub"     id="fUnit"    contenteditable="true" spellcheck="false">(Amount in Indian Rupees &#x20B9;)</div>
+  </div>
+
+  <!-- ── Balance Sheet Table ── -->
+  <table class="bs-table">
+    <thead>
+      <tr>
+        <th class="lft" style="min-width:300px;">Particulars</th>
+        <th class="c"   style="width:56px;">Note<br>No.</th>
+        <th class="r"   style="width:138px;">As at<br>
+          <small id="fCYDate" contenteditable="true" style="font-weight:400;cursor:text;" spellcheck="false">31-Mar-2025</small></th>
+        <th class="r"   style="width:138px;">As at<br>
+          <small id="fPYDate" contenteditable="true" style="font-weight:400;cursor:text;" spellcheck="false">31-Mar-2024</small></th>
+      </tr>
+    </thead>
+    <tbody>
+
+      <!-- ═══════════════════════════════════════
+           I. EQUITY AND LIABILITIES
+           ═══════════════════════════════════════ -->
+      <tr class="row-section"><td colspan="4">I.&emsp;EQUITY AND LIABILITIES</td></tr>
+
+      <!-- (1) Shareholders' Funds -->
+      <tr class="row-subsec">
+        <td colspan="2">(1)&emsp;Shareholders&#8217; Funds</td>
+        <td class="amt"></td><td class="amt"></td>
+      </tr>
+      <tr class="row-subcat">
+        <td>&emsp;(a)&ensp;Share Capital</td>
+        <td class="note">1</td>
+        <td class="amt"><span class="ed-amt" data-key="sh_sc_cy" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+        <td class="amt"><span class="ed-amt" data-key="sh_sc_py" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+      </tr>
+      <tr class="row-subcat">
+        <td>&emsp;(b)&ensp;Reserves and Surplus</td>
+        <td class="note">2</td>
+        <td class="amt"><span class="ed-amt" data-key="sh_res_cy" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+        <td class="amt"><span class="ed-amt" data-key="sh_res_py" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+      </tr>
+      <tr class="row-subcat">
+        <td>&emsp;(c)&ensp;Money received against Share Warrants</td>
+        <td class="note"></td>
+        <td class="amt"><span class="ed-amt" data-key="sh_sw_cy" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+        <td class="amt"><span class="ed-amt" data-key="sh_sw_py" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+      </tr>
+      <tr class="row-subtot">
+        <td><strong>Sub-Total &mdash; Shareholders&#8217; Funds</strong></td>
+        <td class="note"></td>
+        <td class="amt"><span class="calc-amt" id="c_sh_cy">&#8212;</span></td>
+        <td class="amt"><span class="calc-amt" id="c_sh_py">&#8212;</span></td>
+      </tr>
+
+      <!-- (2) Share Application Money -->
+      <tr class="row-subsec">
+        <td>(2)&emsp;Share Application Money Pending Allotment</td>
+        <td class="note"></td>
+        <td class="amt"><span class="ed-amt" data-key="sam_cy" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+        <td class="amt"><span class="ed-amt" data-key="sam_py" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+      </tr>
+
+      <!-- (3) Non-Current Liabilities -->
+      <tr class="row-subsec">
+        <td colspan="2">(3)&emsp;Non-Current Liabilities</td>
+        <td class="amt"></td><td class="amt"></td>
+      </tr>
+      <tr class="row-subcat">
+        <td>&emsp;(a)&ensp;Long-term Borrowings</td>
+        <td class="note">3</td>
+        <td class="amt"><span class="ed-amt" data-key="ncl_ltb_cy" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+        <td class="amt"><span class="ed-amt" data-key="ncl_ltb_py" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+      </tr>
+      <tr class="row-subcat">
+        <td>&emsp;(b)&ensp;Deferred Tax Liabilities (Net)</td>
+        <td class="note"></td>
+        <td class="amt"><span class="ed-amt" data-key="ncl_dtl_cy" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+        <td class="amt"><span class="ed-amt" data-key="ncl_dtl_py" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+      </tr>
+      <tr class="row-subcat">
+        <td>&emsp;(c)&ensp;Other Long-term Liabilities</td>
+        <td class="note"></td>
+        <td class="amt"><span class="ed-amt" data-key="ncl_oltl_cy" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+        <td class="amt"><span class="ed-amt" data-key="ncl_oltl_py" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+      </tr>
+      <tr class="row-subcat">
+        <td>&emsp;(d)&ensp;Long-term Provisions</td>
+        <td class="note"></td>
+        <td class="amt"><span class="ed-amt" data-key="ncl_ltp_cy" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+        <td class="amt"><span class="ed-amt" data-key="ncl_ltp_py" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+      </tr>
+      <tr class="row-subtot">
+        <td><strong>Sub-Total &mdash; Non-Current Liabilities</strong></td>
+        <td class="note"></td>
+        <td class="amt"><span class="calc-amt" id="c_ncl_cy">&#8212;</span></td>
+        <td class="amt"><span class="calc-amt" id="c_ncl_py">&#8212;</span></td>
+      </tr>
+
+      <!-- (4) Current Liabilities -->
+      <tr class="row-subsec">
+        <td colspan="2">(4)&emsp;Current Liabilities</td>
+        <td class="amt"></td><td class="amt"></td>
+      </tr>
+      <tr class="row-subcat">
+        <td>&emsp;(a)&ensp;Short-term Borrowings</td>
+        <td class="note">4</td>
+        <td class="amt"><span class="ed-amt" data-key="cl_stb_cy" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+        <td class="amt"><span class="ed-amt" data-key="cl_stb_py" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+      </tr>
+      <tr class="row-subcat">
+        <td>&emsp;(b)&ensp;Trade Payables</td>
+        <td class="note">5</td>
+        <td class="amt"><span class="calc-amt" id="c_tp_cy">&#8212;</span></td>
+        <td class="amt"><span class="calc-amt" id="c_tp_py">&#8212;</span></td>
+      </tr>
+      <tr class="row-fixedsub">
+        <td>&emsp;&emsp;(i)&ensp;Due to Micro, Small &amp; Medium Enterprises</td>
+        <td class="note"></td>
+        <td class="amt"><span class="ed-amt" data-key="cl_tp_msme_cy" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+        <td class="amt"><span class="ed-amt" data-key="cl_tp_msme_py" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+      </tr>
+      <tr class="row-fixedsub">
+        <td>&emsp;&emsp;(ii)&ensp;Due to Others</td>
+        <td class="note"></td>
+        <td class="amt"><span class="ed-amt" data-key="cl_tp_oth_cy" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+        <td class="amt"><span class="ed-amt" data-key="cl_tp_oth_py" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+      </tr>
+      <tr class="row-subcat">
+        <td>&emsp;(c)&ensp;Other Current Liabilities</td>
+        <td class="note">6</td>
+        <td class="amt"><span class="ed-amt" data-key="cl_ocl_cy" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+        <td class="amt"><span class="ed-amt" data-key="cl_ocl_py" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+      </tr>
+      <tr class="row-subcat">
+        <td>&emsp;(d)&ensp;Short-term Provisions</td>
+        <td class="note">7</td>
+        <td class="amt"><span class="ed-amt" data-key="cl_stp_cy" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+        <td class="amt"><span class="ed-amt" data-key="cl_stp_py" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+      </tr>
+      <tr class="row-subtot">
+        <td><strong>Sub-Total &mdash; Current Liabilities</strong></td>
+        <td class="note"></td>
+        <td class="amt"><span class="calc-amt" id="c_cl_cy">&#8212;</span></td>
+        <td class="amt"><span class="calc-amt" id="c_cl_py">&#8212;</span></td>
+      </tr>
+
+      <!-- Total E&L -->
+      <tr class="row-total">
+        <td>TOTAL &mdash; EQUITY AND LIABILITIES&emsp;<small style="font-size:10.5px;font-weight:400;">(1+2+3+4)</small></td>
+        <td class="note"></td>
+        <td class="amt"><span class="calc-amt" id="c_el_cy">&#8212;</span></td>
+        <td class="amt"><span class="calc-amt" id="c_el_py">&#8212;</span></td>
+      </tr>
+      <tr class="row-spacer"><td colspan="4"></td></tr>
+
+      <!-- ═══════════════════════════════════════
+           II. ASSETS
+           ═══════════════════════════════════════ -->
+      <tr class="row-section"><td colspan="4">II.&emsp;ASSETS</td></tr>
+
+      <!-- (1) Non-Current Assets -->
+      <tr class="row-subsec">
+        <td colspan="2">(1)&emsp;Non-Current Assets</td>
+        <td class="amt"></td><td class="amt"></td>
+      </tr>
+      <tr class="row-subcat">
+        <td>&emsp;(a)&ensp;Fixed Assets</td>
+        <td class="note">8</td>
+        <td class="amt"><span class="calc-amt" id="c_fa_cy">&#8212;</span></td>
+        <td class="amt"><span class="calc-amt" id="c_fa_py">&#8212;</span></td>
+      </tr>
+      <tr class="row-fixedsub">
+        <td>&emsp;&emsp;(i)&ensp;&nbsp;Tangible Assets (Property, Plant &amp; Equipment)</td>
+        <td class="note"></td>
+        <td class="amt"><span class="ed-amt" data-key="nca_tan_cy" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+        <td class="amt"><span class="ed-amt" data-key="nca_tan_py" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+      </tr>
+      <tr class="row-fixedsub">
+        <td>&emsp;&emsp;(ii)&ensp;Intangible Assets</td>
+        <td class="note"></td>
+        <td class="amt"><span class="ed-amt" data-key="nca_int_cy" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+        <td class="amt"><span class="ed-amt" data-key="nca_int_py" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+      </tr>
+      <tr class="row-fixedsub">
+        <td>&emsp;&emsp;(iii)&ensp;Capital Work-in-Progress</td>
+        <td class="note"></td>
+        <td class="amt"><span class="ed-amt" data-key="nca_cwip_cy" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+        <td class="amt"><span class="ed-amt" data-key="nca_cwip_py" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+      </tr>
+      <tr class="row-fixedsub">
+        <td>&emsp;&emsp;(iv)&ensp;Intangible Assets under Development</td>
+        <td class="note"></td>
+        <td class="amt"><span class="ed-amt" data-key="nca_iaud_cy" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+        <td class="amt"><span class="ed-amt" data-key="nca_iaud_py" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+      </tr>
+      <tr class="row-subcat">
+        <td>&emsp;(b)&ensp;Non-current Investments</td>
+        <td class="note">9</td>
+        <td class="amt"><span class="ed-amt" data-key="nca_nci_cy" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+        <td class="amt"><span class="ed-amt" data-key="nca_nci_py" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+      </tr>
+      <tr class="row-subcat">
+        <td>&emsp;(c)&ensp;Deferred Tax Assets (Net)</td>
+        <td class="note"></td>
+        <td class="amt"><span class="ed-amt" data-key="nca_dta_cy" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+        <td class="amt"><span class="ed-amt" data-key="nca_dta_py" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+      </tr>
+      <tr class="row-subcat">
+        <td>&emsp;(d)&ensp;Long-term Loans and Advances</td>
+        <td class="note">10</td>
+        <td class="amt"><span class="ed-amt" data-key="nca_ltla_cy" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+        <td class="amt"><span class="ed-amt" data-key="nca_ltla_py" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+      </tr>
+      <tr class="row-subcat">
+        <td>&emsp;(e)&ensp;Other Non-current Assets</td>
+        <td class="note"></td>
+        <td class="amt"><span class="ed-amt" data-key="nca_ona_cy" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+        <td class="amt"><span class="ed-amt" data-key="nca_ona_py" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+      </tr>
+      <tr class="row-subtot">
+        <td><strong>Sub-Total &mdash; Non-Current Assets</strong></td>
+        <td class="note"></td>
+        <td class="amt"><span class="calc-amt" id="c_nca_cy">&#8212;</span></td>
+        <td class="amt"><span class="calc-amt" id="c_nca_py">&#8212;</span></td>
+      </tr>
+
+      <!-- (2) Current Assets -->
+      <tr class="row-subsec">
+        <td colspan="2">(2)&emsp;Current Assets</td>
+        <td class="amt"></td><td class="amt"></td>
+      </tr>
+      <tr class="row-subcat">
+        <td>&emsp;(a)&ensp;Current Investments</td>
+        <td class="note">11</td>
+        <td class="amt"><span class="ed-amt" data-key="ca_ci_cy" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+        <td class="amt"><span class="ed-amt" data-key="ca_ci_py" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+      </tr>
+      <tr class="row-subcat">
+        <td>&emsp;(b)&ensp;Inventories</td>
+        <td class="note">12</td>
+        <td class="amt"><span class="ed-amt" data-key="ca_inv_cy" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+        <td class="amt"><span class="ed-amt" data-key="ca_inv_py" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+      </tr>
+      <tr class="row-subcat">
+        <td>&emsp;(c)&ensp;Trade Receivables</td>
+        <td class="note">13</td>
+        <td class="amt"><span class="ed-amt" data-key="ca_tr_cy" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+        <td class="amt"><span class="ed-amt" data-key="ca_tr_py" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+      </tr>
+      <tr class="row-subcat">
+        <td>&emsp;(d)&ensp;Cash and Cash Equivalents</td>
+        <td class="note">14</td>
+        <td class="amt"><span class="ed-amt" data-key="ca_cce_cy" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+        <td class="amt"><span class="ed-amt" data-key="ca_cce_py" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+      </tr>
+      <tr class="row-subcat">
+        <td>&emsp;(e)&ensp;Short-term Loans and Advances</td>
+        <td class="note">15</td>
+        <td class="amt"><span class="ed-amt" data-key="ca_stla_cy" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+        <td class="amt"><span class="ed-amt" data-key="ca_stla_py" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+      </tr>
+      <tr class="row-subcat">
+        <td>&emsp;(f)&ensp;Other Current Assets</td>
+        <td class="note"></td>
+        <td class="amt"><span class="ed-amt" data-key="ca_oca_cy" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+        <td class="amt"><span class="ed-amt" data-key="ca_oca_py" contenteditable="true" tabindex="0" spellcheck="false">&#8212;</span></td>
+      </tr>
+      <tr class="row-subtot">
+        <td><strong>Sub-Total &mdash; Current Assets</strong></td>
+        <td class="note"></td>
+        <td class="amt"><span class="calc-amt" id="c_ca_cy">&#8212;</span></td>
+        <td class="amt"><span class="calc-amt" id="c_ca_py">&#8212;</span></td>
+      </tr>
+
+      <!-- Total Assets -->
+      <tr class="row-total">
+        <td>TOTAL &mdash; ASSETS&emsp;<small style="font-size:10.5px;font-weight:400;">(1+2)</small></td>
+        <td class="note"></td>
+        <td class="amt"><span class="calc-amt" id="c_a_cy">&#8212;</span></td>
+        <td class="amt"><span class="calc-amt" id="c_a_py">&#8212;</span></td>
+      </tr>
+      <tr id="warnRow" style="display:none;" class="row-warn">
+        <td colspan="4" id="warnMsg"></td>
+      </tr>
+
+    </tbody>
+  </table>
+
+  <!-- Statutory note -->
+  <div class="stat-note">
+    The notes referred to above form an integral part of the Balance Sheet.<br>
+    As per our Report of even date. &nbsp;|&nbsp; For and on behalf of the Board of Directors.
+  </div>
+
+  <!-- ── Signature Block ── -->
+  <div class="sig-block">
+    <div class="sig-grid">
+      <div class="sig-col">
+        <div class="sig-role">For <span contenteditable="true" id="sFirmName" spellcheck="false">[CA Firm Name]</span></div>
+        <div class="sig-firm">Chartered Accountants</div>
+        <div class="sig-firm">Firm Reg. No.: <span contenteditable="true" id="sFirmReg" spellcheck="false">___________</span></div>
+        <div class="sig-line">
+          <div class="sig-name" contenteditable="true" id="sPartner" spellcheck="false">[Partner Name]</div>
+          <div class="sig-detail">Partner &nbsp;|&nbsp; M.No.: <span contenteditable="true" id="sParMNo" spellcheck="false">___________</span></div>
+          <div class="sig-detail">Place: <span contenteditable="true" id="sPlace" spellcheck="false">___________</span></div>
+          <div class="sig-detail">Date: <span contenteditable="true" id="sSigDate" spellcheck="false">___________</span></div>
+        </div>
+      </div>
+      <div class="sig-col">
+        <div class="sig-role">Managing Director</div>
+        <div class="sig-firm" contenteditable="true" id="sMDCo" spellcheck="false">[Company Name]</div>
+        <div class="sig-line">
+          <div class="sig-name" contenteditable="true" id="sMDName" spellcheck="false">[Director Name]</div>
+          <div class="sig-detail">DIN: <span contenteditable="true" id="sMDDIN" spellcheck="false">___________</span></div>
+          <div class="sig-detail">Designation: <span contenteditable="true" id="sMDDesig" spellcheck="false">Managing Director</span></div>
+        </div>
+      </div>
+      <div class="sig-col">
+        <div class="sig-role">Director / CFO / CS</div>
+        <div class="sig-firm" contenteditable="true" id="sDir2Co" spellcheck="false">[Company Name]</div>
+        <div class="sig-line">
+          <div class="sig-name" contenteditable="true" id="sDir2Name" spellcheck="false">[Name]</div>
+          <div class="sig-detail">PAN: <span contenteditable="true" id="sDir2PAN" spellcheck="false">___________</span></div>
+          <div class="sig-detail">Designation: <span contenteditable="true" id="sDir2Desig" spellcheck="false">Director</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /report-doc -->
+</div><!-- /page-wrapper -->
+
+<script>
+"use strict";
+const SK = 'BS_BUILDER_V2';
+let D = {};
+
+/* ── Indian number formatting ── */
+function fmtIN(v) {
+  if (!v && v !== 0) return '—';
+  const abs = Math.abs(v);
+  if (abs < 0.005) return '—';
+  const s = abs.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2});
+  return v < 0 ? '(' + s + ')' : s;
+}
+
+/* ── Parse raw input text to number ── */
+function parseAmt(txt) {
+  const t = (txt||'').replace(/,/g,'').replace(/\u2212/g,'-').trim();
+  if (!t || t === '—' || t === '-') return 0;
+  const neg = /^\(.+\)$/.test(t);
+  const n = parseFloat(t.replace(/[()]/g,''));
+  if (isNaN(n)) return 0;
+  return neg ? -Math.abs(n) : n;
+}
+
+/* ── Read from D ── */
+function g(k) { return parseFloat(D[k] || 0); }
+
+/* ── Update a calc-amt span ── */
+function sc(id, v) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = (v && Math.abs(v) > 0.004) ? fmtIN(v) : '—';
+}
+
+/* ── Full recalculation ── */
+function recalc() {
+  /* Shareholders' Funds */
+  const sh_cy = g('sh_sc_cy') + g('sh_res_cy') + g('sh_sw_cy');
+  const sh_py = g('sh_sc_py') + g('sh_res_py') + g('sh_sw_py');
+  sc('c_sh_cy', sh_cy); sc('c_sh_py', sh_py);
+
+  /* SAM (direct in subsec row, no calc span) */
+  const sam_cy = g('sam_cy'), sam_py = g('sam_py');
+
+  /* Non-Current Liabilities */
+  const ncl_cy = g('ncl_ltb_cy') + g('ncl_dtl_cy') + g('ncl_oltl_cy') + g('ncl_ltp_cy');
+  const ncl_py = g('ncl_ltb_py') + g('ncl_dtl_py') + g('ncl_oltl_py') + g('ncl_ltp_py');
+  sc('c_ncl_cy', ncl_cy); sc('c_ncl_py', ncl_py);
+
+  /* Trade Payables */
+  const tp_cy = g('cl_tp_msme_cy') + g('cl_tp_oth_cy');
+  const tp_py = g('cl_tp_msme_py') + g('cl_tp_oth_py');
+  sc('c_tp_cy', tp_cy); sc('c_tp_py', tp_py);
+
+  /* Current Liabilities */
+  const cl_cy = g('cl_stb_cy') + tp_cy + g('cl_ocl_cy') + g('cl_stp_cy');
+  const cl_py = g('cl_stb_py') + tp_py + g('cl_ocl_py') + g('cl_stp_py');
+  sc('c_cl_cy', cl_cy); sc('c_cl_py', cl_py);
+
+  /* Total Equity & Liabilities */
+  const el_cy = sh_cy + sam_cy + ncl_cy + cl_cy;
+  const el_py = sh_py + sam_py + ncl_py + cl_py;
+  sc('c_el_cy', el_cy); sc('c_el_py', el_py);
+
+  /* Fixed Assets */
+  const fa_cy = g('nca_tan_cy') + g('nca_int_cy') + g('nca_cwip_cy') + g('nca_iaud_cy');
+  const fa_py = g('nca_tan_py') + g('nca_int_py') + g('nca_cwip_py') + g('nca_iaud_py');
+  sc('c_fa_cy', fa_cy); sc('c_fa_py', fa_py);
+
+  /* Non-Current Assets */
+  const nca_cy = fa_cy + g('nca_nci_cy') + g('nca_dta_cy') + g('nca_ltla_cy') + g('nca_ona_cy');
+  const nca_py = fa_py + g('nca_nci_py') + g('nca_dta_py') + g('nca_ltla_py') + g('nca_ona_py');
+  sc('c_nca_cy', nca_cy); sc('c_nca_py', nca_py);
+
+  /* Current Assets */
+  const ca_cy = g('ca_ci_cy') + g('ca_inv_cy') + g('ca_tr_cy') + g('ca_cce_cy') + g('ca_stla_cy') + g('ca_oca_cy');
+  const ca_py = g('ca_ci_py') + g('ca_inv_py') + g('ca_tr_py') + g('ca_cce_py') + g('ca_stla_py') + g('ca_oca_py');
+  sc('c_ca_cy', ca_cy); sc('c_ca_py', ca_py);
+
+  /* Total Assets */
+  const a_cy = nca_cy + ca_cy;
+  const a_py = nca_py + ca_py;
+  sc('c_a_cy', a_cy); sc('c_a_py', a_py);
+
+  /* Balance indicator */
+  const ind = document.getElementById('balInd');
+  const diff = Math.abs(el_cy - a_cy);
+  const hasData = el_cy !== 0 || a_cy !== 0;
+  if (!hasData) {
+    ind.textContent = '— No data —';
+    ind.className = 'bal-empty';
+  } else if (diff < 1.0) {
+    ind.textContent = '✓ Balanced';
+    ind.className = 'bal-ok';
+  } else {
+    ind.textContent = '✗ Diff: ₹' + fmtIN(diff);
+    ind.className = 'bal-diff';
+  }
+
+  /* Warn row */
+  const wr = document.getElementById('warnRow');
+  const wm = document.getElementById('warnMsg');
+  if (hasData && diff >= 1.0) {
+    wm.innerHTML = '&#9888;&nbsp; Balance Sheet does not tally — Difference: ₹\u00A0' + fmtIN(diff) + '. Please check your entries.';
+    wr.style.display = '';
+  } else {
+    wr.style.display = 'none';
+  }
+}
+
+/* ── Render a single ed-amt cell from D ── */
+function renderCell(el) {
+  const v = parseFloat(D[el.dataset.key] || 0);
+  el.textContent = (v && Math.abs(v) > 0.004) ? fmtIN(v) : '—';
+}
+
+/* ── All text field IDs ── */
+const TXT = [
+  'fCompany','fCIN','fDate','fUnit','fCYDate','fPYDate',
+  'sFirmName','sFirmReg','sPartner','sParMNo','sPlace','sSigDate',
+  'sMDCo','sMDName','sMDDIN','sMDDesig',
+  'sDir2Co','sDir2Name','sDir2PAN','sDir2Desig'
+];
+
+/* ── Save ── */
+function saveSheet() {
+  const texts = {};
+  TXT.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) texts[id] = el.textContent;
+  });
+  try {
+    localStorage.setItem(SK, JSON.stringify({amounts: D, texts}));
+    const ind = document.getElementById('balInd');
+    const prev = ind.textContent, cls = ind.className;
+    ind.textContent = '✓ Saved!'; ind.className = 'bal-ok';
+    setTimeout(() => { ind.textContent = prev; ind.className = cls; }, 1400);
+  } catch(e) { alert('Save failed: ' + e.message); }
+}
+
+/* ── Auto-save debounce ── */
+let _ast;
+function autoSave() { clearTimeout(_ast); _ast = setTimeout(saveSheet, 900); }
+
+/* ── Save as named draft ── */
+function saveDraftNamed() {
+  // Save current sheet first so the draft captures latest BS_BUILDER_V2
+  saveSheet();
+  const name = prompt('Name this draft:', 'Draft ' + new Date().toLocaleDateString());
+  if (!name || !name.trim()) return;
+  try {
+    window.AccountingEngine.saveDraft(name.trim());
+    const ind = document.getElementById('balInd');
+    const prev = ind.textContent, cls = ind.className;
+    ind.textContent = '✓ Draft saved: ' + name; ind.className = 'bal-ok';
+    setTimeout(() => { ind.textContent = prev; ind.className = cls; }, 1800);
+  } catch(e) { alert('Failed to save draft: ' + e.message); }
+}
+
+/* ── Cross-note reconciliation validation ── */
+function runValidation() {
+  const checks = window.AccountingEngine.getReconciliationReport();
+  if (!checks || checks.length === 0) {
+    alert('✓ No reconciliation data yet. Import TB first, then fill notes and run Validate.');
+    return;
+  }
+  const fmt = v => Math.abs(Number(v) || 0).toLocaleString('en-IN');
+  let msg = 'RECONCILIATION REPORT\n═══════════════════════════════════════════\n\n';
+  let passed = 0, failed = 0;
+  checks.forEach((c, i) => {
+    const mark = c.ok ? '✓' : '✗';
+    if (c.ok) passed++; else failed++;
+    msg += `${i+1}. ${mark} ${c.label}\n`;
+    msg += `    BS side  : ${fmt(c.bs)}\n`;
+    msg += `    Note side: ${fmt(c.note)}\n`;
+    if (!c.ok) msg += `    ⚠ DIFFERENCE: ${fmt(c.diff)}\n`;
+    msg += '\n';
+  });
+  msg += '═══════════════════════════════════════════\n';
+  msg += `Result: ${passed} passed | ${failed} failed (total ${checks.length})\n\n`;
+  msg += failed > 0
+    ? '⚠ FIX NEEDED:\n  • Edit the relevant N2-N7 pages to align with BS\n  • Or click amount cells in BS to override\n  • Then click Validate again.'
+    : '✓ All reconciliation checks passed. Safe to sign & issue.';
+  alert(msg);
+}
+
+/* ── Drafts menu (simple prompt-driven list) ── */
+function openDraftsMenu() {
+  const drafts = window.AccountingEngine.getDrafts();
+  if (drafts.length === 0) {
+    alert('No drafts saved yet.\n\nClick "Save Draft" to create one.');
+    return;
+  }
+  let msg = 'Saved Drafts:\n\n';
+  drafts.forEach((d, i) => {
+    const when = new Date(d.createdAt).toLocaleString();
+    msg += `${i+1}. ${d.name}   (${when})\n`;
+  });
+  msg += '\nEnter the number to RESTORE, or "d<number>" to DELETE (e.g. d3), or Cancel:';
+  const inp = prompt(msg);
+  if (!inp) return;
+  const trimmed = inp.trim();
+  if (trimmed.startsWith('d') || trimmed.startsWith('D')) {
+    const idx = parseInt(trimmed.slice(1), 10) - 1;
+    if (idx >= 0 && idx < drafts.length) {
+      if (!confirm('Delete draft "' + drafts[idx].name + '"? This cannot be undone.')) return;
+      window.AccountingEngine.deleteDraft(drafts[idx].id);
+      alert('✓ Deleted.');
+    } else { alert('Invalid draft number.'); }
+  } else {
+    const idx = parseInt(trimmed, 10) - 1;
+    if (idx >= 0 && idx < drafts.length) {
+      if (!confirm('Restore draft "' + drafts[idx].name + '"?\n\nThis will REPLACE your current unsaved Balance Sheet with the draft\'s contents.')) return;
+      window.AccountingEngine.restoreDraft(drafts[idx].id);
+      alert('✓ Restored. Reloading page...');
+      location.reload();
+    } else { alert('Invalid draft number.'); }
+  }
+}
+
+/* ── Load ── */
+function loadData() {
+  try {
+    const raw = localStorage.getItem(SK);
+    if (!raw) return;
+    const saved = JSON.parse(raw);
+    D = saved.amounts || {};
+    const texts = saved.texts || {};
+    TXT.forEach(id => {
+      const el = document.getElementById(id);
+      if (el && texts[id] != null) el.textContent = texts[id];
+    });
+  } catch(e) { console.warn('Load error', e); }
+  document.querySelectorAll('.ed-amt').forEach(renderCell);
+  recalc();
+}
+
+/* ── New sheet ── */
+function newSheet() {
+  if (!confirm('Clear all data and start a new Balance Sheet?')) return;
+  localStorage.removeItem(SK);
+  D = {};
+  document.querySelectorAll('.ed-amt').forEach(el => { el.textContent = '—'; });
+  const defaults = {
+    fCompany: 'MY BUSINESS PRIVATE LIMITED',
+    fCIN: 'CIN: U12345MH2020PTC123456',
+    fDate: 'as at 31st March 2025',
+    fUnit: '(Amount in Indian Rupees \u20B9)',
+    fCYDate: '31-Mar-2025', fPYDate: '31-Mar-2024',
+    sFirmName: '[CA Firm Name]', sFirmReg: '___________',
+    sPartner: '[Partner Name]', sParMNo: '___________',
+    sPlace: '___________', sSigDate: '___________',
+    sMDCo: '[Company Name]', sMDName: '[Director Name]',
+    sMDDIN: '___________', sMDDesig: 'Managing Director',
+    sDir2Co: '[Company Name]', sDir2Name: '[Name]',
+    sDir2PAN: '___________', sDir2Desig: 'Director'
+  };
+  Object.entries(defaults).forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val;
+  });
+  recalc();
+}
+
+/* ── Export CSV ── */
+function exportCSV() {
+  const company  = document.getElementById('fCompany').textContent;
+  const dateStr  = document.getElementById('fDate').textContent;
+  const cyLabel  = document.getElementById('fCYDate').textContent;
+  const pyLabel  = document.getElementById('fPYDate').textContent;
+
+  const rows = [
+    [company], [dateStr], [],
+    ['Particulars', 'Note No.', 'CY: ' + cyLabel, 'PY: ' + pyLabel],
+    ['I. EQUITY AND LIABILITIES'],
+    ['(1) Shareholders Funds'],
+    ['(a) Share Capital',                   '1',  D.sh_sc_cy||0,    D.sh_sc_py||0],
+    ['(b) Reserves and Surplus',            '2',  D.sh_res_cy||0,   D.sh_res_py||0],
+    ['(c) Money against Share Warrants',    '',   D.sh_sw_cy||0,    D.sh_sw_py||0],
+    ['(2) Share Application Money',         '',   D.sam_cy||0,      D.sam_py||0],
+    ['(3) Non-Current Liabilities'],
+    ['(a) Long-term Borrowings',            '3',  D.ncl_ltb_cy||0,  D.ncl_ltb_py||0],
+    ['(b) Deferred Tax Liabilities',        '',   D.ncl_dtl_cy||0,  D.ncl_dtl_py||0],
+    ['(c) Other Long-term Liabilities',     '',   D.ncl_oltl_cy||0, D.ncl_oltl_py||0],
+    ['(d) Long-term Provisions',            '',   D.ncl_ltp_cy||0,  D.ncl_ltp_py||0],
+    ['(4) Current Liabilities'],
+    ['(a) Short-term Borrowings',           '4',  D.cl_stb_cy||0,   D.cl_stb_py||0],
+    ['(b)(i) Trade Payables - MSME',        '5',  D.cl_tp_msme_cy||0,D.cl_tp_msme_py||0],
+    ['(b)(ii) Trade Payables - Others',     '',   D.cl_tp_oth_cy||0, D.cl_tp_oth_py||0],
+    ['(c) Other Current Liabilities',       '6',  D.cl_ocl_cy||0,   D.cl_ocl_py||0],
+    ['(d) Short-term Provisions',           '7',  D.cl_stp_cy||0,   D.cl_stp_py||0],
+    ['II. ASSETS'],
+    ['(1) Non-Current Assets'],
+    ['(a)(i) Tangible Assets',              '8',  D.nca_tan_cy||0,  D.nca_tan_py||0],
+    ['(a)(ii) Intangible Assets',           '',   D.nca_int_cy||0,  D.nca_int_py||0],
+    ['(a)(iii) Capital WIP',                '',   D.nca_cwip_cy||0, D.nca_cwip_py||0],
+    ['(a)(iv) Intangible under Dev.',       '',   D.nca_iaud_cy||0, D.nca_iaud_py||0],
+    ['(b) Non-current Investments',         '9',  D.nca_nci_cy||0,  D.nca_nci_py||0],
+    ['(c) Deferred Tax Assets',             '',   D.nca_dta_cy||0,  D.nca_dta_py||0],
+    ['(d) Long-term Loans and Advances',    '10', D.nca_ltla_cy||0, D.nca_ltla_py||0],
+    ['(e) Other Non-current Assets',        '',   D.nca_ona_cy||0,  D.nca_ona_py||0],
+    ['(2) Current Assets'],
+    ['(a) Current Investments',             '11', D.ca_ci_cy||0,    D.ca_ci_py||0],
+    ['(b) Inventories',                     '12', D.ca_inv_cy||0,   D.ca_inv_py||0],
+    ['(c) Trade Receivables',               '13', D.ca_tr_cy||0,    D.ca_tr_py||0],
+    ['(d) Cash and Cash Equivalents',       '14', D.ca_cce_cy||0,   D.ca_cce_py||0],
+    ['(e) Short-term Loans and Advances',   '15', D.ca_stla_cy||0,  D.ca_stla_py||0],
+    ['(f) Other Current Assets',            '',   D.ca_oca_cy||0,   D.ca_oca_py||0],
+  ];
+  const csv = rows.map(r => r.map(c => '"' + String(c).replace(/"/g,'""') + '"').join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'BalanceSheet_' + (document.getElementById('fCYDate').textContent || 'export') + '.csv';
+  a.click();
+}
+
+/* ── Wire up editable amount cells ── */
+function initEditable() {
+  document.querySelectorAll('.ed-amt').forEach(el => {
+    const key = el.dataset.key;
+
+    el.addEventListener('focus', () => {
+      const raw = parseFloat(D[key] || 0);
+      el.textContent = raw ? String(raw) : '';
+      /* Select all */
+      const r = document.createRange();
+      r.selectNodeContents(el);
+      const s = window.getSelection();
+      s.removeAllRanges(); s.addRange(r);
+    });
+
+    el.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); el.blur(); }
+      /* Allow only digit chars, decimal, minus, backspace, arrows, tab */
+      if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+        const ok = /^[0-9.\-]$/.test(e.key) ||
+          ['Backspace','Delete','ArrowLeft','ArrowRight','Tab','Home','End'].includes(e.key);
+        if (!ok) e.preventDefault();
+      }
+    });
+
+    el.addEventListener('blur', () => {
+      const v = parseAmt(el.textContent);
+      D[key] = v;
+      el.textContent = (v && Math.abs(v) > 0.004) ? fmtIN(v) : '—';
+      recalc();
+      autoSave();
+    });
+  });
+}
+
+/* ── Wire text fields for auto-save ── */
+function initTextFields() {
+  TXT.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('blur', autoSave);
+  });
+}
+
+/* ── Auto-populate from Trial Balance (AccountingEngine) ── */
+function fillFromEngine() {
+  if (typeof window.AccountingEngine === 'undefined') {
+    alert('Accounting engine not loaded. Please open this page from the main app.');
+    return;
+  }
+  const ledgers = window.AccountingEngine.getLedgers();
+  if (!ledgers || ledgers.length === 0) {
+    alert('No trial balance data found.\n\nPlease import your trial balance from the Trial Balance page first, then come back here and click "Fill from TB".');
+    return;
+  }
+
+  const report = window.AccountingEngine.getReportData();
+  const co     = window.AccountingEngine.getCompanyDetails();
+  const N = {};
+  function add(key, val) { N[key] = (N[key] || 0) + val; }
+
+  /* LIABILITIES (group.total is negative) */
+  report.liabilities.forEach(g => {
+    const n = g.name.toLowerCase(), amt = Math.abs(g.total);
+    if      (n.includes('capital account') || n.includes('share capital') || n.includes('proprietor') || n.includes('partner capital') || n.includes('owner')) add('sh_sc_cy', amt);
+    else if (n.includes('reserve') || n.includes('surplus') || n.includes('retained') || n.includes('profit & loss a/c') || n.includes('p&l a/c') || n.includes('profit and loss a/c')) add('sh_res_cy', amt);
+    else if (n.includes('deferred tax liab')) add('ncl_dtl_cy', amt);
+    else if (n.includes('secured loan') || n.includes('term loan') || n.includes('long term borrow') || n.includes('mortgage') || n.includes('vehicle loan')) add('ncl_ltb_cy', amt);
+    else if (n.includes('unsecured loan') || n.includes('director loan') || n.includes('inter corporate')) add('ncl_ltb_cy', amt);
+    else if (n.includes('bank od') || n.includes('overdraft') || n.includes('cash credit') || n.includes('cc a/c') || n.includes('short term borrow') || n.includes('working capital loan')) add('cl_stb_cy', amt);
+    else if (n.includes('loan') && !n.includes('advance') && !n.includes('asset')) add('ncl_ltb_cy', amt);
+    else if (n.includes('creditor') || n.includes('sundry creditor') || n.includes('trade payable') || n.includes('accounts payable') || n.includes('payable')) add('cl_tp_oth_cy', amt);
+    else if (n.includes('duties') || n.includes('gst') || n.includes('vat') || n.includes('tds payable') || n.includes('tcs payable') || n.includes('tax payable')) add('cl_ocl_cy', amt);
+    else if (n.includes('long-term provision') || n.includes('long term provision')) add('ncl_ltp_cy', amt);
+    else if (n.includes('provision') || n.includes('outstanding') || n.includes('accrued')) add('cl_stp_cy', amt);
+    else if (n.includes('other long') || n.includes('security deposit received')) add('ncl_oltl_cy', amt);
+    else if (n.includes('share application') || n.includes('share warrant')) add('sam_cy', amt);
+    else add('cl_ocl_cy', amt);
+  });
+  if (report.netProfit !== 0) add('sh_res_cy', report.netProfit);
+
+  /* ASSETS (group.total is positive) */
+  report.assets.forEach(g => {
+    const n = g.name.toLowerCase(), amt = Math.abs(g.total);
+    if      (n === 'fixed assets' || n.includes('tangible asset') || n.includes('property, plant') || n.includes('ppe') || n.includes('machinery') || n.includes('furniture') || n.includes('vehicle') || n.includes('land') || n.includes('building') || n.includes('computer') || n.includes('equipment') || n.includes('plant')) add('nca_tan_cy', amt);
+    else if (n.includes('intangible asset') || n.includes('goodwill') || n.includes('trademark') || n.includes('trade mark') || n.includes('patent') || n.includes('copyright')) add('nca_int_cy', amt);
+    else if (n.includes('capital work') || n.includes('cwip') || n.includes('construction in progress')) add('nca_cwip_cy', amt);
+    else if (n.includes('intangible under')) add('nca_iaud_cy', amt);
+    else if (n.includes('deferred tax asset')) add('nca_dta_cy', amt);
+    else if (n.includes('non current invest') || n.includes('long term invest') || n.includes('investment in')) add('nca_nci_cy', amt);
+    else if (n.includes('long term loan') || n.includes('long-term loan') || n.includes('deposits (asset)') || n.includes('security deposit paid')) add('nca_ltla_cy', amt);
+    else if (n.includes('other non current')) add('nca_ona_cy', amt);
+    else if (n.includes('current invest')) add('ca_ci_cy', amt);
+    else if (n.includes('investment')) add('nca_nci_cy', amt);
+    else if (n.includes('stock') || n.includes('inventory') || n.includes('inventori') || n.includes('stock-in-hand') || n.includes('closing stock') || n.includes('raw material') || n.includes('finished goods') || n.includes('work in progress') || n.includes('wip')) add('ca_inv_cy', amt);
+    else if (n.includes('debtor') || n.includes('sundry debtor') || n.includes('trade receivable') || n.includes('accounts receivable') || n.includes('receivable')) add('ca_tr_cy', amt);
+    else if (n.includes('bank account') || n.includes('bank accounts') || n.includes('cash-in-hand') || n.includes('cash in hand') || n.includes('petty cash') || n.includes('cash and bank') || n.includes('bank balance')) add('ca_cce_cy', amt);
+    else if (n.includes('short term loan') || n.includes('advance') || n.includes('prepaid') || n.includes('deposit') || n.includes('staff advance') || n.includes('supplier advance') || n.includes('loans & advances')) add('ca_stla_cy', amt);
+    else if (n.includes('tds') || n.includes('tcs receivable') || n.includes('input gst') || n.includes('gst receivable') || n.includes('tax receivable')) add('ca_oca_cy', amt);
+    else add('ca_oca_cy', amt);
+  });
+
+  Object.assign(D, N);
+
+  /* ── Auto-fill PREVIOUS YEAR columns ── */
+  try {
+    // Preferred path: directly imported PY TB (LEDGERS_PY)
+    if (window.AccountingEngine.hasPYData && window.AccountingEngine.hasPYData()) {
+      const pyReport = window.AccountingEngine.getReportData('PY');
+      const PY = {};
+      function addPY(key, val) { PY[key] = (PY[key] || 0) + val; }
+      pyReport.liabilities.forEach(g => {
+        const n = g.name.toLowerCase(), amt = Math.abs(g.total);
+        if      (n.includes('capital account') || n.includes('share capital') || n.includes('proprietor') || n.includes('partner capital') || n.includes('owner')) addPY('sh_sc_py', amt);
+        else if (n.includes('reserve') || n.includes('surplus') || n.includes('retained') || n.includes('profit & loss a/c') || n.includes('p&l a/c') || n.includes('profit and loss a/c')) addPY('sh_res_py', amt);
+        else if (n.includes('deferred tax liab')) addPY('ncl_dtl_py', amt);
+        else if (n.includes('secured loan') || n.includes('term loan') || n.includes('long term borrow') || n.includes('mortgage') || n.includes('vehicle loan')) addPY('ncl_ltb_py', amt);
+        else if (n.includes('unsecured loan') || n.includes('director loan') || n.includes('inter corporate')) addPY('ncl_ltb_py', amt);
+        else if (n.includes('bank od') || n.includes('overdraft') || n.includes('cash credit') || n.includes('cc a/c') || n.includes('short term borrow') || n.includes('working capital loan')) addPY('cl_stb_py', amt);
+        else if (n.includes('loan') && !n.includes('advance') && !n.includes('asset')) addPY('ncl_ltb_py', amt);
+        else if (n.includes('creditor') || n.includes('sundry creditor') || n.includes('trade payable') || n.includes('accounts payable') || n.includes('payable')) addPY('cl_tp_oth_py', amt);
+        else if (n.includes('duties') || n.includes('gst') || n.includes('vat') || n.includes('tds payable') || n.includes('tcs payable') || n.includes('tax payable')) addPY('cl_ocl_py', amt);
+        else if (n.includes('long-term provision') || n.includes('long term provision')) addPY('ncl_ltp_py', amt);
+        else if (n.includes('provision') || n.includes('outstanding') || n.includes('accrued')) addPY('cl_stp_py', amt);
+        else if (n.includes('other long') || n.includes('security deposit received')) addPY('ncl_oltl_py', amt);
+        else if (n.includes('share application') || n.includes('share warrant')) addPY('sam_py', amt);
+        else addPY('cl_ocl_py', amt);
+      });
+      if (pyReport.netProfit !== 0) addPY('sh_res_py', pyReport.netProfit);
+      pyReport.assets.forEach(g => {
+        const n = g.name.toLowerCase(), amt = Math.abs(g.total);
+        if      (n === 'fixed assets' || n.includes('tangible asset') || n.includes('property, plant') || n.includes('ppe') || n.includes('machinery') || n.includes('furniture') || n.includes('vehicle') || n.includes('land') || n.includes('building') || n.includes('computer') || n.includes('equipment') || n.includes('plant')) addPY('nca_tan_py', amt);
+        else if (n.includes('intangible asset') || n.includes('goodwill') || n.includes('trademark') || n.includes('trade mark') || n.includes('patent') || n.includes('copyright')) addPY('nca_int_py', amt);
+        else if (n.includes('capital work') || n.includes('cwip') || n.includes('construction in progress')) addPY('nca_cwip_py', amt);
+        else if (n.includes('intangible under')) addPY('nca_iaud_py', amt);
+        else if (n.includes('deferred tax asset')) addPY('nca_dta_py', amt);
+        else if (n.includes('non current invest') || n.includes('long term invest') || n.includes('investment in')) addPY('nca_nci_py', amt);
+        else if (n.includes('long term loan') || n.includes('long-term loan') || n.includes('deposits (asset)') || n.includes('security deposit paid')) addPY('nca_ltla_py', amt);
+        else if (n.includes('other non current')) addPY('nca_ona_py', amt);
+        else if (n.includes('current invest')) addPY('ca_ci_py', amt);
+        else if (n.includes('investment')) addPY('nca_nci_py', amt);
+        else if (n.includes('stock') || n.includes('inventory') || n.includes('inventori') || n.includes('stock-in-hand') || n.includes('closing stock') || n.includes('raw material') || n.includes('finished goods') || n.includes('work in progress') || n.includes('wip')) addPY('ca_inv_py', amt);
+        else if (n.includes('debtor') || n.includes('sundry debtor') || n.includes('trade receivable') || n.includes('accounts receivable') || n.includes('receivable')) addPY('ca_tr_py', amt);
+        else if (n.includes('bank account') || n.includes('bank accounts') || n.includes('cash-in-hand') || n.includes('cash in hand') || n.includes('petty cash') || n.includes('cash and bank') || n.includes('bank balance')) addPY('ca_cce_py', amt);
+        else if (n.includes('short term loan') || n.includes('advance') || n.includes('prepaid') || n.includes('deposit') || n.includes('staff advance') || n.includes('supplier advance') || n.includes('loans & advances')) addPY('ca_stla_py', amt);
+        else if (n.includes('tds') || n.includes('tcs receivable') || n.includes('input gst') || n.includes('gst receivable') || n.includes('tax receivable')) addPY('ca_oca_py', amt);
+        else addPY('ca_oca_py', amt);
+      });
+      Object.assign(D, PY);
+    } else {
+    // Fallback path: year-end snapshot (existing behaviour)
+    const pyBals = window.AccountingEngine.getPreviousYearBalances();
+    if (pyBals && Object.keys(pyBals).length > 0) {
+      /* Also check if PY snapshot has a saved BS_BUILDER_V2 */
+      const currentFY = window.AccountingEngine._currentFYKey();
+      const fyYears = currentFY && currentFY !== 'default' ? currentFY.split('-').map(Number) : [];
+      const pyRaw = (fyYears.length === 2 && !isNaN(fyYears[0]) && !isNaN(fyYears[1]))
+        ? localStorage.getItem('FY_' + (fyYears[0] - 1) + '-' + (fyYears[1] - 1))
+        : null;
+      if (pyRaw) {
+        const pySnap = JSON.parse(pyRaw);
+        if (pySnap.BS_BUILDER_V2) {
+          /* Previous year had a saved balance sheet — copy its CY values as our PY values */
+          const pyBS = JSON.parse(pySnap.BS_BUILDER_V2);
+          const pyAmounts = pyBS.amounts || {};
+          for (const k in pyAmounts) {
+            if (k.endsWith('_cy')) {
+              const pyKey = k.replace(/_cy$/, '_py');
+              D[pyKey] = pyAmounts[k];
+            }
+          }
+        } else {
+          /* No saved BS — run the same grouping logic on PY ledger balances */
+          const PY = {};
+          function addPY(key, val) { PY[key] = (PY[key] || 0) + val; }
+          const pyLedgers = JSON.parse(pySnap.LEDGERS || '[]');
+          const pyReport = { liabilities: [], assets: [] };
+          /* Quick grouping of PY ledgers */
+          pyLedgers.forEach(l => {
+            const bal = l.openingBalance || 0;
+            if (bal === 0) return;
+            const n = (l.group || l.name || '').toLowerCase();
+            const isLiab = ['capital','reserve','surplus','loan','liab','creditor','payable','duties','tax','provision','outstanding','fund','borrow','source'].some(kw => n.includes(kw));
+            const amt = Math.abs(bal);
+            if (isLiab || bal < 0) {
+              if      (n.includes('capital') || n.includes('share capital') || n.includes('proprietor') || n.includes('partner') || n.includes('owner')) addPY('sh_sc_py', amt);
+              else if (n.includes('reserve') || n.includes('surplus') || n.includes('retained') || n.includes('profit')) addPY('sh_res_py', amt);
+              else if (n.includes('deferred tax liab')) addPY('ncl_dtl_py', amt);
+              else if (n.includes('long term borrow') || n.includes('secured loan') || n.includes('term loan') || n.includes('mortgage')) addPY('ncl_ltb_py', amt);
+              else if (n.includes('bank od') || n.includes('overdraft') || n.includes('short term borrow') || n.includes('cash credit')) addPY('cl_stb_py', amt);
+              else if (n.includes('creditor') || n.includes('trade payable') || n.includes('payable')) addPY('cl_tp_oth_py', amt);
+              else if (n.includes('share application')) addPY('sam_py', amt);
+              else addPY('cl_ocl_py', amt);
+            } else {
+              if      (n.includes('fixed asset') || n.includes('tangible') || n.includes('machinery') || n.includes('furniture') || n.includes('vehicle') || n.includes('land') || n.includes('building') || n.includes('plant') || n.includes('equipment')) addPY('nca_tan_py', amt);
+              else if (n.includes('intangible')) addPY('nca_int_py', amt);
+              else if (n.includes('investment')) addPY('nca_nci_py', amt);
+              else if (n.includes('stock') || n.includes('inventor') || n.includes('closing stock') || n.includes('raw material')) addPY('ca_inv_py', amt);
+              else if (n.includes('debtor') || n.includes('receivable')) addPY('ca_tr_py', amt);
+              else if (n.includes('bank') || n.includes('cash')) addPY('ca_cce_py', amt);
+              else if (n.includes('advance') || n.includes('prepaid') || n.includes('deposit') || n.includes('loan')) addPY('ca_stla_py', amt);
+              else addPY('ca_oca_py', amt);
+            }
+          });
+          Object.assign(D, PY);
+        }
+      }
+    }
+    } // end else (fallback snapshot path)
+  } catch(e) { console.warn('PY auto-fill failed:', e); }
+
+  if (co && co.name) {
+    const el = document.getElementById('fCompany');
+    if (el) el.textContent = co.name.toUpperCase();
+    const mdEl = document.getElementById('sMDCo');
+    if (mdEl) mdEl.textContent = co.name;
+    const d2El = document.getElementById('sDir2Co');
+    if (d2El) d2El.textContent = co.name;
+  }
+  if (co && co.financialYear) {
+    const fy = co.financialYear;
+    const toIdx = fy.indexOf(' to ');
+    if (toIdx !== -1) {
+      const fyEnd = fy.slice(toIdx + 4).trim();
+      const el1 = document.getElementById('fDate'); const el2 = document.getElementById('fCYDate');
+      if (el1) el1.textContent = 'as at ' + fyEnd;
+      if (el2) el2.textContent = fyEnd;
+      /* Set PY date header (one year before CY end) */
+      const pyDateEl = document.getElementById('fPYDate');
+      if (pyDateEl) {
+        const yMatch = fyEnd.match(/\d{4}/);
+        if (yMatch) pyDateEl.textContent = fyEnd.replace(yMatch[0], String(Number(yMatch[0]) - 1));
+      }
+    }
+  }
+
+  document.querySelectorAll('.ed-amt').forEach(renderCell);
+  recalc();
+  autoSave();
+  const balanced = document.getElementById('balInd').classList.contains('bal-ok');
+  alert('Balance Sheet populated from Trial Balance (' + ledgers.length + ' ledgers)!\n\n' +
+    (balanced ? '✓ Balanced.' : '⚠ Difference detected — review groupings in Trial Balance.') +
+    '\n\nClick any amount to manually adjust.');
+}
+
+/* ── Export to Excel (.xlsx) ── */
+function exportExcel() {
+  if (typeof XLSX === 'undefined') { alert('XLSX library not loaded. Please use Export CSV instead.'); return; }
+  const company = document.getElementById('fCompany').textContent;
+  const cyDate  = document.getElementById('fCYDate').textContent;
+  const pyDate  = document.getElementById('fPYDate').textContent;
+  const rows = [
+    [company], ['Balance Sheet as at ' + cyDate], ['(Amount in ₹)'], [],
+    ['Particulars', 'Note No.', 'CY: ' + cyDate, 'PY: ' + pyDate],
+    ['I. EQUITY AND LIABILITIES'],
+    ['  (1) Shareholders Funds'],
+    ['     (a) Share Capital', 1, D.sh_sc_cy||0, D.sh_sc_py||0],
+    ['     (b) Reserves and Surplus', 2, D.sh_res_cy||0, D.sh_res_py||0],
+    ['     (c) Money against Share Warrants', '', D.sh_sw_cy||0, D.sh_sw_py||0],
+    ['  (2) Share Application Money', '', D.sam_cy||0, D.sam_py||0],
+    ['  (3) Non-Current Liabilities'],
+    ['     (a) Long-term Borrowings', 3, D.ncl_ltb_cy||0, D.ncl_ltb_py||0],
+    ['     (b) Deferred Tax Liabilities', '', D.ncl_dtl_cy||0, D.ncl_dtl_py||0],
+    ['     (c) Other Long-term Liabilities', '', D.ncl_oltl_cy||0, D.ncl_oltl_py||0],
+    ['     (d) Long-term Provisions', '', D.ncl_ltp_cy||0, D.ncl_ltp_py||0],
+    ['  (4) Current Liabilities'],
+    ['     (a) Short-term Borrowings', 4, D.cl_stb_cy||0, D.cl_stb_py||0],
+    ['     (b)(i) Trade Payables - MSME', 5, D.cl_tp_msme_cy||0, D.cl_tp_msme_py||0],
+    ['     (b)(ii) Trade Payables - Others', '', D.cl_tp_oth_cy||0, D.cl_tp_oth_py||0],
+    ['     (c) Other Current Liabilities', 6, D.cl_ocl_cy||0, D.cl_ocl_py||0],
+    ['     (d) Short-term Provisions', 7, D.cl_stp_cy||0, D.cl_stp_py||0],
+    [],
+    ['II. ASSETS'],
+    ['  (1) Non-Current Assets'],
+    ['     (a)(i) Tangible Assets (PP&E)', 8, D.nca_tan_cy||0, D.nca_tan_py||0],
+    ['     (a)(ii) Intangible Assets', '', D.nca_int_cy||0, D.nca_int_py||0],
+    ['     (a)(iii) Capital WIP', '', D.nca_cwip_cy||0, D.nca_cwip_py||0],
+    ['     (a)(iv) Intangible under Dev.', '', D.nca_iaud_cy||0, D.nca_iaud_py||0],
+    ['     (b) Non-current Investments', 9, D.nca_nci_cy||0, D.nca_nci_py||0],
+    ['     (c) Deferred Tax Assets', '', D.nca_dta_cy||0, D.nca_dta_py||0],
+    ['     (d) Long-term Loans and Advances', 10, D.nca_ltla_cy||0, D.nca_ltla_py||0],
+    ['     (e) Other Non-current Assets', '', D.nca_ona_cy||0, D.nca_ona_py||0],
+    ['  (2) Current Assets'],
+    ['     (a) Current Investments', 11, D.ca_ci_cy||0, D.ca_ci_py||0],
+    ['     (b) Inventories', 12, D.ca_inv_cy||0, D.ca_inv_py||0],
+    ['     (c) Trade Receivables', 13, D.ca_tr_cy||0, D.ca_tr_py||0],
+    ['     (d) Cash and Cash Equivalents', 14, D.ca_cce_cy||0, D.ca_cce_py||0],
+    ['     (e) Short-term Loans and Advances', 15, D.ca_stla_cy||0, D.ca_stla_py||0],
+    ['     (f) Other Current Assets', '', D.ca_oca_cy||0, D.ca_oca_py||0],
+  ];
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{wch:52},{wch:8},{wch:18},{wch:18}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Balance Sheet');
+  XLSX.writeFile(wb, 'BalanceSheet_' + (cyDate || 'export').replace(/[\/\\:]/g,'-') + '.xlsx');
+}
+
+/* ── Boot ── */
+document.addEventListener('DOMContentLoaded', () => {
+  initEditable();
+  initTextFields();
+  loadData();
+  /* Wire note numbers as clickable links to the matching N-page.
+     Map: Notes 1-2 → n1, 3-8 → n2, 9 → n3, 10-15 → n4, 16-24 → n5, 25-27 → n6, 28-31 → n7 */
+  const noteToPage = (n) => {
+    if (n <= 2)  return 'n1.html';
+    if (n <= 8)  return 'n2.html';
+    if (n === 9) return 'n3.html';
+    if (n <= 15) return 'n4.html';
+    if (n <= 24) return 'n5.html';
+    if (n <= 27) return 'n6.html';
+    return 'n7.html';
+  };
+  document.querySelectorAll('.bs-table td.note').forEach(td => {
+    const num = td.textContent.trim();
+    if (num && /^\d+$/.test(num)) {
+      const n = parseInt(num, 10);
+      td.innerHTML = `<a class="note-link" href="${noteToPage(n)}" title="Open Note ${num}">${num}</a>`;
+    }
+  });
+});
+</script>
+<!-- BOTTOM TABS -->
+<div class="bottom-tabs">
+    <a href="dashboard.html" class="tab">HOME</a>
+    <a href="bd.html" class="tab">BD</a>
+    <a href="tb.html" class="tab">TB</a>
+    <a href="ae.html" class="tab">AE</a>
+    <a href="balance.html" class="tab">BS</a>
+    <a href="pl.html" class="tab">PL</a>
+    <a href="cf.html" class="tab">CF</a>
+    <a href="n1.html" class="tab">N1</a>
+    <a href="n2.html" class="tab">N2</a>
+    <a href="n3.html" class="tab">N3</a>
+    <a href="n4.html" class="tab">N4</a>
+    <a href="n5.html" class="tab">N5</a>
+    <a href="n6.html" class="tab">N6</a>
+    <a href="n7.html" class="tab">N7</a>
+    <a href="tx.html" class="tab">TX</a>
+    <a href="audit-report.html" class="tab">AR</a>
+    <a href="fs-package.html" class="tab">FS</a>
+    <button class="tab plus">+</button>
+</div>
+
+<script src="engine.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</body>
+</html>

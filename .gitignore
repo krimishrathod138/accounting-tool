@@ -1,0 +1,28 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# Environment / secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# Client data — never commit real trial balances (sample CSV is allowed)
+*.xls
+*.xlsx
+!sample_trial_balance.csv
+
+# Files that exceed GitHub's 100 MiB hard limit (rest of node_modules / dist is included).
+# Anyone cloning can regenerate these via `npm install` and `npm run build`.
+Electron Framework
+dist/win-unpacked/Balance Sheet Builder.exe
