@@ -362,13 +362,18 @@
                         const origL = localStorage.getItem('LEDGERS');
                         const origV = localStorage.getItem('VOUCHERS');
                         const origA = localStorage.getItem('AE');
-                        localStorage.setItem('LEDGERS', pySnap.LEDGERS || '[]');
-                        localStorage.setItem('VOUCHERS', pySnap.VOUCHERS || '[]');
-                        localStorage.setItem('AE', pySnap.AE || '[]');
-                        pyR = AccountingEngine.getReportData();
-                        localStorage.setItem('LEDGERS', origL);
-                        localStorage.setItem('VOUCHERS', origV);
-                        if (origA) localStorage.setItem('AE', origA); else localStorage.removeItem('AE');
+                        try {
+                            localStorage.setItem('LEDGERS', pySnap.LEDGERS || '[]');
+                            localStorage.setItem('VOUCHERS', pySnap.VOUCHERS || '[]');
+                            localStorage.setItem('AE', pySnap.AE || '[]');
+                            pyR = AccountingEngine.getReportData();
+                        } finally {
+                            // Always restore CY data, even if getReportData threw.
+                            // Previously a throw left PY data installed as CY — permanent data loss on reload.
+                            if (origL) localStorage.setItem('LEDGERS', origL); else localStorage.removeItem('LEDGERS');
+                            if (origV) localStorage.setItem('VOUCHERS', origV); else localStorage.removeItem('VOUCHERS');
+                            if (origA) localStorage.setItem('AE', origA); else localStorage.removeItem('AE');
+                        }
                     }
                 }
             }

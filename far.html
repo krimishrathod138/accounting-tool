@@ -304,20 +304,28 @@ function calcDep(a) {
   const disp = parseFloat(a.disposals)  || 0;
   const rate = parseFloat(a.rate)       || 0;
 
-  /* Depreciable base after disposals */
-  const base = Math.max(0, owdv + add - disp);
   let dep = 0;
+  let base = 0;
   if (a.method === "SLM") {
-    /* SLM: depreciation on (opening WDV + additions - disposals), NOT gross block.
-       Ensures depreciation stops when asset is fully depreciated or disposed. */
-    dep = base * rate / 100;
+    /* SLM (Straight Line Method): depreciation is on ORIGINAL COST (gross block) at
+       the rate derived from useful life. Same rupee amount every year until the
+       asset's WDV reaches zero. */
+    base = Math.max(0, gb + add - disp);
+    dep  = gb * rate / 100;
+    // Stop when the remaining WDV would go below 0
+    const remainingWDV = Math.max(0, owdv + add - disp);
+    dep = Math.min(dep, remainingWDV);
   } else {
-    /* WDV: depreciation on (opening WDV + additions - disposals) */
-    dep = base * rate / 100;
+    /* WDV (Written Down Value): depreciation is on the NET carrying value
+       (opening WDV + additions − disposals) each year. Higher in early years,
+       declining over time. Standard method under the Income Tax Act. */
+    base = Math.max(0, owdv + add - disp);
+    dep  = base * rate / 100;
   }
-  /* Cap depreciation — can't depreciate more than the depreciable base */
-  dep = Math.min(Math.max(0, dep), base);
-  const closingWDV = Math.max(0, base - dep);
+  /* Safety cap: can't depreciate more than the net depreciable amount */
+  const netDepBase = Math.max(0, owdv + add - disp);
+  dep = Math.min(Math.max(0, dep), netDepBase);
+  const closingWDV = Math.max(0, netDepBase - dep);
   return { dep, closingWDV };
 }
 

@@ -171,12 +171,18 @@ function render(){
     else if (reg === 'llp_30')      rate = 0.30;  // LLP/Partnership
     basic = taxableIncome * rate;
 
-    // Surcharge (income-based for companies)
+    // Surcharge — rates differ by entity type
     let surRate = 0;
-    if (reg === 'domestic_22') surRate = 0.10;
-    else if (reg === 'domestic_15') surRate = 0.10;
-    else if (taxableIncome > 100000000) surRate = 0.12;       // > ₹10 Cr
-    else if (taxableIncome > 10000000) surRate = 0.07;        // > ₹1 Cr
+    if (reg === 'domestic_22') surRate = 0.10;                // 115BAA: flat 10%
+    else if (reg === 'domestic_15') surRate = 0.10;           // 115BAB: flat 10%
+    else if (reg === 'llp_30') {
+      // LLP / Partnership Firm: flat 12% above ₹1 Cr (no intermediate 7% slab)
+      if (taxableIncome > 10000000) surRate = 0.12;
+    } else {
+      // Domestic Company (25% / 30%): 7% above ₹1 Cr, 12% above ₹10 Cr
+      if (taxableIncome > 100000000) surRate = 0.12;
+      else if (taxableIncome > 10000000) surRate = 0.07;
+    }
     const surcharge = basic * surRate;
 
     // Health & Education Cess = 4% on (Basic + Surcharge)

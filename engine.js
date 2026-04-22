@@ -2199,7 +2199,9 @@ window.AccountingEngine = {
        Active client's vault is deserialized into normal keys for session use.
        ================================================================ */
 
-    // Keys that belong to a client vault (session data)
+    // Keys that belong to a client vault (session data).
+    // IMPORTANT: every key written by any report/input page MUST be listed here.
+    // A missing key = that client's data leaks into other clients when you switch.
     _CLIENT_KEYS: [
         // Core accounting data
         'LEDGERS', 'LEDGERS_PY',
@@ -2222,6 +2224,18 @@ window.AccountingEngine = {
         'N7_DATA',
         'TX_DATA',
         'AUDIT_REPORT',
+        // Cash Flow overrides (user edits to the yellow cells on cf.html)
+        'CF_OVERRIDES', 'CF_DATA',
+        // Audit Manager state (audit.html)
+        'AUDIT_MANAGER',
+        // GST working papers (gst.html)
+        'GST_GSTR', 'GST_PURCHASE', 'GST_DATA',
+        // CARO (caro.html)
+        'CARO_COMP', 'CARO_RESP', 'CARO_DATA',
+        // Fixed Asset Register (far.html)
+        'FAR',
+        // Stock (stc.html)
+        'STC_DATA',
         // Global display settings (bundled per-client)
         'ROUNDING',
         // Classification rules are per-user (global), NOT included here

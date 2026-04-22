@@ -299,6 +299,16 @@ button:not(.tab):hover { background:#008000; }
             if(!file){ alert("Please select a file first"); return; }
             const targetYear = document.getElementById('importYear').value || 'CY';
             const yrLabel = targetYear === 'PY' ? 'Previous Year' : 'Current Year';
+            // Warn if we'd overwrite existing data — user may have picked the wrong dropdown.
+            const existingKey = targetYear === 'PY' ? 'LEDGERS_PY' : 'LEDGERS';
+            const existing = JSON.parse(localStorage.getItem(existingKey) || '[]');
+            if (existing.length > 0) {
+                const otherYr = targetYear === 'PY' ? 'Current Year' : 'Previous Year';
+                if (!confirm('⚠ ' + yrLabel + ' already has ' + existing.length + ' ledgers loaded.\n\nImporting will REPLACE all of them with the new file.\n\nIf you meant to import into ' + otherYr + ', cancel and flip the "Import to:" dropdown.\n\nContinue and overwrite ' + yrLabel + '?')) {
+                    document.getElementById('importFile').value = '';
+                    return;
+                }
+            }
             const reader = new FileReader();
             if(file.name.endsWith(".xml")){
                 reader.onload = () => {
