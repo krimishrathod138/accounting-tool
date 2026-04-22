@@ -2638,18 +2638,19 @@ window.AccountingEngine = {
                               wcPayables + wcStBorrowings + wcStProvisions + wcOtherCL;
         const cashFromOps = profitBeforeWC + totalWCChange;
 
-        // Taxes paid — prefer actual cash outflow (movement in advance tax / TDS receivable) if PY available,
-        // else fall back to accrual current-tax expense from P&L Note 24.
-        let taxesPaid = plnCY.n24_tax?.currentTax || 0;
+        // Taxes paid — actual cash outflow.
+        // Cash tax paid = movement in (Advance Tax + TDS receivable) when PY is present.
+        // The accrual "Current Tax" expense from P&L is a Provision, NOT cash, so it must
+        // not be added on top of the advance-tax delta (would double-count).
+        // If no PY, fall back to the P&L provision as a rough proxy.
+        let taxesPaid = 0;
         if (hasPY) {
-            // Advance Tax + TDS receivable balances come bucketed in bsNotes.n14_stLoans.advanceTax
             const advCY = (bsnCY.n14_stLoans?.advanceTax || 0);
             const advPY = (bsnPY.n14_stLoans?.advanceTax || 0);
             const advDelta = advCY - advPY;   // +ve = paid more taxes in advance this year
-            // Cash tax paid this year = prior tax liability cleared + advance tax paid - refunds received.
-            // Simpler proxy: current-tax expense + increase in advance tax balance.
-            const proxyTaxesPaid = (plnCY.n24_tax?.currentTax || 0) + Math.max(0, advDelta);
-            if (proxyTaxesPaid > 0) taxesPaid = proxyTaxesPaid;
+            taxesPaid = Math.max(0, advDelta);
+        } else {
+            taxesPaid = plnCY.n24_tax?.currentTax || 0;
         }
         const netA = cashFromOps - taxesPaid;
 
@@ -2697,16 +2698,18 @@ window.AccountingEngine = {
                                  'dividend payable', 'dividend distribution', 'dividend'];
             const hitsDiv = (name) => {
                 const n = (name || '').toLowerCase();
-                // "Dividend Received" must NOT match (it's income, not payment)
-                if (n.includes('dividend') && (n.includes('received') || n.includes('income'))) return false;
+                if (!n.includes('dividend')) return false;
+                // Exclusions: anything that's clearly NOT a paid-out dividend
+                //   - "Dividend Received" / "Dividend Income" (these are inflows on P&L)
+                //   - "Dividend Receivable" (an asset — declared but not yet collected)
+                //   - "Dividend Bank Account" / "Dividend Investments" (operational accounts)
+                if (n.includes('received') || n.includes('income') || n.includes('receivable') ||
+                    n.includes('bank') || n.includes('investment')) return false;
                 return divKeywords.some(k => n.includes(k));
             };
-            // Look in BOTH sides of BS — some ledger schemas put dividend paid as a liability (proposed),
-            // some as a contra in reserves (e.g., "Dividend Paid A/c" in Reserves group).
+            // Look only on the LIABILITIES side — paid/proposed dividends sit there
+            // (or as a contra in Reserves group, also classified as liability).
             (reportCY.liabilities || []).forEach(g => {
-                (g.ledgers || []).forEach(l => { if (hitsDiv(l.name)) dividendsPaid += Math.abs(l.balance || 0); });
-            });
-            (reportCY.assets || []).forEach(g => {
                 (g.ledgers || []).forEach(l => { if (hitsDiv(l.name)) dividendsPaid += Math.abs(l.balance || 0); });
             });
         }
@@ -2802,7 +2805,7 @@ window.AccountingEngine = {
                 netProfit,
                 // Adjustments — each signed as per AS 3 convention
                 adjDep, adjIntFD, adjDividend, adjLTCG, adjFnO, adjSTCG, adjSpec,
-                adjOtherNonOp, adjWriteBack, adjIntExp,
+                adjOtherNonOp, adjIntOther, adjWriteBack, adjIntExp,
                 totalAdjustments,
                 profitBeforeWC,
                 // Working capital deltas

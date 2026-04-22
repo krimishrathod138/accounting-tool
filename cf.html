@@ -399,14 +399,24 @@ function render(){
   document.getElementById('cfSignatures').innerHTML = sigH;
 
   // === RECONCILIATION BANNER (screen only) ===
+  // Use the ENGINE-computed reconciliation (sum.reconDiff), not the override-sensitive
+  // vReconDiff. If user types into s_open/s_close, those overrides could mask a real
+  // mis-classification by making the diff appear zero. Engine's reconDiff always
+  // compares against the BS's actual closing cash.
   let reconH = '';
   if (cf.hasPY) {
-    if (Math.abs(vReconDiff) < 1) {
-      reconH = `<div class="recon-box ok">✓ <b>Reconciled:</b> Opening (${fmt(vOpen)}) + Net change (${fmt(vTotal)}) = Closing (${fmt(vClose)}).</div>`;
+    const engineDiff = sum.reconDiff || 0;
+    const overrideDiff = vReconDiff;
+    const isOverridden = (u.s_open !== undefined && u.s_open !== '') ||
+                         (u.s_close !== undefined && u.s_close !== '');
+    if (Math.abs(engineDiff) < 1) {
+      reconH = `<div class="recon-box ok">✓ <b>Reconciled:</b> Opening (${fmt(sum.openingCash)}) + Net change (${fmt(vTotal)}) = Closing (${fmt(sum.closingCash)}).</div>`;
     } else {
-      reconH = `<div class="recon-box bad">⚠ <b>Reconciliation difference: ${fmt(vReconDiff)}</b><br>
-        Opening + Net change = ${fmt(vImplied)} but BS shows closing cash = ${fmt(vClose)}.<br>
-        Common causes: (a) Taxes paid ≠ Current Tax on P&amp;L, (b) Non-cash revaluation/fair-value gains not excluded, (c) DDT, (d) Cash FX differences.</div>`;
+      reconH = `<div class="recon-box bad">⚠ <b>Reconciliation difference: ${fmt(engineDiff)}</b><br>
+        BS opening cash (${fmt(sum.openingCash)}) + Net change (${fmt(vTotal)}) = ${fmt(sum.openingCash + vTotal)},
+        but BS closing cash = ${fmt(sum.closingCash)}.<br>
+        ${isOverridden ? '<i>⚠ You have overridden the opening/closing cash cells — these overrides do NOT affect the reconciliation check, which always uses the actual BS values.</i><br>' : ''}
+        Common causes: (a) Taxes paid ≠ Current Tax on P&amp;L, (b) Non-cash revaluation/fair-value gains not excluded, (c) DDT, (d) Cash FX differences, (e) misclassified ledgers — click 🔍 Show Classification to debug.</div>`;
     }
   }
   // Append reconciliation to the content area (after notes+sig)
