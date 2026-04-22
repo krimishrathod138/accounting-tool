@@ -242,7 +242,10 @@
 
     <!-- Sidebar -->
     <div class="tally-sidebar">
-        <button type="button" class="sidebar-btn" onclick="window.print()">
+        <button type="button" class="sidebar-btn" onclick="AccountingEngine.downloadPDF({element:document.body, filename:'Profit_and_Loss.pdf'})" style="background:#006400;color:#fff;">
+            <span>⬇ PDF</span><span class="shortcut"></span>
+        </button>
+        <button type="button" class="sidebar-btn" onclick="window.print()" title="Browser print — adds URL footer unless disabled in print dialog">
             <span>Print</span><span class="shortcut">Ctrl+P</span>
         </button>
         <button type="button" class="sidebar-btn" onclick="loadReport()">

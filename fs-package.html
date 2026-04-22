@@ -76,12 +76,15 @@ html,body{font-family:Calibri,'Segoe UI',Arial,sans-serif;font-size:11px;color:#
 </head>
 <body>
 <script src="engine.js"></script>
+<!-- html2pdf for in-page PDF generation (avoids browser print URL/footer watermark) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <div class="toolbar">
   <span class="title">📑 Financial Statements Package — Complete</span>
   <button type="button" onclick="window.location.href='balance.html'">← Back to BS</button>
   <button type="button" onclick="render()">⟳ Refresh</button>
-  <button type="button" onclick="window.print()" style="background:#006400;color:#fff;">🖨 Print Complete Package (PDF)</button>
+  <button type="button" onclick="downloadPDF()" style="background:#006400;color:#fff;">⬇ Download PDF</button>
+  <button type="button" onclick="window.print()" title="Browser print — adds URL footer unless you uncheck 'Headers and footers' in print dialog">🖨 Browser Print</button>
 </div>
 
 <div id="pkgWrap"></div>
@@ -1156,6 +1159,53 @@ function render(){
 }
 
 window.addEventListener('DOMContentLoaded', render);
+
+/* ═══════════════════ PDF DOWNLOAD (no browser URL/header watermark) ═══════════════════
+   Uses html2pdf.js to render the assembled FS package directly to a PDF Blob, then
+   triggers a download. The browser's print dialog is bypassed entirely — so no URL,
+   no page count, no date stamp added by Chrome/Safari/Firefox. */
+async function downloadPDF() {
+  const btn = event && event.target ? event.target : null;
+  const oldLabel = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Generating PDF…'; }
+
+  try {
+    if (typeof html2pdf === 'undefined') {
+      alert('PDF library not loaded — check your internet connection. Falling back to browser print.');
+      window.print();
+      return;
+    }
+
+    const wrap = document.getElementById('pkgWrap');
+    if (!wrap || !wrap.innerHTML.trim()) {
+      alert('Nothing to export — wait for the page to finish loading.');
+      return;
+    }
+
+    // Hide toolbar and bottom tabs in the captured snapshot
+    document.querySelectorAll('.toolbar, .bottom-tabs').forEach(el => el.style.display = 'none');
+
+    const co = (typeof COMPANY !== 'undefined' && COMPANY.name) ? COMPANY.name.replace(/[^a-z0-9]+/gi,'_') : 'FS';
+    const date = (typeof CY_END !== 'undefined') ? CY_END.replace(/[^a-z0-9]+/gi,'_') : new Date().toISOString().slice(0,10);
+
+    await html2pdf().set({
+      margin: [10, 12, 10, 12],   // mm: top, right, bottom, left
+      filename: `Financial_Statements_${co}_${date}.pdf`,
+      image: { type: 'jpeg', quality: 0.95 },
+      html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
+      pagebreak: { mode: ['css', 'legacy'], before: '.page-break' }
+    }).from(wrap).save();
+
+  } catch (e) {
+    console.error('PDF generation failed:', e);
+    alert('PDF generation failed: ' + e.message + '\n\nFalling back to browser print.');
+    window.print();
+  } finally {
+    document.querySelectorAll('.toolbar, .bottom-tabs').forEach(el => el.style.display = '');
+    if (btn) { btn.disabled = false; btn.textContent = oldLabel; }
+  }
+}
 </script>
 
 <!-- BOTTOM TABS -->

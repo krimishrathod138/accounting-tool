@@ -3542,6 +3542,67 @@ window.AccountingEngine = {
     /* ================================================================
        (Removed: autoPopulateNotes — notes pages n2-n7 now auto-pull from TB themselves via structured forms.)
        ================================================================ */
+
+    /* ================================================================
+       PDF DOWNLOAD HELPER — bypasses browser print pipeline so the
+       generated PDF has NO URL, NO date stamp, NO page-number watermark
+       added by Chrome/Safari/Firefox. Uses html2pdf.js loaded on demand
+       from a CDN. Falls back to window.print() if CDN unreachable.
+
+       Usage:  AccountingEngine.downloadPDF({
+                 element:  document.querySelector('.cf-wrap'),  // or selector string
+                 filename: 'Cash_Flow_Statement.pdf',
+                 hideSelectors: '.toolbar, .bottom-tabs, #statusBar'  // optional
+               });
+       ================================================================ */
+    _html2pdfReady: null,
+    _ensureHtml2Pdf() {
+        if (typeof html2pdf !== 'undefined') return Promise.resolve();
+        if (this._html2pdfReady) return this._html2pdfReady;
+        this._html2pdfReady = new Promise((resolve, reject) => {
+            const s = document.createElement('script');
+            s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+            s.onload  = () => resolve();
+            s.onerror = () => reject(new Error('Failed to load html2pdf.js (no internet?)'));
+            document.head.appendChild(s);
+        });
+        return this._html2pdfReady;
+    },
+    async downloadPDF(opts) {
+        opts = opts || {};
+        const target  = opts.element || document.body;
+        const el      = (typeof target === 'string') ? document.querySelector(target) : target;
+        if (!el) { alert('Nothing to export.'); return; }
+        const filename = opts.filename || ('Document_' + new Date().toISOString().slice(0,10) + '.pdf');
+        const hideSel = opts.hideSelectors || '.toolbar, .toolbar-row, .bottom-tabs, #statusBar, .info-box, .legend, .recon-box, button';
+        const orientation = opts.orientation || 'portrait';
+        const hidden = [];
+
+        try {
+            await this._ensureHtml2Pdf();
+            // Hide UI chrome from the snapshot
+            document.querySelectorAll(hideSel).forEach(node => {
+                if (node.style.display !== 'none') {
+                    hidden.push([node, node.style.display]);
+                    node.style.display = 'none';
+                }
+            });
+            await html2pdf().set({
+                margin: [10, 12, 10, 12],
+                filename: filename,
+                image: { type: 'jpeg', quality: 0.95 },
+                html2canvas: { scale: 2, useCORS: true, letterRendering: true, backgroundColor: '#ffffff' },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: orientation, compress: true },
+                pagebreak: { mode: ['css', 'legacy'], before: '.page-break, .fs-page' }
+            }).from(el).save();
+        } catch (e) {
+            console.error('downloadPDF failed:', e);
+            alert('PDF generation failed: ' + e.message + '\n\nFalling back to browser print.');
+            window.print();
+        } finally {
+            hidden.forEach(([node, display]) => { node.style.display = display; });
+        }
+    }
 };
 
 try {

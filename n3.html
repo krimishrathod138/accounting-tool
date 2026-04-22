@@ -69,7 +69,8 @@ button:hover:not(.tab){filter:brightness(1.1);}
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
       <button type="button" class="btn-primary" onclick="render()">⟳ Refresh from TB</button>
       <button type="button" class="btn-save" onclick="saveAll()">💾 Save</button>
-      <button type="button" class="btn-primary" onclick="window.print()">🖨 Print</button>
+      <button type="button" class="btn-primary" onclick="AccountingEngine.downloadPDF({element:document.body, filename:'N3_Report.pdf'})" style="background:#006400;">⬇ PDF</button>
+      <button type="button" class="btn-primary" onclick="window.print()" title="Browser print — adds URL footer unless you uncheck Headers and footers">🖨 Print</button>
     </div>
   </div>
   <div class="legend">

@@ -61,7 +61,8 @@ button:hover:not(.tab){filter:brightness(1.1);}
       <button type="button" class="btn-primary" id="tplGaapBtn" onclick="loadTemplate('gaap')">Load Indian GAAP Template</button>
       <button type="button" class="btn-primary" id="tplIndAsBtn" onclick="loadTemplate('indas')">Load Ind AS Template</button>
       <button type="button" class="btn-save" id="saveBtn" onclick="saveAll()">💾 Save</button>
-      <button type="button" class="btn-primary" onclick="window.print()">🖨 Print</button>
+      <button type="button" class="btn-primary" onclick="AccountingEngine.downloadPDF({element:document.body, filename:'N1_Report.pdf'})" style="background:#006400;">⬇ PDF</button>
+      <button type="button" class="btn-primary" onclick="window.print()" title="Browser print — adds URL footer unless you uncheck Headers and footers">🖨 Print</button>
     </div>
   </div>
 

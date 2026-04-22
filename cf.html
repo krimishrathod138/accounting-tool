@@ -77,6 +77,8 @@ button:hover:not(.tab){filter:brightness(1.1);}
 </head>
 <body>
 <script src="engine.js"></script>
+<!-- html2pdf for PDF generation without browser URL/footer watermark -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <div id="statusBar" class="status-normal">Loading...</div>
 
@@ -87,7 +89,8 @@ button:hover:not(.tab){filter:brightness(1.1);}
       <button type="button" class="btn-primary" onclick="render()">⟳ Refresh</button>
       <button type="button" class="btn-save" onclick="saveOverrides()">💾 Save</button>
       <button type="button" class="btn-primary" onclick="toggleDiag()" style="background:#8a5a00;">🔍 Show Classification</button>
-      <button type="button" class="btn-primary" onclick="window.print()">🖨 Print</button>
+      <button type="button" class="btn-primary" onclick="downloadPDF()" style="background:#006400;">⬇ Download PDF</button>
+      <button type="button" class="btn-primary" onclick="window.print()" title="Browser print — adds URL footer unless you uncheck 'Headers and footers'">🖨 Print</button>
     </div>
   </div>
   <div class="legend">
@@ -552,6 +555,35 @@ function renderDiagnostics(cf){
 function toggleDiag(){
   const el = document.getElementById('cfDiag');
   el.style.display = (el.style.display === 'none') ? 'block' : 'none';
+}
+
+/* ── PDF download (no browser URL/header watermark) ── */
+async function downloadPDF() {
+  const btn = event && event.target ? event.target : null;
+  const oldLabel = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Generating…'; }
+  try {
+    if (typeof html2pdf === 'undefined') { window.print(); return; }
+    const wrap = document.querySelector('.cf-wrap');
+    if (!wrap) return;
+    // Hide on-screen-only chrome in the snapshot
+    document.querySelectorAll('.toolbar-row, .bottom-tabs, #statusBar, .info-box, .legend, .recon-box').forEach(el => el.style.display = 'none');
+    document.getElementById('cfDiag').style.display = 'none';
+    const co = (document.getElementById('coName')?.textContent || 'CF').replace(/[^a-z0-9]+/gi,'_');
+    await html2pdf().set({
+      margin: [10, 12, 10, 12],
+      filename: `Cash_Flow_${co}.pdf`,
+      image: { type: 'jpeg', quality: 0.95 },
+      html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true }
+    }).from(wrap).save();
+  } catch (e) {
+    console.error(e);
+    alert('PDF generation failed: ' + e.message);
+  } finally {
+    document.querySelectorAll('.toolbar-row, .bottom-tabs, #statusBar, .info-box, .legend, .recon-box').forEach(el => el.style.display = '');
+    if (btn) { btn.disabled = false; btn.textContent = oldLabel; }
+  }
 }
 
 function saveOverrides(silent){

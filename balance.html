@@ -162,7 +162,8 @@ body{margin:0;font-family:'Segoe UI',Arial,sans-serif;background:#eaeef4;color:#
   <button class="btn"       onclick="saveDraftNamed()" title="Save current state as a named draft">&#x1F4D1; Save Draft</button>
   <button class="btn"       onclick="openDraftsMenu()" title="Open/Restore a saved draft">&#x1F4C2; Drafts</button>
   <button class="btn"       onclick="runValidation()" title="Check BS \u2194 Notes reconciliation">&#x2713; Validate</button>
-  <button class="btn"       onclick="window.print()">&#x1F5B6; Print / PDF</button>
+  <button class="btn"       onclick="AccountingEngine.downloadPDF({element:document.body, filename:'Balance_Sheet.pdf'})" style="background:#006400;color:#fff;">⬇ Download PDF</button>
+  <button class="btn"       onclick="window.print()" title="Browser print — adds URL footer unless you uncheck Headers and footers">&#x1F5B6; Print</button>
   <button class="btn"       onclick="exportCSV()">&#x2B07; Export CSV</button>
   <button class="btn green" onclick="fillFromEngine()" title="Auto-populate from imported Trial Balance data">&#x26A1; Fill from TB</button>
   <button class="btn"       onclick="exportExcel()" title="Export to Excel (.xlsx)">&#x1F4CA; Export Excel</button>
