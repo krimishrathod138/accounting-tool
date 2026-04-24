@@ -139,6 +139,7 @@ window.AccountingEngine = {
 
     getReportData(year) {
         const groups = this.getGroupedBalances(year);
+        const balances = this.getLedgerBalances(year);
         const report = {
             liabilities: [],
             assets: [],
@@ -227,6 +228,34 @@ window.AccountingEngine = {
 
         report.grossProfit = report.trading.totalInc - report.trading.totalExp;
         report.netProfit = report.grossProfit + report.pl.totalInc - report.pl.totalExp;
+
+        // ── Closing stock adjustment ──
+        // Accrual-basis profit = Revenue − (Purchases + Direct − Closing Stock + Opening Stock + Indirect).
+        // Above arithmetic doesn't subtract closing stock (an asset, not an expense group),
+        // so netProfit was understating by (closing stock - opening stock). Fix in-place so
+        // every downstream caller (balance.html "Fill from TB", BS equity calc, dashboard
+        // summary) sees consistent, correct net profit.
+        let closingStock = 0, openingStock = 0;
+        report.assets.forEach(g => {
+            const n = (g.name || '').toLowerCase();
+            if (n.includes('stock') || n.includes('inventor')) closingStock += g.total;
+        });
+        for (const name in balances) {
+            if ((name || '').toLowerCase().includes('opening stock')) openingStock += balances[name].current;
+        }
+        // If no explicit opening stock ledger, use PY closing stock as this year's opening.
+        if (openingStock === 0 && year !== 'PY') {
+            try {
+                const pyBal = this.getLedgerBalances('PY');
+                for (const n in pyBal) {
+                    const gn = (pyBal[n].group || '').toLowerCase();
+                    if (gn.includes('stock') || gn.includes('inventor')) openingStock += pyBal[n].current;
+                }
+            } catch(e) {}
+        }
+        report.inventoryChange = openingStock - closingStock;  // n19-style: +ve expense if stock fell
+        report.netProfit = report.netProfit - report.inventoryChange;  // subtract the expense adjustment
+        report.grossProfit = report.grossProfit - report.inventoryChange;
 
         return report;
     },
