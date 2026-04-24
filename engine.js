@@ -289,18 +289,22 @@ window.AccountingEngine = {
         };
 
         // Revenue from Operations (Note 16)
+        // Income ledgers are credit-normal (negative balance). A contra ledger like
+        // "Sales Return" has a POSITIVE balance and MUST reduce revenue. Using
+        // Math.abs() on every ledger would inflate revenue by the return amount —
+        // a real accounting error. Preserve sign, sum, then flip sign at the end.
         report.trading.incomes.forEach(g => {
             g.ledgers.forEach(l => {
-                const amt = Math.abs(l.balance);
+                const amt = -(l.balance || 0);  // credit → positive revenue; debit contra → negative
                 plNotes.n16_revenue.items.push({ name: l.name, amount: amt });
                 plNotes.n16_revenue.total += amt;
             });
         });
 
-        // Other Income (Note 17)
+        // Other Income (Note 17) — same sign convention
         report.pl.incomes.forEach(g => {
             g.ledgers.forEach(l => {
-                const amt = Math.abs(l.balance);
+                const amt = -(l.balance || 0);
                 plNotes.n17_otherIncome.items.push({ name: l.name, amount: amt });
                 plNotes.n17_otherIncome.total += amt;
             });
@@ -462,11 +466,21 @@ window.AccountingEngine = {
             }
         });
 
-        // Add net profit to reserves
-        bsNotes.n4_reserves.netProfit = report.netProfit;
+        // ── P&L summary (compute FIRST so BS can use the correct profit figure) ──
+        const totalRevenue = plNotes.n16_revenue.total + plNotes.n17_otherIncome.total;
+        const totalExpenses = plNotes.n18_materials.total + plNotes.n19_inventoryChange.total +
+            plNotes.n20_employee.total + plNotes.n21_finance.total +
+            plNotes.n22_depreciation.total + plNotes.n23_otherExpenses.total;
+        const profitBeforeTax = totalRevenue - totalExpenses;
+        const profitForYear = profitBeforeTax - plNotes.n24_tax.total;
+
+        // Add net profit to reserves. CRITICAL: must use profitForYear (which accounts for
+        // inventory change via Note 19), NOT report.netProfit which skips Note 19. Using the
+        // wrong one makes BS fail to balance by the inventory-change amount.
+        bsNotes.n4_reserves.netProfit = profitForYear;
 
         // ── Compute totals for BS ──
-        const shareholdersFunds = bsNotes.n3_shareCapital.total + bsNotes.n4_reserves.total + report.netProfit;
+        const shareholdersFunds = bsNotes.n3_shareCapital.total + bsNotes.n4_reserves.total + profitForYear;
         const ncLiabilities = bsNotes.n5_ltBorrowings.total;
         const cLiabilities = bsNotes.n6_stBorrowings.total + bsNotes.n7_tradePayables.total + bsNotes.n8_otherCL.total;
         const totalEL = shareholdersFunds + ncLiabilities + cLiabilities;
@@ -475,14 +489,6 @@ window.AccountingEngine = {
         const cAssets = bsNotes.n11_inventories.total + bsNotes.n12_tradeReceivables.total +
                         bsNotes.n13_cashBank.total + bsNotes.n14_stLoans.total + bsNotes.n15_otherCA.total;
         const totalAssets = ncAssets + cAssets;
-
-        // ── P&L summary ──
-        const totalRevenue = plNotes.n16_revenue.total + plNotes.n17_otherIncome.total;
-        const totalExpenses = plNotes.n18_materials.total + plNotes.n19_inventoryChange.total +
-            plNotes.n20_employee.total + plNotes.n21_finance.total +
-            plNotes.n22_depreciation.total + plNotes.n23_otherExpenses.total;
-        const profitBeforeTax = totalRevenue - totalExpenses;
-        const profitForYear = profitBeforeTax - plNotes.n24_tax.total;
 
         // ── Compute analytical ratios (Note 27) ──
         const ratios = [];
