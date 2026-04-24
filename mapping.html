@@ -335,18 +335,29 @@ function updateStatusBar() {
 function saveAll() {
   const n = Object.keys(pendingChanges).length;
   if (n === 0) { alert('No changes to save.'); return; }
-  // Write rules and update ledgers' group field
+  // Write rules and update ledgers' group field (BOTH CY and PY)
   Object.keys(pendingChanges).forEach(name => {
     AccountingEngine.setGroupRule(name, pendingChanges[name]);
   });
-  // Update LEDGERS so BS/PL/CF pages see the new grouping immediately
+  // Update CY LEDGERS
   const ledgers = AccountingEngine.getLedgers();
   ledgers.forEach(l => {
     if (pendingChanges[l.name] !== undefined) l.group = pendingChanges[l.name];
   });
   localStorage.setItem('LEDGERS', JSON.stringify(ledgers));
+  // CRITICAL: also update PY LEDGERS so PY column on BS/PL/CF uses the new grouping.
+  // Without this, PY comparatives would be misclassified relative to CY.
+  try {
+    const pyLedgers = JSON.parse(localStorage.getItem('LEDGERS_PY') || '[]');
+    if (Array.isArray(pyLedgers) && pyLedgers.length) {
+      pyLedgers.forEach(l => {
+        if (pendingChanges[l.name] !== undefined) l.group = pendingChanges[l.name];
+      });
+      localStorage.setItem('LEDGERS_PY', JSON.stringify(pyLedgers));
+    }
+  } catch(e) {}
   AccountingEngine.persistToElectron && AccountingEngine.persistToElectron();
-  alert(`✓ Saved ${n} mapping change${n>1?'s':''}. The new classification is now active across BS, P&L, CF, and all Notes.`);
+  alert(`✓ Saved ${n} mapping change${n>1?'s':''}. The new classification is now active across BS, P&L, CF, and all Notes (both CY and PY).`);
   pendingChanges = {};
   load();
 }
@@ -363,10 +374,17 @@ function resetAllToAuto() {
   if (n === 0) { alert('No overrides to reset.'); return; }
   if (!confirm(`Remove all ${n} user-defined classification override${n>1?'s':''}?\n\nAll ledgers will revert to keyword-based auto-classification.`)) return;
   AccountingEngine.clearAllGroupRules();
-  // Re-apply guessGroup to update LEDGERS
+  // Re-apply guessGroup to BOTH CY and PY ledgers
   const ledgers = AccountingEngine.getLedgers();
   ledgers.forEach(l => { l.group = AccountingEngine.guessGroup(l.name); });
   localStorage.setItem('LEDGERS', JSON.stringify(ledgers));
+  try {
+    const pyLedgers = JSON.parse(localStorage.getItem('LEDGERS_PY') || '[]');
+    if (Array.isArray(pyLedgers) && pyLedgers.length) {
+      pyLedgers.forEach(l => { l.group = AccountingEngine.guessGroup(l.name); });
+      localStorage.setItem('LEDGERS_PY', JSON.stringify(pyLedgers));
+    }
+  } catch(e) {}
   AccountingEngine.persistToElectron && AccountingEngine.persistToElectron();
   alert(`✓ Reset ${n} override${n>1?'s':''}. All ledgers now use auto-classification.`);
   pendingChanges = {};

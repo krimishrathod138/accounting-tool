@@ -229,22 +229,23 @@ window.AccountingEngine = {
         report.grossProfit = report.trading.totalInc - report.trading.totalExp;
         report.netProfit = report.grossProfit + report.pl.totalInc - report.pl.totalExp;
 
-        // ── Closing stock adjustment ──
-        // Accrual-basis profit = Revenue − (Purchases + Direct − Closing Stock + Opening Stock + Indirect).
-        // Above arithmetic doesn't subtract closing stock (an asset, not an expense group),
-        // so netProfit was understating by (closing stock - opening stock). Fix in-place so
-        // every downstream caller (balance.html "Fill from TB", BS equity calc, dashboard
-        // summary) sees consistent, correct net profit.
+        // ── Closing stock adjustment (same 3-tier fallback as Schedule III n19) ──
+        // 1. Explicit "Opening Stock" ledger in CY (rare — most Tally TBs don't have one)
+        // 2. PY closing stock (from LEDGERS_PY if imported)
+        // 3. Assume no change (opening = closing) to avoid inflating profit by full
+        //    closing-stock value when neither source is available.
         let closingStock = 0, openingStock = 0;
         report.assets.forEach(g => {
             const n = (g.name || '').toLowerCase();
             if (n.includes('stock') || n.includes('inventor')) closingStock += g.total;
         });
+        let explicitOpen = 0;
         for (const name in balances) {
-            if ((name || '').toLowerCase().includes('opening stock')) openingStock += balances[name].current;
+            if ((name || '').toLowerCase().includes('opening stock')) explicitOpen += balances[name].current;
         }
-        // If no explicit opening stock ledger, use PY closing stock as this year's opening.
-        if (openingStock === 0 && year !== 'PY') {
+        if (explicitOpen) {
+            openingStock = explicitOpen;
+        } else if (year !== 'PY') {
             try {
                 const pyBal = this.getLedgerBalances('PY');
                 for (const n in pyBal) {
@@ -252,9 +253,12 @@ window.AccountingEngine = {
                     if (gn.includes('stock') || gn.includes('inventor')) openingStock += pyBal[n].current;
                 }
             } catch(e) {}
+            if (openingStock === 0) openingStock = closingStock;  // safe default — no change
+        } else {
+            openingStock = closingStock;
         }
-        report.inventoryChange = openingStock - closingStock;  // n19-style: +ve expense if stock fell
-        report.netProfit = report.netProfit - report.inventoryChange;  // subtract the expense adjustment
+        report.inventoryChange = openingStock - closingStock;   // +ve = expense (stock fell)
+        report.netProfit = report.netProfit - report.inventoryChange;
         report.grossProfit = report.grossProfit - report.inventoryChange;
 
         return report;
@@ -380,9 +384,15 @@ window.AccountingEngine = {
                 plNotes.n19_inventoryChange.closing = g.total;
             }
         });
-        // Opening stock: prefer explicit "Opening Stock" ledger; fall back to prior-year
-        // closing stock (from the PY snapshot). This prevents inflated PBT when Tally TBs
-        // don't carry a separate Opening Stock ledger — the common case.
+        // Opening stock detection — in priority order:
+        //   1. Explicit "Opening Stock" ledger in the current TB
+        //   2. PY closing stock (from LEDGERS_PY if imported)
+        //   3. Equal to closing stock (NO change assumed — safest default)
+        //
+        // The third fallback is crucial: without it, a first-year-filing user (or anyone
+        // who hasn't imported PY yet) would see opening=0, inventory-change = -closing,
+        // and the entire closing stock value would be added to profit. For an ongoing
+        // business importing only CY TB, that's a material overstatement.
         let explicitOpening = 0;
         for (let name in balances) {
             if (name.toLowerCase().includes('opening stock')) {
@@ -393,7 +403,7 @@ window.AccountingEngine = {
         if (explicitOpening) {
             plNotes.n19_inventoryChange.opening = explicitOpening;
         } else if (year !== 'PY') {
-            // Use PY's closing stock (from PY ledgers) as this year's opening stock.
+            let pyOpening = 0;
             try {
                 const pyBalances = this.getLedgerBalances('PY');
                 const pyGroups = {};
@@ -405,10 +415,17 @@ window.AccountingEngine = {
                 for (const gName in pyGroups) {
                     const lgName = gName.toLowerCase();
                     if (lgName.includes('stock') || lgName.includes('inventor')) {
-                        plNotes.n19_inventoryChange.opening += pyGroups[gName];
+                        pyOpening += pyGroups[gName];
                     }
                 }
-            } catch(e) { /* PY lookup failed — leave opening=0 */ }
+            } catch(e) {}
+            if (pyOpening) {
+                plNotes.n19_inventoryChange.opening = pyOpening;
+            } else {
+                // No PY, no explicit opening: assume no change (opening = closing).
+                // Alternative would overstate profit by entire closing stock value.
+                plNotes.n19_inventoryChange.opening = plNotes.n19_inventoryChange.closing;
+            }
         }
         plNotes.n19_inventoryChange.total = plNotes.n19_inventoryChange.opening - plNotes.n19_inventoryChange.closing;
 
@@ -2757,25 +2774,44 @@ window.AccountingEngine = {
             const n2 = JSON.parse(localStorage.getItem('N2_DATA') || '{}');
             dividendsPaid = Number(n2.n4_divPaid || 0);
         } catch(e) {}
-        if (!dividendsPaid) {
-            const divKeywords = ['dividend paid', 'proposed dividend', 'interim dividend', 'final dividend',
-                                 'dividend payable', 'dividend distribution', 'dividend'];
-            const hitsDiv = (name) => {
+        if (!dividendsPaid && hasPY) {
+            // Auto-detect from ledgers. TWO sources of dividend cash outflow:
+            //   (a) "Dividend Paid" ledgers — show the full amount debited this year
+            //   (b) Drop in "Proposed Dividend" / "Dividend Payable" provisions — means the
+            //       previously-provisioned amount was settled in cash this year.
+            // Proposed dividends still on BS at year-end are NOT cash outflow — they're
+            // just provisions for next year's payment.
+            const isPaidDiv = (name) => {
                 const n = (name || '').toLowerCase();
                 if (!n.includes('dividend')) return false;
-                // Exclusions: anything that's clearly NOT a paid-out dividend
-                //   - "Dividend Received" / "Dividend Income" (these are inflows on P&L)
-                //   - "Dividend Receivable" (an asset — declared but not yet collected)
-                //   - "Dividend Bank Account" / "Dividend Investments" (operational accounts)
                 if (n.includes('received') || n.includes('income') || n.includes('receivable') ||
                     n.includes('bank') || n.includes('investment')) return false;
-                return divKeywords.some(k => n.includes(k));
+                // Only count ledgers that explicitly indicate an actual payment (not a provision)
+                return n.includes('paid') || n.includes('distribution') || n.includes('distributed') ||
+                       n.includes('interim');  // Interim dividend is typically paid when declared
             };
-            // Look only on the LIABILITIES side — paid/proposed dividends sit there
-            // (or as a contra in Reserves group, also classified as liability).
+            const isProvisionDiv = (name) => {
+                const n = (name || '').toLowerCase();
+                if (!n.includes('dividend')) return false;
+                return n.includes('proposed') || n.includes('payable') ||
+                       (n.includes('final') && !n.includes('paid'));
+            };
+            let divPaidLedger = 0;
             (reportCY.liabilities || []).forEach(g => {
-                (g.ledgers || []).forEach(l => { if (hitsDiv(l.name)) dividendsPaid += Math.abs(l.balance || 0); });
+                (g.ledgers || []).forEach(l => {
+                    if (isPaidDiv(l.name)) divPaidLedger += Math.abs(l.balance || 0);
+                });
             });
+            // Provision drop = payment of last year's proposed dividend
+            let provCY = 0, provPY = 0;
+            (reportCY.liabilities || []).forEach(g => {
+                (g.ledgers || []).forEach(l => { if (isProvisionDiv(l.name)) provCY += Math.abs(l.balance || 0); });
+            });
+            (reportPY.liabilities || []).forEach(g => {
+                (g.ledgers || []).forEach(l => { if (isProvisionDiv(l.name)) provPY += Math.abs(l.balance || 0); });
+            });
+            const provDrop = Math.max(0, provPY - provCY);
+            dividendsPaid = divPaidLedger + provDrop;
         }
         const netC = ltBorrChange + shareCapChange - financeCosts - dividendsPaid;
 

@@ -311,7 +311,7 @@ function renderPL(){
         <tr class="subtot"><td><b>Total Expenses</b></td><td></td><td class="amt">${fmt(pl.totalExpenses)}</td><td class="amt py">${pyv('pl.totalExpenses')}</td></tr>
         <tr class="blank"><td colspan="4"></td></tr>
         <tr class="total"><td><b>Profit before Tax</b></td><td></td><td class="amt">${fmt(pl.profitBeforeTax)}</td><td class="amt py">${pyv('pl.profitBeforeTax')}</td></tr>
-        <tr class="item"><td>Tax Expenses</td><td>24</td><td class="amt">${fmt((pln.n24_tax?.currentTax||0) + (pln.n24_tax?.adjustments||0) + (pln.n24_tax?.deferredTax||0))}</td><td class="amt py">-</td></tr>
+        <tr class="item"><td>Tax Expenses</td><td>24</td><td class="amt">${fmt((pln.n24_tax?.currentTax||0) + (pln.n24_tax?.adjustments||0) + (pln.n24_tax?.deferredTax||0))}</td><td class="amt py">${pyv('plNotes.n24_tax.total')}</td></tr>
         <tr class="blank"><td colspan="4"></td></tr>
         <tr class="total"><td><b>Profit for the Year</b></td><td></td><td class="amt">${fmt(pl.profitForYear)}</td><td class="amt py">${pyv('pl.profitForYear')}</td></tr>
       </tbody>
